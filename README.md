@@ -198,6 +198,8 @@ We believe high-quality learning content should be accessible to everyone. These
 
 ## Want the Full Experience?
 
+<img src="./images/react-mastery-course-view.webp" style="width:100%" />
+
 Reading is great, but **practicing is better**. Stanza provides:
 
 - Interactive challenges validated in real-time
@@ -205,6 +207,10 @@ Reading is great, but **practicing is better**. Stanza provides:
 - Learning directly in VS Code — your professional environment
 
 → [Try Stanza for free](https://stanza.dev)
+
+<img src="./images/lesson-view.webp" style="width:100%" />
+<img src="./images/courses-view.webp" style="width:100%" />
+
 
 ## Contributing
 
