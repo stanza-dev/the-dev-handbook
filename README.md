@@ -217,6 +217,12 @@ Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before submitting.
 
 Content is licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Code examples are [MIT](./LICENSE).
 
+**In plain English:**
+- **Read, share, translate, improve** — yes, always
+- **Use code snippets in your projects** — yes, no restrictions (MIT)
+- **Fork and sell as a paid course** — no
+- **Credit required** — yes, link back to this repo or stanza.dev
+
 ---
 
 *Built with ❤️ by [Stanza](https://stanza.dev)*
