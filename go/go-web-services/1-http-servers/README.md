@@ -1,0 +1,23 @@
+# 🖥️ Building HTTP Servers
+
+> Part of [Go for Web & Microservices](https://stanza.dev/courses/go-web-services)
+
+Using net/http and middleware.
+
+## Lessons
+
+1. [The net/http Package](./1-http-basics.md)
+2. [Enhanced Routing (Go 1.22+)](./2-routing-122.md)
+3. [Middleware Patterns](./3-http-middleware.md)
+4. [JSON Request & Response Handling](./4-json-responses.md)
+
+## Practice Challenges
+
+This section includes **4 interactive challenges** available on Stanza:
+
+- ✏️ Fill in the Blank: HTTP Method Routing
+- 🧩 Multiple Choice: Response Writer Usage
+- 🧩 Multiple Choice: Middleware Stop
+- 🔗 Matching: HTTP Components
+
+→ [Practice in your IDE](https://stanza.dev/courses/go-web-services)

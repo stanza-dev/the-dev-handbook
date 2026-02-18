@@ -1,0 +1,234 @@
+---
+source_course: "php-performance"
+source_lesson: "php-performance-jit-compilation"
+---
+
+# JIT Compilation in PHP 8
+
+Just-In-Time compilation converts PHP bytecode to machine code at runtime for maximum performance.
+
+## JIT vs OPcache
+
+```
+OPcache:   Source → Bytecode → Execute on Zend VM
+JIT:       Source → Bytecode → Machine Code → Execute on CPU
+```
+
+## Enable JIT
+
+```ini
+; php.ini
+opcache.enable=1  ; Required
+opcache.jit=1255  ; Enable JIT
+opcache.jit_buffer_size=128M
+```
+
+## JIT Configuration Values
+
+The `opcache.jit` value has 4 digits: `CRTO`
+
+```
+C - CPU-specific optimization
+  0 = no optimization
+  1 = enable AVX
+
+R - Register allocation
+  0 = no register allocation
+  1 = local linear scan
+  2 = global linear scan
+
+T - Trigger mode
+  0 = compile on script load
+  1 = compile on first execution
+  2 = compile on first execution and profile
+  3 = compile function on first execution
+  4 = compile based on call count
+  5 = compile based on call count and trace hot functions
+
+O - Optimization level
+  0 = no JIT
+  1 = minimal JIT
+  2 = selective JIT
+  3 = optimized JIT
+  4 = optimized and speculative JIT
+  5 = maximum JIT
+```
+
+## Recommended Settings
+
+```ini
+; Tracing JIT (best for most apps)
+opcache.jit=tracing
+; Equivalent to: opcache.jit=1255
+
+; Function JIT (more conservative)
+opcache.jit=function
+; Equivalent to: opcache.jit=1205
+
+; Disable JIT
+opcache.jit=off
+; Equivalent to: opcache.jit=0
+```
+
+## When JIT Helps
+
+```php
+<?php
+// JIT helps: CPU-intensive calculations
+function fibonacci(int $n): int {
+    if ($n <= 1) return $n;
+    return fibonacci($n - 1) + fibonacci($n - 2);
+}
+
+// JIT helps: Loops with calculations
+function processArray(array $data): float {
+    $sum = 0;
+    foreach ($data as $value) {
+        $sum += sqrt($value) * log($value);
+    }
+    return $sum;
+}
+
+// JIT has less impact: I/O bound operations
+function fetchData(): array {
+    return $pdo->query('SELECT * FROM users')->fetchAll();
+}
+```
+
+## Monitoring JIT
+
+```php
+<?php
+function jitStatus(): array
+{
+    $status = opcache_get_status();
+    
+    return [
+        'enabled' => $status['jit']['enabled'],
+        'on' => $status['jit']['on'],
+        'kind' => $status['jit']['kind'],
+        'buffer_size' => $status['jit']['buffer_size'],
+        'buffer_free' => $status['jit']['buffer_free'],
+    ];
+}
+```
+
+## Benchmark Comparison
+
+```php
+<?php
+// Without JIT: ~2.5 seconds
+// With JIT: ~0.5 seconds (5x faster)
+$start = microtime(true);
+$result = fibonacci(35);
+echo microtime(true) - $start;
+```
+
+## Code Examples
+
+**JIT performance benchmark**
+
+```php
+<?php
+declare(strict_types=1);
+
+// JIT benchmark comparison
+class JitBenchmark
+{
+    public function run(): array
+    {
+        return [
+            'fibonacci' => $this->benchFibonacci(),
+            'mandelbrot' => $this->benchMandelbrot(),
+            'string_ops' => $this->benchStringOps(),
+            'array_ops' => $this->benchArrayOps(),
+        ];
+    }
+    
+    private function benchFibonacci(): float
+    {
+        $start = microtime(true);
+        for ($i = 0; $i < 30; $i++) {
+            $this->fibonacci(25);
+        }
+        return (microtime(true) - $start) * 1000;
+    }
+    
+    private function fibonacci(int $n): int
+    {
+        if ($n <= 1) return $n;
+        return $this->fibonacci($n - 1) + $this->fibonacci($n - 2);
+    }
+    
+    private function benchMandelbrot(): float
+    {
+        $start = microtime(true);
+        $size = 200;
+        
+        for ($y = 0; $y < $size; $y++) {
+            for ($x = 0; $x < $size; $x++) {
+                $zr = $zi = 0;
+                $cr = ($x / $size) * 3.5 - 2.5;
+                $ci = ($y / $size) * 2 - 1;
+                
+                for ($i = 0; $i < 100; $i++) {
+                    $temp = $zr * $zr - $zi * $zi + $cr;
+                    $zi = 2 * $zr * $zi + $ci;
+                    $zr = $temp;
+                    if ($zr * $zr + $zi * $zi > 4) break;
+                }
+            }
+        }
+        
+        return (microtime(true) - $start) * 1000;
+    }
+    
+    private function benchStringOps(): float
+    {
+        $start = microtime(true);
+        
+        for ($i = 0; $i < 100000; $i++) {
+            $str = 'Hello World ' . $i;
+            $upper = strtoupper($str);
+            $replaced = str_replace('WORLD', 'PHP', $upper);
+            $len = strlen($replaced);
+        }
+        
+        return (microtime(true) - $start) * 1000;
+    }
+    
+    private function benchArrayOps(): float
+    {
+        $start = microtime(true);
+        
+        $data = range(1, 10000);
+        
+        for ($i = 0; $i < 100; $i++) {
+            $filtered = array_filter($data, fn($n) => $n % 2 === 0);
+            $mapped = array_map(fn($n) => $n * 2, $filtered);
+            $sum = array_sum($mapped);
+        }
+        
+        return (microtime(true) - $start) * 1000;
+    }
+}
+
+// Run benchmark
+$bench = new JitBenchmark();
+$results = $bench->run();
+
+echo "JIT Status: " . (opcache_get_status()['jit']['on'] ? 'ON' : 'OFF') . "\n";
+foreach ($results as $name => $ms) {
+    printf("%s: %.2f ms\n", $name, $ms);
+}
+?>
+```
+
+
+## Resources
+
+- [PHP JIT](https://www.php.net/manual/en/opcache.configuration.php#ini.opcache.jit) — PHP JIT configuration
+
+---
+
+> 📘 *This lesson is part of the [PHP Performance Optimization](https://stanza.dev/courses/php-performance) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*
