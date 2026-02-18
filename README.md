@@ -2,7 +2,10 @@
 
 > Free, open-source developer courses — React, Next.js, TypeScript, Go, Python & more.
 
-Maintained by [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.
+
+<img src="./images/banner-the-dev-handbook.webp" style="width:100%" />
+
+Maintained by [Stanza](https://stanza.dev) — Learn coding faster right in your IDE, Slack, emails and the web.
 
 **130 courses** · **2129+ lessons** · **17 technologies**
 
