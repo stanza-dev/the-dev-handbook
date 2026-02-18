@@ -198,19 +198,32 @@ We believe high-quality learning content should be accessible to everyone. These
 
 ## Want the Full Experience?
 
-<img src="./images/react-mastery-course-view.webp" style="width:100%" />
+Complete all these courses on the open Stanza app:
 
-Reading is great, but **practicing is better**. Stanza provides:
+<figure>
+Web interface
+<img src="./images/react-mastery-course-view.webp" style="width:100%" />
+<img src="./images/lesson-view.webp" style="width:100%" />
+
+</figure>
+
+<figure>
+Embedded in your IDE panel (VsCode/Cursor extension) 
+<img src="./images/ide-integration.webp" style="width:100%" />
+</figure>
+
+<figure>
+Use the Slack app
+<img src="./images/slack-integration.webp" style="width:100%" />
+</figure>
+
+More details on Stanza's website [https://stanza.dev]((https://stanza.dev))
 
 - Interactive challenges validated in real-time
 - Progress tracking with Mana points and streaks
-- Learning directly in VS Code — your professional environment
+- Embed courses & challenges directly in VS Code / Cursor
 
 → [Try Stanza for free](https://stanza.dev)
-
-<img src="./images/lesson-view.webp" style="width:100%" />
-<img src="./images/courses-view.webp" style="width:100%" />
-
 
 ## Contributing
 
