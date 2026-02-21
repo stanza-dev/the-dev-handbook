@@ -75,7 +75,7 @@ export async function POST(request: Request) {
 import { headers } from 'next/headers';
 
 export async function GET() {
-  const headersList = headers();
+  const headersList = await headers();
   
   const userAgent = headersList.get('user-agent');
   const authorization = headersList.get('authorization');
@@ -121,11 +121,11 @@ import { headers, cookies } from 'next/headers';
 
 export async function GET() {
   // Read cookies
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value;
   
   // Read headers
-  const headersList = headers();
+  const headersList = await headers();
   const ip = headersList.get('x-forwarded-for');
   
   return Response.json({ hasToken: !!token, ip });
@@ -149,7 +149,7 @@ export async function GET() {
 
 ## Summary
 
-Route Handlers use standard Web APIs for requests and responses. Read query params from `new URL(request.url).searchParams`, parse bodies with `await request.json()`, and access headers with Next.js's `headers()` function. Build responses with `Response.json()` for convenience or `new Response()` for full control.
+Route Handlers use standard Web APIs for requests and responses. Read query params from `new URL(request.url).searchParams`, parse bodies with `await request.json()`, and access headers with Next.js's `await headers()` function. Build responses with `Response.json()` for convenience or `new Response()` for full control.
 
 ## Resources
 

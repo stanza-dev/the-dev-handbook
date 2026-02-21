@@ -89,7 +89,8 @@ export async function POST(request: Request) {
 
   const sessionId = await createSession(user.id);
   
-  cookies().set('session', sessionId, {
+  const cookieStore = await cookies();
+  cookieStore.set('session', sessionId, {
     httpOnly: true,                              // Not accessible via JavaScript
     secure: process.env.NODE_ENV === 'production', // HTTPS only in prod
     sameSite: 'lax',                             // CSRF protection
@@ -138,12 +139,13 @@ import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 
 export async function POST() {
-  const sessionId = cookies().get('session')?.value;
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get('session')?.value;
   
   if (sessionId) {
     // Delete session from database
     await prisma.session.delete({ where: { id: sessionId } }).catch(() => {});
-    cookies().delete('session');
+    cookieStore.delete('session');
   }
 
   return Response.json({ success: true });

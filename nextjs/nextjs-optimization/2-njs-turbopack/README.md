@@ -15,7 +15,7 @@ Next.js's Rust-powered bundler for faster development.
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- ✏️ Fill in the Blank: Njs Challenge Turbopack Flag
+- ✏️ Fill in the Blank: Opting Out of Turbopack
 - 🧩 Multiple Choice: Njs Challenge Turbopack Status
 - 🧩 Multiple Choice: Turbopack Main Benefit
 

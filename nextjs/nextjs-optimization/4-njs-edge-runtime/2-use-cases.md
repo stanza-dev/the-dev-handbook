@@ -10,7 +10,7 @@ source_lesson: "nextjs-optimization-njs-edge-use-cases"
 1. **Personalization**: Geo-based content, A/B testing.
 2. **Redirects**: Fast redirects based on cookies or headers.
 3. **Simple APIs**: Lightweight endpoints that don't need node APIs.
-4. **Middleware**: All middleware runs on the edge.
+4. **Proxy**: By default, proxy runs on the Node.js runtime in Next.js 16, with an option to use the Edge runtime.
 
 ## Example: Geo-Based Content
 

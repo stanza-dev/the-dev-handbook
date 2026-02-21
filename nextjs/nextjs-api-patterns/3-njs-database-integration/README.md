@@ -12,9 +12,8 @@ Connecting to databases with Prisma and raw SQL.
 
 ## Practice Challenges
 
-This section includes **4 interactive challenges** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Njs Challenge Prisma Singleton
 - 🧩 Multiple Choice: Successful DELETE Status
 - 🧩 Multiple Choice: Prisma Singleton Purpose
 - ✏️ Fill in the Blank: Transaction Client

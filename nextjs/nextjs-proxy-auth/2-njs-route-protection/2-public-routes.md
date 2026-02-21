@@ -142,7 +142,7 @@ Public routes don't need protection, but they do need intentional handling. Use 
 
 ## Resources
 
-- [Middleware Matching Paths](https://nextjs.org/docs/app/building-your-application/routing/middleware#matching-paths) — How to configure middleware path matching
+- [Middleware Matching Paths](https://nextjs.org/docs/app/api-reference/file-conventions/proxy#matching-paths) — How to configure middleware path matching
 
 ---
 

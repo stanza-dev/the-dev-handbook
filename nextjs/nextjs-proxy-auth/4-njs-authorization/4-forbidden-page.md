@@ -122,7 +122,7 @@ import { headers } from 'next/headers';
 import Link from 'next/link';
 
 export default function UnauthorizedPage() {
-  const headersList = headers();
+  const headersList = await headers();
   const referer = headersList.get('referer');
   const attemptedPath = referer ? new URL(referer).pathname : null;
 

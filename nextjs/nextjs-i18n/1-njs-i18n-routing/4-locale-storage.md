@@ -22,14 +22,14 @@ Remembering a user's language preference improves UX. They shouldn't have to swi
 ### Cookie-Based (Recommended)
 
 ```typescript
-// middleware.ts
+// proxy.ts
 import { match } from '@formatjs/intl-localematcher';
 import Negotiator from 'negotiator';
 
 const locales = ['en', 'fr', 'de'];
 const defaultLocale = 'en';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // 1. Check cookie first
   const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
   if (cookieLocale && locales.includes(cookieLocale)) {
@@ -57,7 +57,8 @@ import { cookies } from 'next/headers';
 export async function POST(request: Request) {
   const { locale } = await request.json();
   
-  cookies().set('NEXT_LOCALE', locale, {
+  const cookieStore = await cookies();
+  cookieStore.set('NEXT_LOCALE', locale, {
     maxAge: 60 * 60 * 24 * 365, // 1 year
     path: '/',
   });
@@ -68,7 +69,7 @@ export async function POST(request: Request) {
 
 ## Summary
 
-Use cookies to store locale preference—they work with middleware and SSR. Check cookie first, then fall back to browser Accept-Language header. Save preferences when users explicitly switch languages.
+Use cookies to store locale preference—they work with the proxy and SSR. Check cookie first, then fall back to browser Accept-Language header. Save preferences when users explicitly switch languages.
 
 ## Resources
 

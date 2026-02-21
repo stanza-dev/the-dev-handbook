@@ -3,18 +3,18 @@ source_course: "nextjs-testing"
 source_lesson: "nextjs-testing-njs-testing-middleware"
 ---
 
-# Testing Middleware
+# Testing Proxy
 
 ## Introduction
 
-Middleware/Proxy handles authentication, redirects, and request modification. Testing it requires creating mock requests and verifying responses.
+The Proxy handles authentication, redirects, and request modification. Testing it requires creating mock requests and verifying responses.
 
 ## Key Concepts
 
-**Middleware testing**:
+**Proxy testing**:
 
 - Create mock NextRequest objects
-- Call middleware function directly
+- Call proxy function directly
 - Assert on NextResponse properties
 
 ## Deep Dive
@@ -72,7 +72,7 @@ beforeEach(() => {
 
 ## Summary
 
-Test middleware by creating mock requests with NextRequest, calling your middleware function, and asserting on the response. Mock external dependencies like JWT verification.
+Test the proxy by creating mock requests with NextRequest, calling your proxy function, and asserting on the response. Mock external dependencies like JWT verification.
 
 ## Resources
 

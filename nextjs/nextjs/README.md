@@ -2,7 +2,7 @@
 
 > Master Next.js 16 architecture. A comprehensive guide covering the App Router, Server Components, Proxy, and full-stack patterns.
 
-**Next.js 16** · 
+**Next.js 16** · Beginner → Intermediate
 
 ## Sections
 

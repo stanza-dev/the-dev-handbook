@@ -14,7 +14,7 @@
 | 🌍 | [Edge Runtime](./4-njs-edge-runtime/) | 4 lessons |
 | ☁️ | [Deployment](./5-njs-deployment/) | 4 lessons |
 
-**20 lessons** · **15 interactive challenges**
+**20 lessons** · **17 interactive challenges**
 
 ## Want the Interactive Experience?
 

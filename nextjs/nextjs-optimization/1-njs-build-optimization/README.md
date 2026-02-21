@@ -13,10 +13,11 @@ Analyzing and optimizing your production bundle.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: Bundle Analyzer Env Var
 - 🧩 Multiple Choice: Client-Only Dynamic Import
 - 🧩 Multiple Choice: Image Priority Attribute
+- 🧩 Challenge: Build Optimization Techniques
 
 → [Practice in your IDE](https://stanza.dev/courses/nextjs-optimization)

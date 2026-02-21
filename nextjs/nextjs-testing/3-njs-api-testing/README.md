@@ -8,7 +8,7 @@ Testing Route Handlers and Server Actions.
 
 1. [Testing Route Handlers](./1-route-handlers.md)
 2. [Testing Server Actions](./2-server-actions.md)
-3. [Testing Middleware](./3-testing-middleware.md)
+3. [Testing Proxy](./3-testing-middleware.md)
 4. [Testing with a Test Database](./4-testing-database.md)
 
 ## Practice Challenges

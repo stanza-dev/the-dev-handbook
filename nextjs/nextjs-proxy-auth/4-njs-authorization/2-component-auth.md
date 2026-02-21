@@ -36,7 +36,8 @@ import { verifySession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 
 export default async function AdminPage() {
-  const session = await verifySession(cookies().get('session')?.value);
+  const cookieStore = await cookies();
+  const session = await verifySession(cookieStore.get('session')?.value);
 
   // Not logged in
   if (!session) {
@@ -71,7 +72,8 @@ import { cache } from 'react';
 
 // Cache the session check per request
 export const getSession = cache(async () => {
-  const sessionId = cookies().get('session')?.value;
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get('session')?.value;
   if (!sessionId) return null;
   
   return await verifySession(sessionId);
@@ -157,7 +159,7 @@ If proxy already verified the user and set headers:
 import { headers } from 'next/headers';
 
 export default async function ProtectedPage() {
-  const headersList = headers();
+  const headersList = await headers();
   const userId = headersList.get('x-user-id');
   const userRole = headersList.get('x-user-role');
 

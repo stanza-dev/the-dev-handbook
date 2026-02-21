@@ -14,7 +14,7 @@
 | ↔️ | [RTL Support](./4-njs-rtl/) | 4 lessons |
 | 🔍 | [SEO for i18n](./5-njs-i18n-seo/) | 4 lessons |
 
-**20 lessons** · **15 interactive challenges**
+**20 lessons** · **17 interactive challenges**
 
 ## Want the Interactive Experience?
 

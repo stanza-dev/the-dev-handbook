@@ -20,12 +20,13 @@ Route Handlers are perfect for proxying external API calls.
 // app/api/weather/[city]/route.ts
 export async function GET(
   request: Request,
-  { params }: { params: { city: string } }
+  props: { params: Promise<{ city: string }> }
 ) {
+  const { city } = await props.params;
   const apiKey = process.env.WEATHER_API_KEY;
 
   const response = await fetch(
-    `https://api.openweathermap.org/data/2.5/weather?q=${params.city}&appid=${apiKey}`,
+    `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`,
     { next: { revalidate: 3600 } } // Cache for 1 hour
   );
 

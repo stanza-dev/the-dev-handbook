@@ -69,13 +69,14 @@ export async function POST(request: Request) {
 // app/api/users/[id]/route.ts
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await props.params;
   const data = await request.json();
   
   // PUT replaces the entire resource
   const user = await prisma.user.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       name: data.name,
       email: data.email,
@@ -93,13 +94,14 @@ export async function PUT(
 ```typescript
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await props.params;
   const data = await request.json();
   
   // PATCH only updates provided fields
   const user = await prisma.user.update({
-    where: { id: params.id },
+    where: { id },
     data, // Only fields in `data` are updated
   });
   
@@ -112,10 +114,11 @@ export async function PATCH(
 ```typescript
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await props.params;
   await prisma.user.delete({
-    where: { id: params.id },
+    where: { id },
   });
   
   // 204 No Content - successful deletion with no body

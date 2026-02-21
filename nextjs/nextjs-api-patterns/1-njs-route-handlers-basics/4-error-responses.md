@@ -99,10 +99,11 @@ export async function POST(request: Request) {
 ```typescript
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await props.params;
   const user = await prisma.user.findUnique({
-    where: { id: params.id },
+    where: { id },
   });
   
   if (!user) {

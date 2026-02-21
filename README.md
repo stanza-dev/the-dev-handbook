@@ -7,7 +7,7 @@
 
 Maintained by [Stanza](https://stanza.dev) — Learn coding faster right in your IDE, Slack, emails and the web.
 
-**130 courses** · **2129+ lessons** · **17 technologies**
+**132 courses** · **2173+ lessons** · **17 technologies**
 
 ## Courses
 
@@ -21,13 +21,15 @@ Maintained by [Stanza](https://stanza.dev) — Learn coding faster right in your
 - 📡 [React Data Fetching Patterns](./react/react-data-fetching/) — 18 lessons
 - 📝 [React Form Mastery](./react/react-forms/) — 19 lessons
 - ⚓ [React Hooks Deep Dive](./react/react-hooks-deep-dive/) — 19 lessons
+- ⚛️ [React Intermediate](./react/react-intermediate/) — 58 lessons
+- ⚛️ [React 19 & Patterns](./react/react-modern-patterns/) — 21 lessons
 - ⚡ [React Performance Deep Dive](./react/react-performance/) — 15 lessons
 - 🏗️ [React Project Architecture](./react/react-project-architecture/) — 13 lessons
 - ⚡ [React Server Components](./react/react-server-components/) — 13 lessons
 - 🏛️ [React State Architecture](./react/react-state-architecture/) — 16 lessons
 - 🧪 [React Testing Strategies](./react/react-testing/) — 18 lessons
 - 📘 [React TypeScript Mastery](./react/react-typescript/) — 17 lessons
-- ⚛️ [React Mastery](./react/react/) — 59 lessons
+- ⚛️ [React Basics](./react/react/) — 24 lessons
 
 ### ▲ Next.js
 

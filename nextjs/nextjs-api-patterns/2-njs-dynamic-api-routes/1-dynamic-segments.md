@@ -33,9 +33,9 @@ Dynamic routes power:
 // app/api/users/[id]/route.ts
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await props.params;
   
   const user = await prisma.user.findUnique({
     where: { id },
@@ -47,7 +47,7 @@ export async function GET(
   
   return Response.json(user);
 }
-// GET /api/users/abc123 → params.id = 'abc123'
+// GET /api/users/abc123 → id = 'abc123'
 ```
 
 ### Multiple Dynamic Segments
@@ -56,9 +56,9 @@ export async function GET(
 // app/api/posts/[postId]/comments/[commentId]/route.ts
 export async function GET(
   request: Request,
-  { params }: { params: { postId: string; commentId: string } }
+  props: { params: Promise<{ postId: string; commentId: string }> }
 ) {
-  const { postId, commentId } = params;
+  const { postId, commentId } = await props.params;
   
   const comment = await prisma.comment.findFirst({
     where: {
@@ -78,14 +78,15 @@ export async function GET(
 // app/api/files/[...path]/route.ts
 export async function GET(
   request: Request,
-  { params }: { params: { path: string[] } }
+  props: { params: Promise<{ path: string[] }> }
 ) {
-  const filePath = params.path.join('/');
+  const { path } = await props.params;
+  const filePath = path.join('/');
   
-  return Response.json({ path: filePath, segments: params.path });
+  return Response.json({ path: filePath, segments: path });
 }
 // GET /api/files/documents/2024/report.pdf
-// → params.path = ['documents', '2024', 'report.pdf']
+// → path = ['documents', '2024', 'report.pdf']
 ```
 
 ### Optional Catch-All
@@ -94,32 +95,33 @@ export async function GET(
 // app/api/docs/[[...slug]]/route.ts
 export async function GET(
   request: Request,
-  { params }: { params: { slug?: string[] } }
+  props: { params: Promise<{ slug?: string[] }> }
 ) {
-  const slug = params.slug || [];
+  const { slug } = await props.params;
+  const segments = slug || [];
   
-  if (slug.length === 0) {
+  if (segments.length === 0) {
     return Response.json({ page: 'index' });
   }
   
-  return Response.json({ page: slug.join('/') });
+  return Response.json({ page: segments.join('/') });
 }
-// GET /api/docs → params.slug = undefined
-// GET /api/docs/intro → params.slug = ['intro']
-// GET /api/docs/api/reference → params.slug = ['api', 'reference']
+// GET /api/docs → slug = undefined
+// GET /api/docs/intro → slug = ['intro']
+// GET /api/docs/api/reference → slug = ['api', 'reference']
 ```
 
 ### Type Safety
 
 ```typescript
-type RouteParams = {
-  params: {
+type RouteProps = {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
-export async function GET(request: Request, { params }: RouteParams) {
-  const { id } = params;
+export async function GET(request: Request, props: RouteProps) {
+  const { id } = await props.params;
   // id is typed as string
 }
 ```
@@ -141,7 +143,7 @@ export async function GET(request: Request, { params }: RouteParams) {
 
 ## Summary
 
-Dynamic segments capture URL values in your route handlers. Use `[name]` for single segments, `[...name]` for catch-all, and `[[...name]]` for optional catch-all. Params are always strings and accessed via the second argument to your handler function.
+Dynamic segments capture URL values in your route handlers. Use `[name]` for single segments, `[...name]` for catch-all, and `[[...name]]` for optional catch-all. Params are always strings and accessed by awaiting `props.params` from the second argument to your handler function.
 
 ## Resources
 

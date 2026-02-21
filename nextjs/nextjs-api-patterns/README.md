@@ -14,7 +14,7 @@
 | 🌐 | [External API Integration](./4-njs-external-apis/) | 3 lessons |
 | 📤 | [Streaming & Uploads](./5-njs-streaming-uploads/) | 3 lessons |
 
-**16 lessons** · **20 interactive challenges**
+**16 lessons** · **19 interactive challenges**
 
 ## Want the Interactive Experience?
 

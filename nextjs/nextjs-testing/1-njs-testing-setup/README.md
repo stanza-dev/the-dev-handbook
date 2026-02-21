@@ -13,10 +13,11 @@ Configuring Jest and React Testing Library for Next.js.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Next.js Jest Helper
 - ✏️ Fill in the Blank: Njs Challenge Test Environment
 - ✏️ Fill in the Blank: Coverage Command
+- 🧩 Challenge: Component Test Setup Order
 
 → [Practice in your IDE](https://stanza.dev/courses/nextjs-testing)

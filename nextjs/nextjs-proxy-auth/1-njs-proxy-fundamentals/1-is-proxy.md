@@ -83,7 +83,7 @@ Proxy is Next.js 16's request interceptor that runs before your routes. Place `p
 
 ## Resources
 
-- [Proxy Documentation](https://nextjs.org/docs/app/building-your-application/routing/middleware) — Official Next.js proxy guide
+- [Proxy Documentation](https://nextjs.org/docs/app/api-reference/file-conventions/proxy) — Official Next.js proxy guide
 - [Next.js Routing Overview](https://nextjs.org/docs/app/building-your-application/routing) — Understanding how routing works in Next.js
 
 ---

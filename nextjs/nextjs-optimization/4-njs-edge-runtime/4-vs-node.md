@@ -53,13 +53,14 @@ export async function GET() {
 ### Mixed Approach
 
 ```typescript
-// Edge for auth check (middleware)
+// Proxy for auth check (runs on Node.js by default in Next.js 16)
+// Edge runtime for latency-sensitive route handlers
 // Node.js for data fetching (route handlers)
 ```
 
 ## Summary
 
-Use Edge for latency-sensitive, simple operations. Use Node.js when you need database connections, file access, or Node-specific libraries. Many apps use both—Edge middleware with Node.js route handlers.
+Proxy runs on the Node.js runtime by default in Next.js 16, giving you full Node.js API access. Use Edge runtime for latency-sensitive, simple route handlers. Use Node.js when you need database connections, file access, or Node-specific libraries.
 
 ## Resources
 

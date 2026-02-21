@@ -7,20 +7,15 @@ source_lesson: "nextjs-optimization-njs-turbopack-intro"
 
 Turbopack is Next.js's new Rust-powered bundler, designed to be the successor to Webpack.
 
-## Enabling Turbopack
+## Turbopack is the Default
+
+In Next.js 16, Turbopack is the default bundler for both development and production builds. No flag is needed—it just works.
+
+To opt out and use Webpack instead:
 
 ```bash
-next dev --turbopack
-```
-
-Or in your `package.json`:
-
-```json
-{
-  "scripts": {
-    "dev": "next dev --turbopack"
-  }
-}
+next dev --webpack
+next build --webpack
 ```
 
 ## Benefits
@@ -29,14 +24,14 @@ Or in your `package.json`:
 - **Faster HMR**: Updates in milliseconds.
 - **Incremental compilation**: Only rebuilds what changed.
 
-## Current Status (Next.js 15)
+## Current Status (Next.js 16)
 
-- Stable for development (`next dev`).
-- Production builds (`next build`) still use Webpack.
+- Turbopack is the default bundler for both `next dev` and `next build`.
+- Use the `--webpack` flag to opt out if needed.
 
-## When to Use
+## When to Use Webpack
 
-Use Turbopack for development to speed up your workflow. Your production builds will still use the stable Webpack pipeline.
+Most projects should use Turbopack (the default). Use `--webpack` only if you have Webpack-specific plugins or configurations that are not yet supported by Turbopack.
 
 ## Resources
 

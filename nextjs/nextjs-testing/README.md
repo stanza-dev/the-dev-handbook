@@ -14,7 +14,7 @@
 | 🎭 | [E2E Testing](./4-njs-e2e-testing/) | 4 lessons |
 | 🎭 | [Mocking & Fixtures](./5-njs-mocking/) | 4 lessons |
 
-**20 lessons** · **15 interactive challenges**
+**20 lessons** · **16 interactive challenges**
 
 ## Want the Interactive Experience?
 

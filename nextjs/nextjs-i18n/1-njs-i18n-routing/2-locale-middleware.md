@@ -5,12 +5,12 @@ source_lesson: "nextjs-i18n-njs-locale-middleware"
 
 # Redirecting to User's Preferred Locale
 
-Use middleware to detect the user's preferred language and redirect accordingly.
+Use a proxy to detect the user's preferred language and redirect accordingly.
 
-## Middleware Implementation
+## Proxy Implementation
 
 ```typescript
-// middleware.ts
+// proxy.ts
 import { NextRequest, NextResponse } from 'next/server';
 import Negotiator from 'negotiator';
 import { match } from '@formatjs/intl-localematcher';
@@ -24,7 +24,7 @@ function getLocale(request: NextRequest): string {
   return match(languages, locales, defaultLocale);
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Check if pathname has a locale
@@ -41,12 +41,10 @@ export function middleware(request: NextRequest) {
   return NextResponse.redirect(request.nextUrl);
 }
 
-export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
-};
+export default { fetch: proxy };
 ```
 
-This detects the browser's language preference and redirects to the correct locale.
+The proxy configuration is exported as a default object with a `fetch` handler. This detects the browser's language preference and redirects to the correct locale.
 
 ---
 

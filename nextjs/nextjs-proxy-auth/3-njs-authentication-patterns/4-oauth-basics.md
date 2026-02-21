@@ -111,7 +111,8 @@ export async function GET(request: Request) {
 
   // Create session and redirect
   const sessionId = await createSession(user.id);
-  cookies().set('session', sessionId, { /* options */ });
+  const cookieStore = await cookies();
+  cookieStore.set('session', sessionId, { /* options */ });
 
   return NextResponse.redirect('/dashboard');
 }
@@ -123,14 +124,16 @@ export async function GET(request: Request) {
 // Generate state and store in cookie
 function generateState(): string {
   const state = randomUUID();
-  cookies().set('oauth_state', state, { httpOnly: true, maxAge: 600 });
+  const cookieStore = await cookies();
+  cookieStore.set('oauth_state', state, { httpOnly: true, maxAge: 600 });
   return state;
 }
 
 // Verify state matches
 function verifyState(state: string | null): boolean {
-  const stored = cookies().get('oauth_state')?.value;
-  cookies().delete('oauth_state');
+  const cookieStore = await cookies();
+  const stored = cookieStore.get('oauth_state')?.value;
+  cookieStore.delete('oauth_state');
   return state === stored;
 }
 ```

@@ -13,10 +13,11 @@ Supporting right-to-left languages.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: Njs Challenge Dir Attribute
 - 🧩 Multiple Choice: Njs Challenge Logical Margin
 - ✏️ Fill in the Blank: Bidirectional Isolation
+- 🔗 Matching: CSS Logical vs Physical Properties
 
 → [Practice in your IDE](https://stanza.dev/courses/nextjs-i18n)

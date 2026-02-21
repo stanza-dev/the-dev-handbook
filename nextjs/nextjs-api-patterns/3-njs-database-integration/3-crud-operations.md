@@ -33,10 +33,11 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await props.params;
   const post = await prisma.post.findUnique({
-    where: { id: parseInt(params.id) },
+    where: { id: parseInt(id) },
   });
 
   if (!post) {
@@ -48,11 +49,12 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await props.params;
   const data = await request.json();
   const post = await prisma.post.update({
-    where: { id: parseInt(params.id) },
+    where: { id: parseInt(id) },
     data,
   });
   return Response.json(post);
@@ -60,10 +62,11 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await props.params;
   await prisma.post.delete({
-    where: { id: parseInt(params.id) },
+    where: { id: parseInt(id) },
   });
   return new Response(null, { status: 204 });
 }

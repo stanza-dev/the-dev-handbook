@@ -107,7 +107,7 @@ Matchers are your first line of defense against proxy performance issues. Use th
 
 ## Resources
 
-- [Middleware Matcher](https://nextjs.org/docs/app/building-your-application/routing/middleware#matcher) — Official matcher configuration guide
+- [Middleware Matcher](https://nextjs.org/docs/app/api-reference/file-conventions/proxy#matcher) — Official matcher configuration guide
 
 ---
 

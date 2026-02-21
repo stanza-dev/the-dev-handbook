@@ -79,12 +79,13 @@ export async function POST(request: Request) {
     path: '/',
   };
 
-  cookies().set('access_token', accessToken, {
+  const cookieStore = await cookies();
+  cookieStore.set('access_token', accessToken, {
     ...cookieOptions,
     maxAge: 60 * 15,  // 15 minutes
   });
 
-  cookies().set('refresh_token', refreshToken, {
+  cookieStore.set('refresh_token', refreshToken, {
     ...cookieOptions,
     maxAge: 60 * 60 * 24 * 7,  // 7 days
   });
@@ -101,7 +102,8 @@ import { jwtVerify } from 'jose';
 import { createTokens } from '@/lib/tokens';
 
 export async function POST(request: Request) {
-  const refreshToken = cookies().get('refresh_token')?.value;
+  const cookieStore = await cookies();
+  const refreshToken = cookieStore.get('refresh_token')?.value;
 
   if (!refreshToken) {
     return Response.json({ error: 'No refresh token' }, { status: 401 });
@@ -132,8 +134,9 @@ export async function POST(request: Request) {
     });
 
     // Set new cookies
-    cookies().set('access_token', accessToken, { /* ... */ });
-    cookies().set('refresh_token', newRefreshToken, { /* ... */ });
+    const updatedCookieStore = await cookies();
+    updatedCookieStore.set('access_token', accessToken, { /* ... */ });
+    updatedCookieStore.set('refresh_token', newRefreshToken, { /* ... */ });
 
     return Response.json({ success: true });
   } catch {
