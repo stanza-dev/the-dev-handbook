@@ -2,19 +2,20 @@
 
 > Master the TypeScript compiler, configuration, and ecosystem tools for building scalable applications.
 
-**TypeScript 5.x** · Intermediate → Advanced
+**TypeScript 5.9** · Intermediate → Advanced
 
 ## Sections
 
 | | Section | Lessons |
 |---|---------|---------|
-| ⚙️ | [Configuring TypeScript](./1-tsconfig-mastery/) | 1 lesson |
-| 📦 | [Modules & Resolution](./2-modules-resolution/) | 1 lesson |
-| 📝 | [Declarations & Publishing](./3-declarations-publishing/) | 1 lesson |
-| 🏗️ | [Monorepos & References](./4-monorepos-references/) | 1 lesson |
-| 📜 | [JSDoc & Migration](./5-jsdoc-migration/) | 1 lesson |
+| ⚙️ | [Configuring TypeScript](./1-tsconfig-mastery/) | 3 lessons |
+| 📦 | [Modules & Resolution](./2-modules-resolution/) | 3 lessons |
+| 📝 | [Declarations & Publishing](./3-declarations-publishing/) | 3 lessons |
+| 🏗️ | [Monorepos & References](./4-monorepos-references/) | 3 lessons |
+| 📜 | [JSDoc & Migration](./5-jsdoc-migration/) | 3 lessons |
+| ⚡ | [Performance & Build Optimization](./6-performance-build/) | 3 lessons |
 
-**5 lessons** · **10 interactive challenges**
+**18 lessons** · **18 interactive challenges**
 
 ## Want the Interactive Experience?
 

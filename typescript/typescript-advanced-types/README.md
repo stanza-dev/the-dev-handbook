@@ -2,20 +2,20 @@
 
 > Deep dive into the Turing-complete type system of TypeScript. Master conditional types, mapped types, and type inference.
 
-**TypeScript 5.x** · Advanced
+**TypeScript 5.9** · Advanced
 
 ## Sections
 
 | | Section | Lessons |
 |---|---------|---------|
-| 🔧 | [Type Manipulation](./1-type-manipulation/) | 1 lesson |
-| 🔀 | [Conditional Types](./2-conditional-types/) | 1 lesson |
-| 🛠️ | [Utility Types Deep Dive](./3-utility-types-deep-dive/) | 1 lesson |
-| 🗺️ | [Mapped Types](./4-mapped-types/) | 1 lesson |
-| 📝 | [Template Literal Types](./5-template-literal-types/) | 1 lesson |
-| ♾️ | [Recursion & Variadic Tuples](./6-recursion-tuples/) | 1 lesson |
+| 🔧 | [Type Manipulation](./1-type-manipulation/) | 3 lessons |
+| 🔀 | [Conditional Types](./2-conditional-types/) | 3 lessons |
+| 🛠️ | [Utility Types Deep Dive](./3-utility-types-deep-dive/) | 3 lessons |
+| 🗺️ | [Mapped Types](./4-mapped-types/) | 3 lessons |
+| 📝 | [Template Literal Types](./5-template-literal-types/) | 3 lessons |
+| ♾️ | [Recursion & Variadic Tuples](./6-recursion-tuples/) | 3 lessons |
 
-**6 lessons** · **12 interactive challenges**
+**18 lessons** · **18 interactive challenges**
 
 ## Want the Interactive Experience?
 

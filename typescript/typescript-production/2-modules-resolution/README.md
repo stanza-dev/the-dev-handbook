@@ -6,13 +6,16 @@ How TypeScript finds your files and handles imports.
 
 ## Lessons
 
-1. [Module Resolution](./1-resolution-strategies.md)
+1. [Module Resolution Strategies](./1-resolution-strategies.md)
+2. [ESM & CJS Interop](./2-cjs-interop.md)
+3. [Deferred Imports (import defer)](./3-import-defer.md)
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Path Mapping Syntax
-- 🧩 Multiple Choice: ESM in Node
+- ✏️ Fill in the Blank: Path Mapping Syntax
+- 🔗 Matching: Module Resolution Matching
+- 🧩 Multiple Choice: ESM in Node.js
 
 → [Practice in your IDE](https://stanza.dev/courses/typescript-production)

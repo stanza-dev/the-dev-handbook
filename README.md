@@ -7,7 +7,7 @@
 
 Maintained by [Stanza](https://stanza.dev) — Learn coding faster right in your IDE, Slack, emails and the web.
 
-**132 courses** · **2207+ lessons** · **17 technologies**
+**132 courses** · **2255+ lessons** · **17 technologies**
 
 ## Courses
 
@@ -42,10 +42,10 @@ Maintained by [Stanza](https://stanza.dev) — Learn coding faster right in your
 
 ### 🔷 TypeScript
 
-- 🧙‍♂️ [TypeScript Type System Mastery](./typescript/typescript-advanced-types/) — 6 lessons
-- 🏛️ [TypeScript Architecture & Patterns](./typescript/typescript-architecture/) — 6 lessons
-- 🏭 [TypeScript in Production](./typescript/typescript-production/) — 5 lessons
-- 🔷 [TypeScript Essentials](./typescript/typescript/) — 10 lessons
+- 🧙‍♂️ [TypeScript Type System Mastery](./typescript/typescript-advanced-types/) — 18 lessons
+- 🏛️ [TypeScript Architecture & Patterns](./typescript/typescript-architecture/) — 18 lessons
+- 🏭 [TypeScript in Production](./typescript/typescript-production/) — 18 lessons
+- 🔷 [TypeScript Essentials](./typescript/typescript/) — 21 lessons
 
 ### 🟨 JavaScript
 
