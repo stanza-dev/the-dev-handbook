@@ -29,6 +29,8 @@ Sparse fieldsets are essential for:
 
 ### Basic Implementation
 
+Parse the `fields` query parameter and use it to control which attributes appear in the response. Only fields in the `all_fields` whitelist are allowed:
+
 ```python
 def api_articles(request):
     # GET /api/articles/?fields=id,title,author
@@ -56,7 +58,11 @@ def api_articles(request):
     return JsonResponse({'data': data, 'fields': fields})
 ```
 
+When no `fields` parameter is provided, all available fields are returned. The whitelist prevents clients from requesting internal or sensitive attributes.
+
 ### With Serializer
+
+Integrating sparse fieldsets into a serializer class makes the pattern reusable and handles type formatting (dates, related objects) automatically:
 
 ```python
 class ArticleSerializer:
@@ -91,7 +97,11 @@ def api_articles(request):
     return JsonResponse({'data': ArticleSerializer(articles, fields=fields).data})
 ```
 
+The `serialize_one()` method checks `isoformat()` for dates and `username` for user objects, handling common types without explicit per-field logic.
+
 ### Optimizing Queries
+
+For maximum efficiency, use the requested fields to limit which columns the database fetches and which relations to join:
 
 ```python
 def api_articles(request):
@@ -125,6 +135,8 @@ def api_articles(request):
     })
 ```
 
+The `field_mapping` dict translates client-facing field names to database lookups. When `author` is requested, the code adds `select_related('author')` and fetches `author__username` via `values()`.
+
 ## Common Pitfalls
 
 1. **Not validating fields**: Allowing `?fields=password` would be a security issue.
@@ -143,6 +155,23 @@ def api_articles(request):
 ## Summary
 
 Sparse fieldsets reduce over-fetching by letting clients specify needed fields. Implement via query parameters, validate against a whitelist, and optimize database queries based on requested fields. This improves performance and gives clients flexibility.
+
+## Code Examples
+
+**Letting clients request only specific fields to reduce over-fetching**
+
+```python
+def api_articles(request):
+    # GET /api/articles/?fields=id,title,author
+    requested = request.GET.get('fields', '').split(',')
+    requested = [f.strip() for f in requested if f.strip()]
+    all_fields = ['id', 'title', 'body', 'author', 'created_at', 'views']
+    fields = [f for f in requested if f in all_fields] or all_fields
+    articles = Article.objects.all()[:20]
+    data = [{f: getattr(a, f, None) for f in fields} for a in articles]
+    return JsonResponse({'data': data, 'fields': fields})
+```
+
 
 ## Resources
 

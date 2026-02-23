@@ -15,6 +15,10 @@ Lazy loading defers loading of non-critical resources until they're needed, impr
 
 **Intersection Observer**: Browser API for visibility detection.
 
+## Real World Context
+
+This topic directly impacts production application performance. Teams that master these techniques reduce page load times, lower infrastructure costs, and deliver better user experiences.
+
 ## Deep Dive
 
 ### Native Lazy Loading
@@ -67,6 +71,11 @@ def generate_placeholder(image_path, size=(10, 10)):
      class="lazy-load">
 ```
 
+## Common Pitfalls
+
+1. **Premature optimization** — Always profile before optimizing. Fix the biggest bottleneck first rather than guessing.
+2. **Ignoring trade-offs** — Every optimization has costs. Caching adds complexity, indexes slow writes, and async adds cognitive overhead.
+
 ## Best Practices
 
 1. **Use native loading="lazy"**: Best browser support.
@@ -76,6 +85,29 @@ def generate_placeholder(image_path, size=(10, 10)):
 ## Summary
 
 Use native lazy loading for images and iframes. Always set dimensions to prevent layout shift. Consider placeholder images for better perceived performance.
+
+## Code Examples
+
+**Native lazy loading for images with width and height attributes**
+
+```python
+# templatetags/image_tags.py
+from django import template
+
+register = template.Library()
+
+@register.simple_tag
+def lazy_image(image, alt='', css_class=''):
+    return f'''
+    <img src="{image.url}" 
+         loading="lazy"
+         alt="{alt}"
+         class="{css_class}"
+         width="{image.width}"
+         height="{image.height}">
+    '''
+```
+
 
 ## Resources
 

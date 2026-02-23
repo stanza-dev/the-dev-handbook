@@ -15,6 +15,10 @@ Choose the right session backend based on your performance and reliability needs
 
 **Cache Backend**: Fast, stores in Redis/Memcached.
 
+## Real World Context
+
+A high-traffic news site with 10,000 concurrent users switched from database sessions to Redis-backed cache sessions and reduced average response time by 40ms per request. The `cached_db` backend is a good middle ground: reads hit Redis, but writes also persist to the database so sessions survive a Redis restart.
+
 ## Deep Dive
 
 ### Backend Comparison
@@ -48,6 +52,12 @@ CACHES = {
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
 ```
+
+## Common Pitfalls
+
+1. **Using `cache` backend without persistent cache**: If Redis or Memcached restarts, all sessions are lost and every user is logged out. Use `cached_db` if you cannot guarantee cache persistence.
+2. **Using `signed_cookies` for sensitive data**: Cookie sessions are stored client-side. They are signed (tamper-proof) but not encrypted -- users can decode and read the session contents.
+3. **Forgetting `clearsessions` management command**: Database-backed sessions accumulate expired rows. Without a periodic cron job running `manage.py clearsessions`, the session table grows indefinitely.
 
 ## Best Practices
 

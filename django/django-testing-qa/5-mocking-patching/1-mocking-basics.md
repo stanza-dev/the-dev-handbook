@@ -5,7 +5,25 @@ source_lesson: "django-testing-qa-mocking-basics"
 
 # Introduction to Mocking
 
-Mocking replaces real objects with fake ones to isolate tests from external dependencies.
+## Introduction
+
+Mocking replaces real objects with controlled fakes to isolate the code under test from external dependencies. Without mocking, tests that depend on APIs, email servers, or file systems become slow, flaky, and hard to control. Python's unittest.mock library provides the tools to mock effectively.
+
+## Key Concepts
+
+**Mock**: A fake object that records how it was called and can return configured values.
+
+**@patch**: A decorator that replaces a target with a Mock for the duration of a test.
+
+**side_effect**: Controls what happens when a mock is called -- raise an exception, return different values, or call a function.
+
+**return_value**: Sets a fixed value that the mock returns when called.
+
+## Real World Context
+
+Every production Django application interacts with external services: payment processors, email providers, third-party APIs, and file storage. Mocking these dependencies means your tests run in milliseconds instead of seconds, work without network access, and produce consistent results. Mocking is essential for testing error handling paths that are impossible to trigger with real services.
+
+## Deep Dive
 
 ## Why Mock?
 
@@ -160,6 +178,50 @@ class MockObjectTests(TestCase):
         self.assertEqual(len(mock_qs), 5)
         self.assertEqual(list(mock_qs), [1, 2, 3, 4, 5])
 ```
+
+## Common Pitfalls
+
+1. **Patching where the function is defined instead of where it is used**: Always patch the name in the importing module, not the source module.
+2. **Over-mocking**: Mocking too many things makes tests pass even when the real code is broken. Mock at the boundary, not everywhere.
+3. **Not verifying mock calls**: Creating a mock without asserting how it was called gives false confidence.
+
+## Best Practices
+
+1. **Mock at the boundary**: Replace external services, not internal Django logic.
+2. **Use assert_called_with()**: Always verify mocks were called with expected arguments.
+3. **Prefer freezegun for time**: Use `@freeze_time` instead of manually mocking datetime.
+
+## Summary
+
+- Mocking isolates tests from slow, unreliable external dependencies
+- Use @patch to replace functions and methods with controllable fakes
+- Configure mocks with return_value and side_effect
+- Always patch where the name is looked up, not where it is defined
+- Verify mock calls with assert_called_with() and assert_called_once()
+
+## Code Examples
+
+**Using @patch to mock send_mail and verify it was called with expected arguments when an article is published.**
+
+```python
+from unittest.mock import patch, Mock
+from django.test import TestCase
+
+
+class EmailNotificationTests(TestCase):
+    @patch('blog.views.send_mail')
+    def test_publish_sends_notification(self, mock_send):
+        article = Article.objects.create(
+            title='Test', author=self.user
+        )
+        article.publish()
+
+        mock_send.assert_called_once()
+        call_args = mock_send.call_args
+        self.assertIn('Test', call_args[1]['subject'])
+
+```
+
 
 ## Resources
 

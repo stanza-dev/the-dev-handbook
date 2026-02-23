@@ -14,7 +14,7 @@ Control user sessions for security and user experience
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- ✏️ Fill in the Blank: Session Cookie Security
+- 🧩 Challenge: Session Cookie Security
 - 🧩 Multiple Choice: Session Flush
 - 🔗 Matching: Session Backend Characteristics
 

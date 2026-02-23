@@ -19,6 +19,12 @@ Clickjacking is just one form of UI redress attack. Understanding the variations
 
 **Overlay Attacks**: Covering legitimate UI with fake elements.
 
+
+
+## Real World Context
+
+In 2008, researchers demonstrated a clickjacking attack that could enable a user's webcam through Adobe Flash by tricking them into clicking through a series of invisible dialogs. More recently, multi-step clickjacking attacks have been used to change OAuth permissions and authorize malicious applications.
+
 ## Deep Dive
 
 ### Attack Variations
@@ -84,6 +90,13 @@ if (window.self !== window.top) {
 }
 </script>
 ```
+
+
+
+## Common Pitfalls
+
+1. **Relying solely on HTTP headers** — Headers prevent framing but not other UI redress techniques like overlay attacks within the same page; add confirmation dialogs for sensitive actions.
+2. **Trusting JavaScript frame-busting code** — Attackers can neutralize frame-busting scripts using iframe sandbox attributes or the onbeforeunload event; always use HTTP headers as the primary defense.
 
 ## Best Practices
 

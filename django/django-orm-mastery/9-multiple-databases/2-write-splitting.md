@@ -66,7 +66,11 @@ user = User.objects.using('default').get(pk=user_id)  # Force primary
 from django.db import router
 
 class ForcePrimary:
-    """Context manager to force reads from primary."""
+    """Context manager to force reads from primary.
+    
+    WARNING: router.routers is an undocumented internal attribute
+    that may change across Django versions. Use with caution.
+    """
     
     def __enter__(self):
         self._original = router.routers
@@ -168,7 +172,27 @@ DATABASES = {
 }
 
 DATABASE_ROUTERS = ['myapp.routers.ReadWriteRouter']
+```\n\n## Common Pitfalls\n\n1. **Not testing edge cases** — Always test read/write splitting with empty querysets, NULL values, and boundary conditions.\n2. **Premature optimization** — Profile queries with `.explain()` before applying complex optimizations.\n3. **Ignoring database-specific behavior** — Some read/write splitting features behave differently across PostgreSQL, MySQL, and SQLite.\n\n## Best Practices\n\n1. **Keep queries readable** — Use meaningful variable names and chain methods logically.\n2. **Test with realistic data** — Create fixtures that match production data patterns for accurate performance testing.\n3. **Document complex queries** — Add comments explaining the business logic behind non-obvious query patterns.\n\n## Summary\n\n- Read/Write Splitting is a core Django ORM feature for building efficient database queries.\n- Always consider query performance and use `.explain()` to verify query plans.\n- Test edge cases including empty results, NULL values, and large datasets.\n- Refer to the Django documentation for database-specific behavior and limitations.
+
+## Code Examples
+
+**Database router directing reads to replica and writes to primary**
+
+```python
+class PrimaryReplicaRouter:
+    def db_for_read(self, model, **hints):
+        return 'replica'
+
+    def db_for_write(self, model, **hints):
+        return 'default'
+
+    def allow_relation(self, obj1, obj2, **hints):
+        return True
+
+    def allow_migrate(self, db, app_label, **hints):
+        return db == 'default'
 ```
+
 
 ## Resources
 

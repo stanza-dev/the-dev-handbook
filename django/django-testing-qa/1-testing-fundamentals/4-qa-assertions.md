@@ -77,6 +77,16 @@ class ExceptionTests(TestCase):
         self.assertIn('Bad', str(cm.exception))
 ```
 
+## Real World Context
+
+Choosing the right assertion makes debugging failed tests dramatically easier. When `assertTrue(a == b)` fails, you see `AssertionError: False is not true`. When `assertEqual(a, b)` fails, you see the actual values of a and b. Django's custom assertions like assertContains and assertRedirects save dozens of lines of boilerplate in every test suite.
+
+## Common Pitfalls
+
+1. **Using assertTrue for equality checks**: `assertTrue(x == 5)` gives unhelpful error messages. Use `assertEqual(x, 5)` instead.
+2. **Ignoring assertion messages**: You can pass a `msg` parameter to any assertion for context: `self.assertEqual(x, 5, 'Score should be 5 after bonus')`.
+3. **Not testing exception messages**: Use `assertRaises` as a context manager to also verify the exception message content.
+
 ## Best Practices
 
 1. **Use specific assertions**: `assertEqual` over `assertTrue(a == b)`.

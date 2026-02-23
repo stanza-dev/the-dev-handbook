@@ -164,6 +164,46 @@ urlpatterns = [
 /get_user?username=johndoe
 ```
 
+## Common Pitfalls
+
+- **Forgetting `app_name` when using namespaces**: Without `app_name` in your app's `urls.py`, Django raises a `NoReverseMatch` error when you use `{% url 'polls:detail' %}`.
+- **Using `reverse()` at class level**: Use `reverse_lazy()` instead of `reverse()` in class attributes (like `success_url`) because URLs are not loaded when the class is defined.
+- **Hardcoding URLs in templates**: Always use `{% url %}` tags instead of hardcoding paths like `/polls/5/`. Hardcoded URLs break when URL patterns change.
+
+## Best Practices
+
+- **Always name your URL patterns**: Use `name='detail'` in every `path()` call so you can reference URLs by name instead of path.
+- **Use app namespaces**: Set `app_name` in each app's `urls.py` to prevent name collisions between apps.
+- **Keep URLs RESTful and readable**: Use patterns like `/articles/2024/my-post/` instead of `/get_article?id=123`.
+
+## Summary
+
+- Name every URL pattern with `name='...'` for reverse lookups
+- Use `app_name` in app-level `urls.py` to create **namespaces** (e.g., `polls:detail`)
+- Use `reverse()` in views and `{% url %}` in templates to generate URLs dynamically
+- `include()` organizes URLs by delegating to app-level `urls.py` files
+- For complex patterns, use `re_path()` with regular expressions or create custom path converters
+
+## Code Examples
+
+**Namespaced URL patterns with app_name for clean reverse URL lookups**
+
+```python
+# polls/urls.py
+from django.urls import path
+from . import views
+
+app_name = 'polls'  # Namespace
+
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('<int:pk>/', views.detail, name='detail'),
+]
+
+# Usage: reverse('polls:detail', args=[5]) -> '/polls/5/'
+```
+
+
 ## Resources
 
 - [URL Dispatcher](https://docs.djangoproject.com/en/6.0/topics/http/urls/) — Official guide to Django's URL dispatcher

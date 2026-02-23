@@ -15,6 +15,10 @@ Custom user managers handle the creation of user instances. They're essential wh
 
 **normalize_email()**: Lowercases the domain part of email.
 
+## Real World Context
+
+In a multi-tenant platform where users sign up with their work email, the custom user manager is where you enforce business rules like requiring a company domain, normalizing emails, and auto-assigning the user to the correct organization based on their email domain.
+
 ## Deep Dive
 
 ### Complete Manager Implementation
@@ -67,6 +71,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name']  # For createsuperuser
 ```
+
+## Common Pitfalls
+
+1. **Storing raw passwords instead of using `set_password()`**: If you assign `user.password = raw_password`, the password is stored in plain text. Always use `set_password()`, which applies the configured hasher.
+2. **Forgetting `normalize_email()`**: Email addresses are case-sensitive in the local part (before @) per RFC 5321, but Django's `normalize_email()` lowercases the domain part to prevent duplicate accounts.
+3. **Not overriding `create_superuser()`**: The `createsuperuser` management command calls `create_superuser()`. If it falls back to `create_user()` without setting `is_staff=True` and `is_superuser=True`, your admin account will not have admin access.
 
 ## Best Practices
 

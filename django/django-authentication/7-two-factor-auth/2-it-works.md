@@ -15,6 +15,10 @@ Understand the algorithm behind authenticator apps like Google Authenticator.
 
 **Shared Secret**: Key shared between app and server.
 
+## Real World Context
+
+When your compliance team requires MFA for admin access, TOTP is the most practical choice because it works offline. Unlike SMS codes (which are vulnerable to SIM-swapping) or email codes (which are delayed), TOTP codes from Google Authenticator or Authy are generated locally and change every 30 seconds.
+
 ## Deep Dive
 
 ### TOTP Algorithm
@@ -56,6 +60,12 @@ uri = totp.provisioning_uri(
 # Generate QR code
 qr = qrcode.make(uri)
 ```
+
+## Common Pitfalls
+
+1. **Not allowing clock drift**: Server and client clocks may differ by a few seconds. If you only accept the current 30-second window, legitimate users get rejected. Accept codes from the previous and next window too (`valid_window=1` in pyotp).
+2. **Storing the TOTP secret in plain text**: The TOTP secret is equivalent to a permanent password. Encrypt it at rest in the database using Django's `Fernet` or a field-level encryption library.
+3. **Not enforcing code reuse prevention**: Without tracking the last used code, an attacker who intercepts a code has 30 seconds (or longer with clock drift) to replay it. Store and check the last successful timestamp.
 
 ## Best Practices
 

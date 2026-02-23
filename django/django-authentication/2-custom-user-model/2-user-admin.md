@@ -5,6 +5,26 @@ source_lesson: "django-authentication-user-admin"
 
 # Custom User Admin
 
+## Introduction
+
+When you customize the User model, the Django admin interface needs to be updated too. Without a custom admin class, your extra fields are invisible in the admin and the user creation form may break.
+
+## Key Concepts
+
+**UserAdmin**: Django's built-in admin class for the User model, providing login-safe fieldsets and password handling.
+
+**fieldsets**: Controls which fields appear on the user detail page and in which groups.
+
+**add_fieldsets**: Controls which fields appear on the user creation form.
+
+**StackedInline**: Displays a related model (like Profile) inline on the user admin page.
+
+## Real World Context
+
+Your customer support team uses Django admin to look up users, reset passwords, and toggle account status. A well-configured UserAdmin shows the phone number, subscription tier, and last login date at a glance, so support staff can resolve issues without running database queries.
+
+## Deep Dive
+
 When you customize the User model, you should also customize its admin interface.
 
 ## Admin for AbstractUser Extension
@@ -150,6 +170,26 @@ class UserAdmin(BaseUserAdmin):
                 form.save(request=request)
         self.message_user(request, f'Password reset sent to {queryset.count()} users.')
 ```
+
+## Common Pitfalls
+
+1. **Registering a custom User model with the default `ModelAdmin`**: The default `ModelAdmin` displays the raw hashed password field and does not use Django's password change form. Always extend `UserAdmin`.
+2. **Overriding `fieldsets` completely instead of extending**: If you replace `UserAdmin.fieldsets` instead of appending to it, you lose the password change section and permission management fields.
+3. **Not setting `list_select_related` for Profile inlines**: Without `list_select_related`, the admin fires a separate query for each user's profile in the list view, causing N+1 performance issues.
+
+## Best Practices
+
+1. **Extend `UserAdmin.fieldsets` with `+`**: Use `fieldsets = UserAdmin.fieldsets + (('Custom', {'fields': (...)}),)` to keep all built-in fields.
+2. **Add `list_filter` and `search_fields`**: Make it easy for staff to find users by status, group, or email.
+3. **Use custom admin actions**: Add batch operations like 'Activate users' or 'Send password reset' for common support tasks.
+
+## Summary
+
+- Always extend `UserAdmin`, not `ModelAdmin`, for custom user models.
+- Append to `fieldsets` and `add_fieldsets` instead of replacing them.
+- Use `StackedInline` or `TabularInline` for Profile models.
+- Add `list_display`, `search_fields`, and `list_filter` for efficient user management.
+- Custom admin actions streamline common support workflows.
 
 ## Resources
 

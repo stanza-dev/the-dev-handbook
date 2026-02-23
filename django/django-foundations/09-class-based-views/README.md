@@ -8,12 +8,14 @@ Use Django's powerful generic views for common patterns
 
 1. [Introduction to Class-Based Views](./1-cbv-introduction.md)
 2. [CRUD with Generic Views](./2-cbv-crud.md)
+3. [View Mixins and Composition](./3-cbv-mixins.md)
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Class-Based View URLs
+- 🧩 Challenge: Class-Based View Request Flow
 - 🧩 Multiple Choice: Cbv List Context
+- 🔗 Matching: Generic View Types
 
 → [Practice in your IDE](https://stanza.dev/courses/django-foundations)

@@ -15,7 +15,13 @@ Async Django requires careful consideration of when async provides benefits and 
 
 **CPU Bound**: Operations using processor time.
 
+## Real World Context
+
+This topic directly impacts production application performance. Teams that master these techniques reduce page load times, lower infrastructure costs, and deliver better user experiences.
+
 ## Deep Dive
+
+> **Important**: While Django's ORM exposes async methods (prefixed with `a`, e.g., `aget()`, `afilter()`), the underlying database drivers (psycopg2, mysqlclient) may still execute synchronously under the hood. Django wraps synchronous database calls with `sync_to_async()` internally. True async database access requires an async-native driver like psycopg3. Always measure actual concurrency gains in your specific setup.
 
 ### When to Use Async
 
@@ -64,6 +70,11 @@ class AsyncViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 ```
 
+## Common Pitfalls
+
+1. **Premature optimization** — Always profile before optimizing. Fix the biggest bottleneck first rather than guessing.
+2. **Ignoring trade-offs** — Every optimization has costs. Caching adds complexity, indexes slow writes, and async adds cognitive overhead.
+
 ## Best Practices
 
 1. **Use async for multiple I/O operations**: Concurrent external calls.
@@ -73,6 +84,28 @@ class AsyncViewTests(TestCase):
 ## Summary
 
 Async shines with concurrent I/O operations. Don't use async for single database queries. Use httpx instead of requests in async code. Test with AsyncClient.
+
+## Code Examples
+
+**Using asyncio.gather to run multiple I/O operations concurrently**
+
+```python
+# GOOD: Multiple I/O operations
+async def dashboard(request):
+    # Run concurrently - total time = max(time1, time2, time3)
+    user_data, notifications, stats = await asyncio.gather(
+        fetch_user_data(request.user),
+        fetch_notifications(request.user),
+        fetch_stats(request.user),
+    )
+    return render(request, 'dashboard.html', {...})
+
+# BAD: Single database query (no benefit)
+async def article_detail(request, pk):
+    article = await Article.objects.aget(pk=pk)
+    return render(request, 'detail.html', {'article': article})
+```
+
 
 ## Resources
 

@@ -15,7 +15,7 @@ Optimize database queries for better performance
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: N+1 Query Problem
+- 🔗 Matching: QuerySet Optimization Methods
 - ✏️ Fill in the Blank: Exists vs Count
 - 🧩 Challenge: Bulk Operations Order
 

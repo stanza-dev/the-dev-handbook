@@ -17,6 +17,12 @@ Brute force attacks try many passwords until one works. Without rate limiting, a
 
 **Progressive Delays**: Increasing wait time after each failure.
 
+
+
+## Real World Context
+
+Credential stuffing attacks use billions of leaked username/password pairs from previous breaches to try logging into other services. Without rate limiting, an attacker can test thousands of credentials per minute against your login endpoint using automated tools.
+
 ## Deep Dive
 
 ### Using django-axes
@@ -77,6 +83,13 @@ def login_with_delay(request):
     
     # ... authenticate ...
 ```
+
+
+
+## Common Pitfalls
+
+1. **Locking only by IP address** — Attackers use rotating proxies and botnets; lock by both IP and username to catch targeted attacks.
+2. **Setting lockout duration too short** — A 1-minute lockout barely slows automated tools; 15-30 minutes is more effective while still being reasonable for legitimate users.
 
 ## Best Practices
 

@@ -19,6 +19,10 @@ In production, Django doesn't serve static files efficiently. You need a proper 
 
 **CDN**: Content Delivery Network for global distribution.
 
+## Real World Context
+
+This topic directly impacts production application performance. Teams that master these techniques reduce page load times, lower infrastructure costs, and deliver better user experiences.
+
 ## Deep Dive
 
 ### Configuring Static Files
@@ -44,7 +48,7 @@ MIDDLEWARE = [
     ...
 ]
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Django 6 STORAGES dict (replaces STATICFILES_STORAGE)\nSTORAGES = {\n    'staticfiles': {\n        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',\n    },\n}
 ```
 
 ### Media Files with Cloud Storage
@@ -53,7 +57,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # pip install django-storages boto3
 
 # settings/production.py
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# Django 6 STORAGES dict (replaces DEFAULT_FILE_STORAGE)\nSTORAGES = {\n    'default': {\n        'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',\n    },\n    'staticfiles': {\n        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',\n    },\n}
 AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
 AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
 AWS_STORAGE_BUCKET_NAME = 'my-media-bucket'
@@ -71,6 +75,11 @@ STATIC_URL = 'https://cdn.example.com/static/'
 AWS_S3_CUSTOM_DOMAIN = 'd1234567890.cloudfront.net'
 ```
 
+## Common Pitfalls
+
+1. **Premature optimization** — Always profile before optimizing. Fix the biggest bottleneck first rather than guessing.
+2. **Ignoring trade-offs** — Every optimization has costs. Caching adds complexity, indexes slow writes, and async adds cognitive overhead.
+
 ## Best Practices
 
 1. **Use WhiteNoise for static**: Simple and efficient.
@@ -81,6 +90,23 @@ AWS_S3_CUSTOM_DOMAIN = 'd1234567890.cloudfront.net'
 ## Summary
 
 Use WhiteNoise for static files, cloud storage (S3) for media files, and consider a CDN for global distribution. Always run collectstatic before deployment.
+
+## Code Examples
+
+**WhiteNoise and cloud storage configuration for static and media files**
+
+```python
+# pip install django-storages boto3
+
+# settings/production.py
+# Django 6 STORAGES dict (replaces DEFAULT_FILE_STORAGE)\nSTORAGES = {\n    'default': {\n        'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',\n    },\n    'staticfiles': {\n        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',\n    },\n}
+AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+AWS_STORAGE_BUCKET_NAME = 'my-media-bucket'
+AWS_S3_REGION_NAME = 'us-east-1'
+AWS_DEFAULT_ACL = 'public-read'
+```
+
 
 ## Resources
 

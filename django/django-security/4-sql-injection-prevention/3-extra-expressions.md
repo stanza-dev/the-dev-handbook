@@ -11,18 +11,24 @@ Django's extra(), RawSQL, and annotations can introduce SQL injection if misused
 
 ## Key Concepts
 
-**extra()**: Deprecated method for adding SQL fragments to queries.
+**extra()**: Legacy method for adding SQL fragments to queries (discouraged in favor of expressions).
 
 **RawSQL()**: Expression for raw SQL in annotations/filters.
 
 **F() and expressions**: Safe ORM alternatives to raw SQL.
+
+
+
+## Real World Context
+
+Django's expression API has grown significantly since extra() was introduced. Teams maintaining legacy codebases often have extra() calls that were safe when written but become injection vectors when someone modifies them to accept user input. Migrating to F(), Case(), and database functions eliminates this risk.
 
 ## Deep Dive
 
 ### Avoid extra() - Use Expressions
 
 ```python
-# DANGEROUS - extra() is deprecated and risky
+# DANGEROUS - extra() is a legacy API and risky
 Article.objects.extra(where=[f"title LIKE '%{search}%'"])
 
 # SAFE - use ORM filters
@@ -73,15 +79,22 @@ Article.objects.annotate(
 )
 ```
 
+
+
+## Common Pitfalls
+
+1. **Modifying old extra() calls to accept user input** — Legacy extra() calls that used hardcoded values become vulnerable when refactored to use variables; replace with ORM expressions instead.
+2. **Forgetting to parameterize RawSQL annotations** — RawSQL() without parameters is just as vulnerable as an f-string query; always pass values as the second argument.
+
 ## Best Practices
 
-1. **Avoid extra()**: It's deprecated—use expressions instead.
+1. **Avoid extra()**: It's a legacy API—use expressions instead.
 2. **RawSQL with params**: Always pass values as parameters.
 3. **Use database functions**: Django has many built-in functions.
 
 ## Summary
 
-Prefer Django's expression API (F, Case, When, database functions) over raw SQL. When RawSQL is necessary, always use parameterized queries. Avoid the deprecated extra() method entirely.
+Prefer Django's expression API (F, Case, When, database functions) over raw SQL. When RawSQL is necessary, always use parameterized queries. Avoid the legacy extra() method entirely.
 
 ## Resources
 

@@ -13,13 +13,13 @@
 | 🎨 | [Form Widgets](./03-widgets/) | 4 lessons |
 | 📚 | [Formsets](./04-formsets/) | 4 lessons |
 | 📁 | [File Uploads](./05-file-uploads/) | 3 lessons |
-| 🔗 | [Model Forms](./06-model-forms/) | 1 lesson |
-| 🎨 | [Form Rendering](./07-form-rendering/) | 1 lesson |
-| ⚡ | [Dynamic Forms](./08-dynamic-forms/) | 1 lesson |
-| 🧙 | [Form Wizards](./09-form-wizards/) | 1 lesson |
-| 🔄 | [AJAX Forms](./10-ajax-forms/) | 1 lesson |
+| 🔗 | [Model Forms](./06-model-forms/) | 3 lessons |
+| 🎨 | [Form Rendering](./07-form-rendering/) | 3 lessons |
+| ⚡ | [Dynamic Forms](./08-dynamic-forms/) | 3 lessons |
+| 🧙 | [Form Wizards](./09-form-wizards/) | 3 lessons |
+| 🔄 | [AJAX Forms](./10-ajax-forms/) | 3 lessons |
 
-**24 lessons** · **25 interactive challenges**
+**34 lessons** · **30 interactive challenges**
 
 ## Want the Interactive Experience?
 

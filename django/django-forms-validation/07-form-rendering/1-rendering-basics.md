@@ -3,6 +3,23 @@ source_course: "django-forms-validation"
 source_lesson: "django-forms-validation-rendering-basics"
 ---
 
+## Introduction
+
+Django provides multiple ways to render forms, from one-liner convenience methods to manual field-by-field control.
+
+## Key Concepts
+
+- **as_p/as_table/as_ul/as_div**: Convenience rendering methods.
+- **BoundField**: Combines field definition with submitted data and errors.
+- **visible_fields/hidden_fields**: Separate user-facing from hidden inputs.
+- **label_tag/id_for_label**: Accessible label rendering.
+
+## Real World Context
+
+A pixel-perfect design mockup needs field-by-field rendering with custom CSS classes and error styling, not convenience methods.
+
+## Deep Dive
+
 # Form Rendering Options
 
 Django provides multiple ways to render forms, from automatic to completely manual control.
@@ -191,6 +208,44 @@ TEMPLATES = [{
 </div>
 {% endfor %}
 ```
+
+## Common Pitfalls
+
+1. **as_table without table wrapper** -- Renders tr elements only.
+2. **Missing hidden fields** -- Causes 403 Forbidden (CSRF).
+3. **Not showing non_field_errors** -- Cross-field errors invisible.
+
+## Best Practices
+
+1. **as_div for prototyping, manual for production** -- Most designs need custom HTML.
+2. **Render hidden fields first** -- Before visible fields.
+3. **Show required indicators** -- Check field.field.required.
+
+## Summary
+
+- as_div, as_p, as_table, as_ul for quick rendering.
+- Iterate visible_fields for custom designs.
+- Always render hidden_fields separately.
+- Display non_field_errors at form top.
+- Use BoundField properties for accessible HTML.
+
+## Code Examples
+
+**Django offers quick rendering methods and manual field access for full template control**
+
+```python
+# Quick rendering in templates:
+# {{ form.as_div }}   -- wraps fields in <div> elements (Django 4.0+)
+# {{ form.as_p }}     -- wraps fields in <p> elements
+# {{ form.as_table }} -- renders as table rows
+
+# Manual field rendering for full control:
+# {{ form.title.label_tag }}
+# {{ form.title }}
+# {{ form.title.errors }}
+# {{ form.title.help_text }}
+```
+
 
 ## Resources
 

@@ -51,6 +51,8 @@ DATABASES = {
 
 ### With QuerySets
 
+The following example demonstrates how to use with querysets in practice:
+
 ```python
 # Read from replica
 users = User.objects.using('replica').all()
@@ -67,7 +69,11 @@ reports = AnalyticsReport.objects.using('analytics').filter(
 )
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### With Model Instances
+
+The following example demonstrates how to use with model instances in practice:
 
 ```python
 # Save to specific database
@@ -184,7 +190,35 @@ report_user_ids = list(
 active_users = User.objects.using('default').filter(
     id__in=report_user_ids
 )
+```\n\n## Common Pitfalls\n\n1. **Not testing edge cases** — Always test configuring multiple databases with empty querysets, NULL values, and boundary conditions.\n2. **Premature optimization** — Profile queries with `.explain()` before applying complex optimizations.\n3. **Ignoring database-specific behavior** — Some configuring multiple databases features behave differently across PostgreSQL, MySQL, and SQLite.\n\n## Best Practices\n\n1. **Keep queries readable** — Use meaningful variable names and chain methods logically.\n2. **Test with realistic data** — Create fixtures that match production data patterns for accurate performance testing.\n3. **Document complex queries** — Add comments explaining the business logic behind non-obvious query patterns.\n\n## Summary\n\n- Configuring Multiple Databases is a core Django ORM feature for building efficient database queries.\n- Always consider query performance and use `.explain()` to verify query plans.\n- Test edge cases including empty results, NULL values, and large datasets.\n- Refer to the Django documentation for database-specific behavior and limitations.
+
+## Code Examples
+
+**Key example from Configuring Multiple Databases**
+
+```python
+# settings.py
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'primary_db',
+        'USER': 'postgres',
+        'PASSWORD': 'password',
+        'HOST': 'primary.db.server',
+        'PORT': '5432',
+    },
+    'replica': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'primary_db',
+        'USER': 'postgres',
+        'PASSWORD': 'password',
+        'HOST': 'replica.db.server',
+        'PORT': '5432',
+    },
+    'analytics': {
+ 
 ```
+
 
 ## Resources
 

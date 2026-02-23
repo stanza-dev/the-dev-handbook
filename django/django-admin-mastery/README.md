@@ -10,13 +10,13 @@
 |---|---------|---------|
 | 🎨 | [Admin Customization](./1-admin-customization/) | 4 lessons |
 | 📎 | [Inline Admin](./2-inline-admin/) | 3 lessons |
-| 🔍 | [Custom Filters](./3-admin-filters/) | 1 lesson |
-| 🏢 | [Site Customization](./4-admin-site-customization/) | 1 lesson |
-| 📄 | [Custom Admin Views](./5-custom-admin-views/) | 1 lesson |
-| 📝 | [Forms and Widgets](./6-admin-forms-widgets/) | 2 lessons |
-| 🔐 | [Permissions and Security](./7-admin-permissions/) | 1 lesson |
+| 🔍 | [Custom Filters](./3-admin-filters/) | 3 lessons |
+| 🏢 | [Site Customization](./4-admin-site-customization/) | 3 lessons |
+| 📄 | [Custom Admin Views](./5-custom-admin-views/) | 3 lessons |
+| 📝 | [Forms and Widgets](./6-admin-forms-widgets/) | 3 lessons |
+| 🔐 | [Permissions and Security](./7-admin-permissions/) | 3 lessons |
 
-**13 lessons** · **16 interactive challenges**
+**22 lessons** · **21 interactive challenges**
 
 ## Want the Interactive Experience?
 

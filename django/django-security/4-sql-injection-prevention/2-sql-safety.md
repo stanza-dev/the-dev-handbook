@@ -17,6 +17,12 @@ Sometimes the ORM isn't enough—complex queries, performance optimization, or d
 
 **Database Cursor**: connection.cursor() for arbitrary queries.
 
+
+
+## Real World Context
+
+Performance-critical views sometimes require raw SQL for complex joins, window functions, or database-specific features. A single f-string in a raw query can turn an optimized view into an injection vulnerability that automated scanners will find within hours of deployment.
+
 ## Deep Dive
 
 ### Using Model.objects.raw()
@@ -65,6 +71,13 @@ cursor.execute(
     [f'%{search}%']
 )
 ```
+
+
+
+## Common Pitfalls
+
+1. **Using Python string formatting out of habit** — f-strings and .format() are natural in Python but deadly in SQL; always use %s placeholders.
+2. **Forgetting to escape LIKE wildcards** — User input containing % or _ in raw LIKE queries matches unintended rows; escape these characters manually.
 
 ## Best Practices
 

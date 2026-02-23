@@ -15,6 +15,10 @@ Create validator functions and classes that can be reused across multiple fields
 
 **Validator Class**: Configurable validator with __call__.
 
+## Real World Context
+
+In a CMS, the same profanity filter and file size check are needed on multiple forms. Write a `validate_no_profanity()` function once and attach it via `validators=[]`.
+
 ## Deep Dive
 
 ### Simple Validator Function
@@ -62,6 +66,17 @@ phone_validator = RegexValidator(
     message='Enter a valid phone number'
 )
 ```
+
+## Common Pitfalls
+
+1. **Mutating the value inside a validator** -- Validators should only check validity. Their return value is ignored.
+2. **Using lambdas for validators** -- Not serializable by Django migrations. Use a function or class.
+3. **Not providing `code` in ValidationError** -- Without it, errors cannot be customized.
+
+## Best Practices
+
+1. **Prefer built-in validators** -- `RegexValidator`, `MinValueValidator`, `FileExtensionValidator` cover common cases.
+2. **Implement `__eq__` and `deconstruct`** -- Required for model field validators in migrations.
 
 ## Summary
 

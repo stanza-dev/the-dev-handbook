@@ -16,7 +16,7 @@ Implement secure password handling with Django's password system
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Recommended Password Hasher
-- 🧩 Multiple Choice: Password Hash Upgrade
 - 🧩 Challenge: Password Validation Order
+- 🧩 Multiple Choice: Password Hash Upgrade
 
 → [Practice in your IDE](https://stanza.dev/courses/django-authentication)

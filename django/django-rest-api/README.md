@@ -17,7 +17,7 @@
 | 🚦 | [Rate Limiting & Throttling](./7-throttling/) | 4 lessons |
 | 🏆 | [API Best Practices](./8-best-practices/) | 4 lessons |
 
-**32 lessons** · **24 interactive challenges**
+**32 lessons** · **29 interactive challenges**
 
 ## Want the Interactive Experience?
 

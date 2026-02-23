@@ -3,6 +3,25 @@ source_course: "django-forms-validation"
 source_lesson: "django-forms-validation-field-types"
 ---
 
+## Introduction
+
+Django ships with a rich set of form field types that handle parsing, validation, and normalization for common data formats. Choosing the right field type saves you from writing custom validation.
+
+## Key Concepts
+
+- **CharField**: Text input with optional length constraints.
+- **IntegerField / DecimalField / FloatField**: Numeric inputs with range validation.
+- **ChoiceField / MultipleChoiceField**: Selection fields validating against allowed values.
+- **DateField / DateTimeField**: Parse date strings into Python objects.
+- **FileField / ImageField**: Handle uploaded files with validation.
+- **RegexField**: Validates text against a regex pattern.
+
+## Real World Context
+
+In e-commerce, use `DecimalField` for prices (never `FloatField` which has rounding issues). For phone numbers, `RegexField` gives format validation without a custom validator. These field types encode business rules directly in the form definition.
+
+## Deep Dive
+
 # Field Types and Options
 
 Django provides many field types for different kinds of input. Each has specific options and validation.
@@ -142,13 +161,10 @@ class MixedForm(forms.Form):
         label='I agree to the terms',
     )
     
-    # Nullable boolean
-    has_car = forms.NullBooleanField(
-        widget=forms.Select(choices=[
-            (None, 'Unknown'),
-            (True, 'Yes'),
-            (False, 'No'),
-        ])
+    # Nullable boolean (BooleanField(required=False, widget=NullBooleanSelect) removed in Django 5)
+    has_car = forms.BooleanField(
+        required=False,
+        widget=forms.NullBooleanSelect,
     )
     
     # File upload
@@ -196,6 +212,26 @@ class OptionsForm(forms.Form):
         disabled=False,          # Read-only in HTML
     )
 ```
+
+## Common Pitfalls
+
+1. **Using `FloatField` for currency** -- Floating-point causes rounding errors. Use `DecimalField`.
+2. **Forgetting `required=False`** -- All fields are required by default.
+3. **Hardcoding date `input_formats`** -- Breaks for international users. Use HTML5 date widget instead.
+
+## Best Practices
+
+1. **Use `TypedChoiceField` for non-string values** -- Standard `ChoiceField` always returns a string.
+2. **Set meaningful `error_messages`** -- User-friendly text explaining what to do.
+3. **Use `widget=forms.Textarea` for long text** -- `CharField` defaults to single-line input.
+
+## Summary
+
+- Django provides specialized fields for text, numbers, dates, choices, booleans, and files.
+- Each field handles parsing, validation, and normalization automatically.
+- Use `DecimalField` for money, `RegexField` for patterns, `TypedChoiceField` for typed selections.
+- All fields are required by default; set `required=False` for optional fields.
+- Customize validation text with `error_messages`.
 
 ## Resources
 

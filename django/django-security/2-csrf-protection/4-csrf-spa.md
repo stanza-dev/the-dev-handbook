@@ -17,6 +17,12 @@ SPAs (React, Vue, Angular) require special handling for CSRF tokens since they d
 
 **CORS Configuration**: Required for cross-origin SPA to backend communication.
 
+
+
+## Real World Context
+
+SPAs that fetch data from a separate API domain frequently hit CSRF issues because cookies don't cross origins by default. Teams often disable CSRF entirely rather than configuring CORS and credentials correctly, opening the application to forged requests.
+
 ## Deep Dive
 
 ### Setting Up SPA CSRF
@@ -78,6 +84,13 @@ from django.http import JsonResponse
 def get_csrf_token(request):
     return JsonResponse({'csrfToken': get_token(request)})
 ```
+
+
+
+## Common Pitfalls
+
+1. **Forgetting credentials: 'include' in fetch calls** — Without this, cookies (including CSRF) are not sent, causing 403 errors that seem like CSRF misconfiguration.
+2. **Not refreshing the CSRF token after login** — The token changes after authentication; the SPA must fetch a new one or subsequent requests will fail.
 
 ## Best Practices
 

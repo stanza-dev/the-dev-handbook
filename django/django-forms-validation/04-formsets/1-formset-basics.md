@@ -3,6 +3,23 @@ source_course: "django-forms-validation"
 source_lesson: "django-forms-validation-formset-basics"
 ---
 
+## Introduction
+
+Formsets manage multiple instances of the same form on a single page for bulk editing and batch processing.
+
+## Key Concepts
+
+- **formset_factory()**: Creates formset class with extra/min/max/delete options.
+- **Management form**: Hidden fields tracking form count, required for processing.
+- **extra**: Number of empty forms displayed.
+- **can_delete/can_order**: Enable deletion checkboxes and ordering.
+
+## Real World Context
+
+An invoicing app lets users add multiple line items. A school admin enters grades for all students on one page. Formsets handle this pattern.
+
+## Deep Dive
+
 # Formset Basics
 
 Formsets manage multiple instances of a form on a single page—perfect for editing multiple items at once.
@@ -165,6 +182,48 @@ def manage_books(request):
     formset = BookFormSet(initial=initial_data)
     return render(request, 'books/manage.html', {'formset': formset})
 ```
+
+## Common Pitfalls
+
+1. **Forgetting management_form** -- Formset raises ValidationError on POST.
+2. **Not checking cleaned_data for empties** -- Skip blank extra forms.
+3. **Ignoring DELETE flag** -- Check cleaned_data.get("DELETE").
+
+## Best Practices
+
+1. **Set min_num with validate_min** -- Prevent empty submissions.
+2. **Use prefix for multiple formsets** -- Avoid POST data conflicts.
+3. **Pass initial for defaults** -- Pre-fill with list of dicts.
+
+## Summary
+
+- formset_factory creates formsets with N empty forms.
+- Always include management_form in templates.
+- Check cleaned_data truthiness to skip empties.
+- Use can_delete and check DELETE flag.
+- Set min_num/max_num with validate_min/validate_max.
+
+## Code Examples
+
+**formset_factory creates a class that manages multiple instances of the same form -- extra controls how many blank forms appear**
+
+```python
+from django import forms
+from django.forms import formset_factory
+
+class BookForm(forms.Form):
+    title = forms.CharField(max_length=200)
+    author = forms.CharField(max_length=100)
+
+# Create a formset class that shows 3 empty forms
+BookFormSet = formset_factory(BookForm, extra=3)
+
+# In the view
+formset = BookFormSet()  # 3 empty forms
+for form in formset:
+    print(form.fields.keys())  # dict_keys(['title', 'author'])
+```
+
 
 ## Resources
 

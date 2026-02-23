@@ -5,6 +5,26 @@ source_lesson: "django-authentication-extending-user"
 
 # Extending the User Model
 
+## Introduction
+
+Django's default User model covers basic authentication, but most real applications need additional fields like profile photos, phone numbers, or email-based login. Choosing the right extension strategy early prevents painful migrations later.
+
+## Key Concepts
+
+**OneToOneField Profile**: Adds extra fields via a separate table linked to User.
+
+**AbstractUser**: Extends the default user while keeping all built-in fields and functionality.
+
+**AbstractBaseUser**: Provides a minimal base for fully custom user models with complete control over fields.
+
+**AUTH_USER_MODEL**: The Django setting that points to your custom user model.
+
+## Real World Context
+
+A healthcare platform needs to store medical license numbers and specialties on each user. Using `AbstractUser` lets the team add these fields while keeping Django's built-in password hashing, permission system, and admin integration -- saving months of custom development.
+
+## Deep Dive
+
 Django provides several ways to customize the User model. Choose based on your needs.
 
 ## Option 1: Profile Model (One-to-One)
@@ -172,6 +192,44 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 users = User.objects.all()
 ```
+
+## Common Pitfalls
+
+1. **Starting with the default User and switching later**: Changing `AUTH_USER_MODEL` after the first migration requires resetting every migration that references User. Always create a custom user model at the start of a project, even if it is just `class User(AbstractUser): pass`.
+2. **Importing `User` directly instead of using `get_user_model()`**: Hard-coding `from django.contrib.auth.models import User` breaks your code if anyone swaps the user model. Use `get_user_model()` in views and `settings.AUTH_USER_MODEL` in model ForeignKeys.
+3. **Adding required fields without defaults to AbstractUser**: New required fields on the user model break `createsuperuser`. Always provide defaults or make new fields nullable/blank.
+
+## Best Practices
+
+1. **Always create a custom user model**: Even if you do not need extra fields yet, `class User(AbstractUser): pass` makes future changes trivial.
+2. **Use `AbstractUser` unless you need email-only login**: It keeps all default behavior. Only use `AbstractBaseUser` when you need to remove the username field entirely.
+3. **Reference users with `settings.AUTH_USER_MODEL`**: In model ForeignKeys, always use the string reference so your models are portable across projects.
+
+## Summary
+
+- Django offers three approaches to extend the User model: Profile (OneToOne), AbstractUser, and AbstractBaseUser.
+- `AbstractUser` is recommended for most new projects because it keeps all defaults while allowing custom fields.
+- Always set `AUTH_USER_MODEL` before the first migration.
+- Use `get_user_model()` and `settings.AUTH_USER_MODEL` instead of importing User directly.
+- For existing projects that cannot change the user model, use a OneToOneField Profile.
+
+## Code Examples
+
+**Custom user model extending AbstractUser with additional profile fields**
+
+```python
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
+class CustomUser(AbstractUser):
+    bio = models.TextField(blank=True)
+    avatar = models.ImageField(upload_to='avatars/', blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'auth_user'
+```
+
 
 ## Resources
 

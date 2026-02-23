@@ -9,6 +9,8 @@ Media files are user-uploaded content: profile pictures, documents, attachments.
 
 ## Configuring Media Files
 
+First, define where uploaded files will be stored and what URL prefix will serve them.
+
 ```python
 # mysite/settings.py
 
@@ -41,6 +43,8 @@ if settings.DEBUG:
 ```
 
 ## Adding File Fields to Models
+
+Use `ImageField` for images and `FileField` for other file types. The `upload_to` argument determines the subdirectory inside `MEDIA_ROOT` where files are saved.
 
 ```python
 # polls/models.py
@@ -78,6 +82,8 @@ pip install Pillow
 
 ## Creating Upload Forms
 
+Create a ModelForm that includes the file fields from your model.
+
 ```python
 # polls/forms.py
 from django import forms
@@ -91,6 +97,8 @@ class ProfileForm(forms.ModelForm):
 ```
 
 ## Handling Uploads in Views
+
+When processing file uploads, you must pass both `request.POST` and `request.FILES` to the form constructor.
 
 ```python
 # polls/views.py
@@ -116,6 +124,8 @@ def upload_profile(request):
 
 ## Template for File Uploads
 
+The form template must include `enctype="multipart/form-data"` to support file uploads. Without it, the browser sends only text data.
+
 ```html
 <!-- templates/upload.html -->
 <form method="post" enctype="multipart/form-data">
@@ -133,6 +143,8 @@ def upload_profile(request):
 **Important**: Always use `enctype="multipart/form-data"` for file uploads!
 
 ## File Field Methods
+
+Once a file is uploaded, the field provides several useful attributes for accessing the file's URL, path, name, and size.
 
 ```python
 # In views or templates
@@ -154,6 +166,43 @@ profile.avatar.size     # 102400
 if profile.avatar:
     print("Has avatar")
 ```
+
+## Common Pitfalls
+
+- **Forgetting `enctype="multipart/form-data"`**: Without this form attribute, `request.FILES` will be empty and file uploads silently fail.
+- **Not passing `request.FILES` to the form**: When processing file uploads, you must pass both `request.POST` and `request.FILES` to the form constructor.
+- **Serving media files without DEBUG check**: Only add the media URL pattern inside `if settings.DEBUG:` to avoid serving user uploads through Django in production.
+
+## Best Practices
+
+- **Install Pillow for ImageField**: `ImageField` requires the Pillow library (`pip install Pillow`) for image validation.
+- **Use dynamic `upload_to` paths**: Define a callable for `upload_to` to organize files by user or date (e.g., `user_{id}/filename`).
+- **Validate file types and sizes**: Add custom validation to reject oversized files or disallowed file types.
+
+## Summary
+
+- Media files are **user-uploaded content** stored separately from static files
+- Configure `MEDIA_URL` and `MEDIA_ROOT` in settings for upload destinations
+- Use `ImageField` and `FileField` in models with `upload_to` for directory organization
+- Forms must use `enctype="multipart/form-data"` and views must pass `request.FILES`
+- Access uploaded files via `.url`, `.path`, `.name`, and `.size` attributes on the field
+
+## Code Examples
+
+**Model with file and image upload fields, plus the required form configuration for uploads**
+
+```python
+from django.db import models
+
+class UserProfile(models.Model):
+    user = models.OneToOneField('auth.User', on_delete=models.CASCADE)
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    resume = models.FileField(upload_to='resumes/', blank=True)
+
+# In views: form = ProfileForm(request.POST, request.FILES)
+# In templates: <form method="post" enctype="multipart/form-data">
+```
+
 
 ## Resources
 

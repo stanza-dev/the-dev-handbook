@@ -16,7 +16,7 @@ Learn the basics of testing Django applications
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Test Database
-- 🧩 Multiple Choice: setUp vs setUpTestData
-- 🧩 Multiple Choice: TestCase Types
+- ✏️ Fill in the Blank: setUp vs setUpTestData
+- 🔗 Matching: TestCase Types
 
 → [Practice in your IDE](https://stanza.dev/courses/django-testing-qa)

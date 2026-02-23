@@ -66,6 +66,8 @@ mysite/
 
 ## Using Static Files in Templates
 
+To reference a static file in a template, load the `static` template tag library first, then use the `{% static %}` tag to generate the correct URL.
+
 ```html
 {% load static %}
 <!DOCTYPE html>
@@ -84,6 +86,8 @@ mysite/
 The `{% static %}` tag generates the full URL to the static file.
 
 ## Creating a Stylesheet
+
+Here is an example stylesheet placed in the app's namespaced static directory. This CSS will be available via `{% static 'polls/css/style.css' %}`.
 
 ```css
 /* polls/static/polls/css/style.css */
@@ -135,6 +139,8 @@ python manage.py collectstatic
 
 ## Using WhiteNoise (Simple Production Setup)
 
+WhiteNoise lets Django serve compressed, cache-busted static files directly without a separate web server. Install it and add it to your middleware.
+
 ```bash
 pip install whitenoise
 ```
@@ -148,8 +154,51 @@ MIDDLEWARE = [
 ]
 
 # Enable compression and caching
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 ```
+
+## Common Pitfalls
+
+- **Hardcoding static file paths**: Never write `/static/css/style.css` directly. Always use `{% static 'css/style.css' %}` so paths update when settings change.
+- **Forgetting `{% load static %}` in templates**: The `{% static %}` tag is not available by default. You must load it at the top of every template that uses it.
+- **Not running `collectstatic` for production**: In production, Django does not serve static files. You must run `python manage.py collectstatic` and configure your web server.
+
+## Best Practices
+
+- **Namespace app static files**: Place files in `app/static/app/` to prevent naming collisions between apps.
+- **Use WhiteNoise for simple deployments**: It serves static files directly from your WSGI app without needing a separate web server configuration.
+- **Set up `STATICFILES_DIRS`** for project-wide static files that don't belong to any specific app.
+
+## Summary
+
+- Static files (CSS, JS, images) are managed by `django.contrib.staticfiles`
+- Configure `STATIC_URL`, `STATICFILES_DIRS`, and `STATIC_ROOT` in settings
+- Use `{% load static %}` and `{% static 'path/to/file' %}` in templates
+- In development, Django serves static files automatically when `DEBUG = True`
+- In production, run `collectstatic` and use WhiteNoise or a web server like Nginx
+
+## Code Examples
+
+**Configuring static file settings and referencing static files in templates**
+
+```python
+# settings.py
+STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# In templates:
+# {% load static %}
+# <link rel="stylesheet" href="{% static 'css/style.css' %}">
+```
+
 
 ## Resources
 

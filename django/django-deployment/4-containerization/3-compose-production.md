@@ -7,7 +7,7 @@ source_lesson: "django-deployment-compose-production"
 
 ## Introduction
 
-Docker Compose orchestrates multiple containers for local development and simple production deployments.
+Docker Compose orchestrates multi-container Django deployments, defining your web server, database, cache, and worker processes in a single configuration file. Production Compose files add health checks, resource limits, and secrets management.
 
 ## Production Compose File
 
@@ -77,6 +77,24 @@ docker-compose -f docker-compose.prod.yml up -d
 docker-compose -f docker-compose.prod.yml up -d --no-deps web
 ```
 
+## Key Concepts
+
+The key terms and concepts for this topic are introduced in the Deep Dive section below.
+
+
+## Deep Dive
+
+See the detailed technical content and code examples throughout this lesson.
+
+## Real World Context
+
+This topic directly impacts production application performance. Teams that master these techniques reduce page load times, lower infrastructure costs, and deliver better user experiences.
+
+## Common Pitfalls
+
+1. **Premature optimization** — Always profile before optimizing. Fix the biggest bottleneck first rather than guessing.
+2. **Ignoring trade-offs** — Every optimization has costs. Caching adds complexity, indexes slow writes, and async adds cognitive overhead.
+
 ## Best Practices
 
 1. **Separate files**: dev vs production compose files.
@@ -87,6 +105,35 @@ docker-compose -f docker-compose.prod.yml up -d --no-deps web
 ## Summary
 
 Use separate compose files for production with health checks, secrets, resource limits, and restart policies. Consider Kubernetes for larger deployments.
+
+## Code Examples
+
+**Production Docker Compose with health checks, secrets, and resource limits**
+
+```bash
+# docker-compose.prod.yml
+version: '3.8'
+
+services:
+  web:
+    image: myregistry/myproject:${TAG:-latest}
+    restart: always
+    env_file:
+      - .env.production
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: curl -f http://localhost:8000/health/
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# ...
+```
+
 
 ## Resources
 

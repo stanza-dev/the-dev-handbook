@@ -43,6 +43,24 @@ docker push myregistry.com/myproject:v1.0.0
     tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
 ```
 
+## Key Concepts
+
+The key terms and concepts for this topic are introduced in the Deep Dive section below.
+
+
+## Deep Dive
+
+See the detailed technical content and code examples throughout this lesson.
+
+## Real World Context
+
+This topic directly impacts production application performance. Teams that master these techniques reduce page load times, lower infrastructure costs, and deliver better user experiences.
+
+## Common Pitfalls
+
+1. **Premature optimization** — Always profile before optimizing. Fix the biggest bottleneck first rather than guessing.
+2. **Ignoring trade-offs** — Every optimization has costs. Caching adds complexity, indexes slow writes, and async adds cognitive overhead.
+
 ## Best Practices
 
 1. **Use tags**: Never rely on 'latest' in production.
@@ -52,6 +70,22 @@ docker push myregistry.com/myproject:v1.0.0
 ## Summary
 
 Choose a registry based on your infrastructure. Use immutable tags (git SHA or semver), enable vulnerability scanning, and integrate with CI/CD for automated builds.
+
+## Code Examples
+
+**Docker image tagging and pushing to container registry**
+
+```bash
+# Login
+docker login myregistry.com
+
+# Tag image
+docker tag myproject:latest myregistry.com/myproject:v1.0.0
+
+# Push
+docker push myregistry.com/myproject:v1.0.0
+```
+
 
 ## Resources
 

@@ -3,6 +3,22 @@ source_course: "django-forms-validation"
 source_lesson: "django-forms-validation-cross-field-validation"
 ---
 
+## Introduction
+
+Cross-field validation uses `clean()` to enforce rules between multiple fields like date ranges or password confirmation.
+
+## Key Concepts
+
+- **clean()**: Runs after all field validations with full `cleaned_data`.
+- **add_error()**: Associates errors with specific fields.
+- **Non-field errors**: Form-wide errors from `form.non_field_errors()`.
+
+## Real World Context
+
+An event form ensures end date is after start date. A shipping form requires address only for delivery. These cross-field rules belong in `clean()`.
+
+## Deep Dive
+
 # Cross-Field Validation
 
 The `clean()` method validates relationships between multiple fields.
@@ -168,6 +184,25 @@ class DiscountCodeForm(forms.Form):
         self.discount = discount
         return code
 ```
+
+## Common Pitfalls
+
+1. **Not checking field existence** -- Use `.get()` since failed fields are absent.
+2. **Single ValidationError for multiple issues** -- Use `add_error()` multiple times.
+3. **Forgetting `super().clean()` in ModelForm** -- Breaks unique constraints.
+
+## Best Practices
+
+1. **Use `add_error(field, msg)`** -- Keeps errors next to correct field.
+2. **Collect all errors** -- Show users everything at once.
+3. **Keep `clean()` focused** -- Single-field rules go in `clean_<field>()`.
+
+## Summary
+
+- Override `clean()` for multi-field validation.
+- Call `super().clean()` and use `.get()`.
+- Use `add_error()` for field-specific errors.
+- Collect all errors before returning.
 
 ## Resources
 

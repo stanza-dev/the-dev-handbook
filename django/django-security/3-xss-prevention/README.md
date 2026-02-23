@@ -16,7 +16,7 @@ Protect against Cross-Site Scripting attacks
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Auto Escaping
-- 🧩 Multiple Choice: Format Html Purpose
-- 🧩 Multiple Choice: JavaScript Context
+- 🔗 Matching: Format Html Purpose
+- ✏️ Fill in the Blank: JavaScript Context
 
 → [Practice in your IDE](https://stanza.dev/courses/django-security)

@@ -14,7 +14,7 @@ Handle file and image uploads securely
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- ✏️ Fill in the Blank: File Upload Form Encoding
+- 🧩 Multiple Choice: File Upload Form Encoding
 - ✏️ Fill in the Blank: Accessing Uploaded Files
 - 🧩 Challenge: File Form Initialization
 

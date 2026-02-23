@@ -9,6 +9,17 @@ source_lesson: "django-forms-validation-file-storage"
 
 Configure where and how Django stores uploaded files.
 
+## Key Concepts
+
+- **MEDIA_ROOT**: Filesystem path for uploads.
+- **MEDIA_URL**: URL prefix for serving uploads.
+- **upload_to**: Subdirectory within MEDIA_ROOT, supports callables.
+- **File API**: .name, .url, .path, .size, .open().
+
+## Real World Context
+
+A multi-tenant app stores files per organization. In production, django-storages abstracts S3 vs local filesystem.
+
 ## Deep Dive
 
 ### Settings
@@ -45,6 +56,16 @@ print(doc.file.name)  # 'documents/report.pdf'
 print(doc.file.url)   # '/media/documents/report.pdf'
 print(doc.file.path)  # '/app/media/documents/report.pdf'
 ```
+
+## Common Pitfalls
+
+1. **Serving media in production via Django** -- static() only works with DEBUG=True.
+2. **Relative MEDIA_ROOT path** -- Always use absolute paths.
+
+## Best Practices
+
+1. **upload_to callables for user paths** -- Prevents filename collisions.
+2. **Keep MEDIA_ROOT outside source directory** -- Avoid committing uploads to git.
 
 ## Summary
 

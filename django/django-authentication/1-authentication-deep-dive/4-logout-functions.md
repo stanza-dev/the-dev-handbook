@@ -17,6 +17,10 @@ Django provides functions to manage user authentication state. Understanding the
 
 **authenticate()**: Verifies credentials.
 
+## Real World Context
+
+When building an e-commerce checkout, users who log in mid-session should keep their cart. Django's `login()` function preserves anonymous session data while rotating the session key, so items added before login are not lost -- a detail that matters for conversion rates.
+
 ## Deep Dive
 
 ### The Login Process
@@ -60,6 +64,12 @@ def logout_view(request):
 # 3. Sets _auth_user_backend in session
 # 4. Sets _auth_user_hash (invalidates on password change)
 ```
+
+## Common Pitfalls
+
+1. **Calling `login()` without `authenticate()` first**: Skipping `authenticate()` bypasses backend verification and the `user_logged_in` signal, which breaks audit logging and third-party integrations.
+2. **Allowing logout via GET requests**: A malicious page can embed `<img src="/logout/">` and log users out. Always require POST for logout and verify the CSRF token.
+3. **Not passing `request` to `authenticate()`**: Some backends (like django-axes) use the request for rate limiting. Omitting it silently disables those protections.
 
 ## Best Practices
 

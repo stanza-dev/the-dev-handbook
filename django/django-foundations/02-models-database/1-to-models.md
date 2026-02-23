@@ -119,6 +119,44 @@ question = models.ForeignKey(Question, on_delete=models.CASCADE)
 - `SET_NULL`: Set to NULL (requires `null=True`)
 - `SET_DEFAULT`: Set to default value
 
+## Common Pitfalls
+
+- **Forgetting `max_length` on CharField**: `CharField` requires a `max_length` argument. Without it, Django raises an error during validation.
+- **Using `null=True` on string fields**: For `CharField` and `TextField`, use `blank=True` instead of `null=True`. Django stores empty strings, not NULL, for text fields.
+- **Choosing the wrong `on_delete` behavior**: Using `CASCADE` means deleting a parent deletes all children. Use `PROTECT` if you want to prevent accidental deletion of related data.
+
+## Best Practices
+
+- **Always define `__str__`** on your models so they display meaningfully in the admin and shell.
+- **Use `blank=True` for optional text fields** and `null=True` only for non-text fields (dates, numbers, foreign keys).
+- **Add `verbose_name` to fields** when the field name alone is not descriptive enough for the admin interface.
+
+## Summary
+
+- Models are Python classes that map to **database tables** via Django's ORM
+- Each model attribute represents a **database column** with a specific field type
+- Common field types include `CharField`, `TextField`, `IntegerField`, `DateTimeField`, and `BooleanField`
+- `ForeignKey` creates **many-to-one relationships** between models
+- Field options like `default`, `blank`, `null`, and `max_length` control validation and storage behavior
+
+## Code Examples
+
+**Defining Django models with fields and a ForeignKey relationship**
+
+```python
+from django.db import models
+
+class Question(models.Model):
+    question_text = models.CharField(max_length=200)
+    pub_date = models.DateTimeField('date published')
+
+class Choice(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    choice_text = models.CharField(max_length=200)
+    votes = models.IntegerField(default=0)
+```
+
+
 ## Resources
 
 - [Django Models](https://docs.djangoproject.com/en/6.0/topics/db/models/) — Official guide to Django models

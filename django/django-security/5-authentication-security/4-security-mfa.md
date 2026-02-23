@@ -17,6 +17,12 @@ Passwords alone aren't enough. MFA adds a second verification factor—something
 
 **SMS/Email OTP**: One-time codes sent via text or email (less secure).
 
+
+
+## Real World Context
+
+After enabling MFA, Dropbox reported a dramatic reduction in account compromises. Google found that security keys (U2F/WebAuthn) blocked 100% of automated bot attacks and 100% of targeted phishing attacks, compared to SMS codes which blocked only 76% of targeted attacks.
+
 ## Deep Dive
 
 ### Using django-two-factor-auth
@@ -60,6 +66,13 @@ def admin_view(request):
 # Modern passwordless/MFA with security keys
 from webauthn import verify_authentication_response
 ```
+
+
+
+## Common Pitfalls
+
+1. **Offering only SMS-based OTP** — SMS is vulnerable to SIM swapping and SS7 attacks; prefer TOTP apps or hardware security keys.
+2. **Not providing backup codes** — Users who lose their authenticator device get permanently locked out; always generate and display backup codes during MFA setup.
 
 ## Best Practices
 

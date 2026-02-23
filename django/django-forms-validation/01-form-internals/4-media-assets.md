@@ -15,6 +15,10 @@ Forms can declare CSS and JavaScript dependencies via the Media class.
 
 **Media Merging**: Combining media from multiple forms.
 
+## Real World Context
+
+When building a form with a custom date picker widget and a rich text editor, each widget needs its own CSS and JavaScript files. The Media class automates this: include `{{ form.media }}` in your template and Django handles deduplication and ordering.
+
 ## Deep Dive
 
 ### Defining Media
@@ -53,6 +57,17 @@ class MyForm(forms.Form):
 # Multiple forms
 combined = form1.media + form2.media
 ```
+
+## Common Pitfalls
+
+1. **Including `form.media` inside the form tag** -- CSS links must go in `<head>` and scripts before `</body>`. Use `form.media.css` and `form.media.js` separately.
+2. **Duplicate assets from multiple forms** -- Use `form1.media + form2.media` which automatically deduplicates.
+3. **Forgetting to serve static files** -- Media paths are relative to STATIC_URL. If static files are not configured, the assets will 404.
+
+## Best Practices
+
+1. **Split CSS and JS placement** -- Use `{{ form.media.css }}` in `<head>` and `{{ form.media.js }}` before `</body>`.
+2. **Use the Media class on custom widgets, not forms** -- This keeps assets scoped correctly when the widget is reused.
 
 ## Summary
 

@@ -16,7 +16,7 @@ Prepare your Django application for production deployment
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Debug Production
-- 🧩 Multiple Choice: Check Deploy
+- 🧩 Challenge: Check Deploy
 - 🧩 Multiple Choice: WhiteNoise Purpose
 
 → [Practice in your IDE](https://stanza.dev/courses/django-deployment)

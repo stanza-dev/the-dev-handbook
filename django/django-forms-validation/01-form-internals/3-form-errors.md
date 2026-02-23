@@ -15,6 +15,10 @@ Understanding how to access and display form errors is essential for good UX.
 
 **Non-Field Errors**: Form-wide validation errors.
 
+## Real World Context
+
+In a user registration flow, you need to display field-specific errors inline next to the field, while showing cross-field errors at the top of the form. The `form.errors` dictionary and `form.non_field_errors()` method give you exactly this separation.
+
 ## Deep Dive
 
 ### Accessing Errors
@@ -68,6 +72,17 @@ def clean(self):
     {% endif %}
 {% endfor %}
 ```
+
+## Common Pitfalls
+
+1. **Displaying `form.errors` without checking first** -- Always wrap in `{% if form.errors %}`.
+2. **Calling `add_error()` outside of `clean()`** -- Only call during validation.
+3. **Forgetting that `add_error()` removes the field from `cleaned_data`** -- Subsequent code must handle the missing key.
+
+## Best Practices
+
+1. **Use `form.errors.as_json()` for API responses** -- Provides structured error data easy to parse.
+2. **Show non-field errors prominently** -- Place at the top of the form in a visible alert box.
 
 ## Summary
 

@@ -30,12 +30,12 @@ class TaskLogicTests(TestCase):
         self.assertEqual(Notification.objects.count(), 1)
 ```
 
-### Using CELERY_TASK_ALWAYS_EAGER
+### Using task_always_eager
 
 ```python
-# settings/test.py
-CELERY_TASK_ALWAYS_EAGER = True
-CELERY_TASK_EAGER_PROPAGATES = True
+# settings/test.py (Celery 5+ lowercase setting names)
+task_always_eager = True
+task_eager_propagates = True
 
 # In tests - .delay() now runs synchronously
 class EagerTaskTests(TestCase):
@@ -76,6 +76,18 @@ class RetryTests(TestCase):
             sync_data()
 ```
 
+## Real World Context
+
+Celery tasks handle background work in Django applications: sending emails, processing uploads, generating reports, and syncing data with external systems. Testing them is tricky because they normally run in a separate process. The three approaches (direct call, eager mode, mocking) each serve different testing needs.
+
+**Note:** Django 6.0 introduced a built-in background tasks framework (`django.tasks`) that provides a lighter-weight alternative to Celery for many use cases. The testing principles covered here — direct function calls, eager execution, and mocking — apply equally to Django's built-in tasks.
+
+## Common Pitfalls
+
+1. **Testing with a real Celery worker**: Tests should never depend on a running Celery broker. Use eager mode or direct calls.
+2. **Forgetting to test retry logic**: If your task uses `self.retry()`, test that retries happen on expected exceptions.
+3. **Not testing task arguments**: When views call `task.delay(user_id)`, verify the correct arguments are passed using mock assertions.
+
 ## Best Practices
 
 1. **Use ALWAYS_EAGER for integration tests**: Runs tasks synchronously.
@@ -84,7 +96,7 @@ class RetryTests(TestCase):
 
 ## Summary
 
-Test Celery task logic by calling functions directly. Use CELERY_TASK_ALWAYS_EAGER for integration tests. Mock .delay() calls when testing views that queue tasks.
+Test Celery task logic by calling functions directly. Use task_always_eager for integration tests. Mock .delay() calls when testing views that queue tasks.
 
 ## Resources
 

@@ -15,7 +15,7 @@ Use mocking to isolate tests and control dependencies
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Patch Target
-- 🧩 Multiple Choice: Side Effect Usage
-- 🧩 Multiple Choice: Mock Assert Called
+- 🧩 Challenge: Side Effect Usage
+- 🔗 Matching: Mock Assert Called
 
 → [Practice in your IDE](https://stanza.dev/courses/django-testing-qa)

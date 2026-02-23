@@ -16,7 +16,7 @@ Prevent UI redress attacks with proper framing controls
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: X Frame Options Deny
-- 🧩 Multiple Choice: CSP Frame Ancestors
-- 🧩 Multiple Choice: Frame Exemption
+- ✏️ Fill in the Blank: CSP Frame Ancestors
+- 🧩 Challenge: Frame Exemption
 
 → [Practice in your IDE](https://stanza.dev/courses/django-security)

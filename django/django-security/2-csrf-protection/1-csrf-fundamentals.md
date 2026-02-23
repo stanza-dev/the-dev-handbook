@@ -5,9 +5,24 @@ source_lesson: "django-security-csrf-fundamentals"
 
 # CSRF Protection
 
-Cross-Site Request Forgery (CSRF) tricks users into performing unwanted actions on a site where they're authenticated.
+## Introduction
 
-## How CSRF Works
+Cross-Site Request Forgery (CSRF) is an attack that tricks authenticated users into performing unwanted actions on your site. Django's CSRF middleware is enabled by default and protects every POST, PUT, PATCH, and DELETE request automatically.
+
+## Key Concepts
+
+- **CSRF Attack**: A malicious site submits a form to your domain using the victim's browser cookies, executing actions the user never intended.
+- **CSRF Token**: A unique, unpredictable value that Django embeds in forms and validates on submission.
+- **CsrfViewMiddleware**: Django middleware that enforces CSRF token validation on unsafe HTTP methods.
+- **CSRF_TRUSTED_ORIGINS**: Setting that whitelists domains for cross-origin HTTPS requests.
+
+## Real World Context
+
+CSRF attacks have been used to transfer funds from bank accounts, change email addresses on social media, and modify admin settings on CMS platforms. Because the browser automatically attaches session cookies, the server cannot distinguish a legitimate form submission from a forged one without a CSRF token.
+
+## Deep Dive
+
+### How CSRF Works
 
 ```html
 <!-- Malicious site -->
@@ -18,7 +33,7 @@ Cross-Site Request Forgery (CSRF) tricks users into performing unwanted actions 
 </form>
 ```
 
-## Django's CSRF Protection
+### Django's CSRF Protection
 
 Django includes automatic CSRF protection via middleware:
 
@@ -31,7 +46,7 @@ MIDDLEWARE = [
 ]
 ```
 
-## Using CSRF in Templates
+### Using CSRF in Templates
 
 ```html
 <!-- All POST forms must include the token -->
@@ -45,7 +60,7 @@ MIDDLEWARE = [
 <input type="hidden" name="csrfmiddlewaretoken" value="abc123...">
 ```
 
-## CSRF in AJAX Requests
+### CSRF in AJAX Requests
 
 ```javascript
 // Get CSRF token from cookie
@@ -77,15 +92,17 @@ fetch('/api/submit/', {
 });
 ```
 
-## CSRF Settings
+### CSRF Settings
 
 ```python
 # settings.py
 
 # Cookie settings
 CSRF_COOKIE_SECURE = True        # Only send over HTTPS
-CSRF_COOKIE_HTTPONLY = True      # Not accessible via JavaScript (use header instead)
-CSRF_COOKIE_SAMESITE = 'Strict'  # Don't send with cross-origin requests
+CSRF_COOKIE_HTTPONLY = False       # Default. Set True only if not reading token via JS
+# Note: If True, JavaScript cannot read the CSRF cookie.
+# You must then get the token from a hidden form input instead.
+CSRF_COOKIE_SAMESITE = 'Lax'     # Send on navigation, not on cross-origin POST
 CSRF_COOKIE_NAME = 'csrftoken'   # Cookie name
 
 # Trusted origins for HTTPS
@@ -98,7 +115,7 @@ CSRF_TRUSTED_ORIGINS = [
 CSRF_FAILURE_VIEW = 'myapp.views.csrf_failure'
 ```
 
-## Exempting Views from CSRF
+### Exempting Views from CSRF
 
 ```python
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
@@ -126,7 +143,7 @@ class WebhookView(View):
         pass
 ```
 
-## CSRF in REST APIs
+### CSRF in REST APIs
 
 ```python
 # For session-authenticated APIs, CSRF is still needed
@@ -138,6 +155,50 @@ class MyAPIView(APIView):
     authentication_classes = [TokenAuthentication]
     # No CSRF needed - token auth doesn't use cookies
 ```
+
+## Common Pitfalls
+
+1. **Forgetting {% csrf_token %} in forms** — Results in 403 Forbidden errors that are hard to debug in production.
+2. **Using @csrf_exempt on session-authenticated views** — Completely disables protection, making the view vulnerable to forged requests.
+3. **Not configuring CSRF_TRUSTED_ORIGINS for HTTPS** — Django 4.0+ requires this for cross-origin POST requests over HTTPS.
+
+## Best Practices
+
+1. **Never remove CsrfViewMiddleware** — It protects all unsafe methods globally.
+2. **Use X-CSRFToken header for AJAX** — Read the token from the cookie and send it as a header.
+3. **Verify webhooks with signatures** — Use HMAC or provider-specific verification instead of @csrf_exempt alone.
+
+## Summary
+
+- CSRF protection is built into Django and works automatically for form submissions.
+- AJAX requests must include the CSRF token via the X-CSRFToken header.
+- Only exempt views from CSRF when using non-cookie authentication or webhook signature verification.
+
+## Code Examples
+
+**Two ways to include CSRF tokens: template tag for forms and X-CSRFToken header for AJAX requests**
+
+```python
+# Template: Include CSRF token in every POST form
+# <form method="post">
+#     {% csrf_token %}
+#     <button type="submit">Submit</button>
+# </form>
+
+# AJAX: Send CSRF token via header
+import requests
+
+def get_csrf_cookie(cookie_jar):
+    return cookie_jar.get('csrftoken')
+
+# fetch('/api/data/', {
+#     method: 'POST',
+#     headers: { 'X-CSRFToken': getCookie('csrftoken') },
+#     credentials: 'include',
+#     body: JSON.stringify(data)
+# });
+```
+
 
 ## Resources
 

@@ -72,6 +72,16 @@ class ArticleViewTests(TestCase):
         pass
 ```
 
+## Real World Context
+
+In large Django projects with hundreds of tests, good organization is the difference between a maintainable test suite and one that nobody wants to touch. Teams that mirror their app structure in tests can quickly find and update tests when code changes. The AAA (Arrange, Act, Assert) pattern makes tests readable even for new team members.
+
+## Common Pitfalls
+
+1. **Putting all tests in one file**: A single `tests.py` becomes unmanageable fast. Split into `test_models.py`, `test_views.py`, etc.
+2. **Vague test names**: `test_article` tells you nothing. Use `test_article_creation_with_valid_data` to describe the expected behavior.
+3. **Multiple concerns per test**: A test that checks creation, update, and deletion is three tests in disguise.
+
 ## Best Practices
 
 1. **One assertion per test**: Each test should verify one behavior.

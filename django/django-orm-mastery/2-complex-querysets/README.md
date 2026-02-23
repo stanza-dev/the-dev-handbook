@@ -12,9 +12,10 @@ Build powerful queries with Q objects, F expressions, and advanced filtering
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: Q Objects OR
-- 🧩 Multiple Choice: F Expression Benefits
+- 🧩 Challenge: F Expression Benefits
+- 🔗 Matching: Q Object Operators
 
 → [Practice in your IDE](https://stanza.dev/courses/django-orm-mastery)

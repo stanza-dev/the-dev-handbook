@@ -7,7 +7,7 @@ source_lesson: "django-deployment-load-balancing"
 
 ## Introduction
 
-Load balancing distributes traffic across multiple servers for reliability and scalability.
+Load balancing distributes incoming requests across multiple application server instances, improving both performance and reliability. If one instance fails, the load balancer routes traffic to healthy instances, providing high availability.
 
 ## Key Concepts
 
@@ -16,6 +16,10 @@ Load balancing distributes traffic across multiple servers for reliability and s
 **Load Balancing Methods**: Round-robin, least connections, IP hash.
 
 **Health Checks**: Automatically remove unhealthy servers.
+
+## Real World Context
+
+This topic directly impacts production application performance. Teams that master these techniques reduce page load times, lower infrastructure costs, and deliver better user experiences.
 
 ## Deep Dive
 
@@ -54,6 +58,11 @@ upstream django {
 }
 ```
 
+## Common Pitfalls
+
+1. **Premature optimization** — Always profile before optimizing. Fix the biggest bottleneck first rather than guessing.
+2. **Ignoring trade-offs** — Every optimization has costs. Caching adds complexity, indexes slow writes, and async adds cognitive overhead.
+
 ## Best Practices
 
 1. **Use least_conn for varying request times**: Better distribution.
@@ -63,6 +72,34 @@ upstream django {
 ## Summary
 
 Nginx load balancing distributes traffic across multiple Gunicorn instances. Use least_conn for most applications and add backup servers for reliability.
+
+## Code Examples
+
+**Nginx upstream configuration for load balancing multiple Gunicorn instances**
+
+```bash
+upstream django {
+    # Round-robin (default)
+    server 127.0.0.1:8001;
+    server 127.0.0.1:8002;
+    server 127.0.0.1:8003;
+    
+    # Or least connections
+    least_conn;
+    
+    # Or IP hash (session persistence)
+    ip_hash;
+}
+
+server {
+    location / {
+        proxy_pass http://django;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
 
 ## Resources
 

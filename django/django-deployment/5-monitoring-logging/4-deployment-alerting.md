@@ -39,6 +39,24 @@ sentry_sdk.init(
 # Sentry auto-alerts on new errors
 ```
 
+## Key Concepts
+
+The key terms and concepts for this topic are introduced in the Deep Dive section below.
+
+
+## Deep Dive
+
+See the detailed technical content and code examples throughout this lesson.
+
+## Real World Context
+
+This topic directly impacts production application performance. Teams that master these techniques reduce page load times, lower infrastructure costs, and deliver better user experiences.
+
+## Common Pitfalls
+
+1. **Premature optimization** — Always profile before optimizing. Fix the biggest bottleneck first rather than guessing.
+2. **Ignoring trade-offs** — Every optimization has costs. Caching adds complexity, indexes slow writes, and async adds cognitive overhead.
+
 ## Best Practices
 
 1. **Alert on symptoms**: User-facing impact.
@@ -49,6 +67,20 @@ sentry_sdk.init(
 ## Summary
 
 Alert on symptoms that affect users, not just causes. Use Prometheus AlertManager or Sentry. Avoid alert fatigue by keeping alerts actionable.
+
+## Code Examples
+
+**Prometheus alerting rule for high error rate detection**
+
+```yaml
+import sentry_sdk
+sentry_sdk.init(
+    dsn=os.environ['SENTRY_DSN'],
+    traces_sample_rate=0.1,
+)
+# Sentry auto-alerts on new errors
+```
+
 
 ## Resources
 

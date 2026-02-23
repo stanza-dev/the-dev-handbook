@@ -3,6 +3,24 @@ source_course: "django-forms-validation"
 source_lesson: "django-forms-validation-form-lifecycle"
 ---
 
+## Introduction
+
+Every Django form follows a predictable lifecycle from instantiation through validation to data access. Understanding this lifecycle is the foundation for writing forms that behave exactly as you expect.
+
+## Key Concepts
+
+- **Bound form**: A form that has received user data via the `data` parameter.
+- **Unbound form**: A form with no submitted data, for rendering only.
+- **full_clean()**: Triggered by `is_valid()`, orchestrates all validation.
+- **cleaned_data**: Dictionary of validated field values.
+- **BoundField**: Pairs a field definition with its submitted value and errors.
+
+## Real World Context
+
+When debugging why a form silently rejects valid-looking input, the lifecycle diagram is your map. A registration form where `clean_username()` normalizes to lowercase while `clean()` verifies passwords match shows exactly where each check belongs.
+
+## Deep Dive
+
 # The Form Lifecycle
 
 Understanding how Django processes forms helps you customize their behavior effectively.
@@ -141,6 +159,49 @@ print(name_field.html_name)    # 'name'
 for field in form:
     print(f"{field.label}: {field.value()}")
 ```
+
+## Common Pitfalls
+
+1. **Confusing `initial` with `data`** -- `initial=` does NOT make a form bound. Only `data=` does.
+2. **Accessing `cleaned_data` before `is_valid()`** -- Raises `AttributeError`.
+3. **Forgetting to return from `clean_<field>()`** -- The field value becomes `None`.
+
+## Best Practices
+
+1. **Always call `super().clean()` first** -- Preserves parent validation including unique constraints.
+2. **Use `clean_<field>()` for single-field, `clean()` for cross-field** -- Keeps errors associated with correct fields.
+3. **Use `.get()` in `clean()`** -- Failed fields are absent from `cleaned_data`.
+
+## Summary
+
+- A form is **bound** when passed `data=`, **unbound** otherwise.
+- `is_valid()` triggers `full_clean()` which runs `_clean_fields()`, `_clean_form()`, `_post_clean()`.
+- `clean_<fieldname>()` runs per-field validation and must return the cleaned value.
+- `clean()` handles cross-field validation and must return `cleaned_data`.
+- `BoundField` objects provide field value, label, and errors in templates.
+
+## Code Examples
+
+**Creating bound and unbound forms -- a bound form has data to validate while an unbound form is just for display**
+
+```python
+from django import forms
+
+class ContactForm(forms.Form):
+    name = forms.CharField(max_length=100)
+    email = forms.EmailField()
+    message = forms.CharField(widget=forms.Textarea)
+
+# Unbound form (no data yet)
+form = ContactForm()
+print(form.is_bound)  # False
+
+# Bound form (with user data)
+form = ContactForm(data={'name': 'Alice', 'email': 'alice@example.com'})
+print(form.is_bound)  # True
+print(form.is_valid())  # False (message is missing)
+```
+
 
 ## Resources
 

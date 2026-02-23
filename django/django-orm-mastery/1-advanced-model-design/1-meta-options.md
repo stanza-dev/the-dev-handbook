@@ -28,12 +28,18 @@ class Article(models.Model):
 
 ### Custom Table Name
 
+You can override Django's default table naming convention by specifying `db_table` in the Meta class:
+
 ```python
 class Meta:
     db_table = 'my_custom_articles'  # Default: appname_modelname
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### Table Comment (Database-level)
+
+The following example demonstrates how to use table comment (database-level) in practice:
 
 ```python
 class Meta:
@@ -43,6 +49,8 @@ class Meta:
 ## Ordering Options
 
 ### Default Ordering
+
+Setting a default ordering means every query on this model returns results in this order unless explicitly overridden:
 
 ```python
 class Meta:
@@ -59,7 +67,11 @@ class Meta:
     ordering = [models.F('pub_date').desc(nulls_last=True)]
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### Get Latest By
+
+The following example demonstrates how to use get latest by in practice:
 
 ```python
 class Meta:
@@ -94,6 +106,8 @@ class Meta:
 ## Constraints
 
 ```python
+from django.db.models.functions import Now
+
 class Meta:
     constraints = [
         # Unique constraint
@@ -101,9 +115,9 @@ class Meta:
             fields=['author', 'title'],
             name='unique_author_title'
         ),
-        # Check constraint
+        # Check constraint (Django 5.1+: use condition= instead of check=)
         models.CheckConstraint(
-            check=models.Q(pub_date__lte=models.functions.Now()),
+            condition=models.Q(pub_date__lte=Now()),
             name='pub_date_not_future'
         ),
     ]
@@ -158,7 +172,27 @@ class Meta:
     
     # Required fields for specific orderings
     order_with_respect_to = 'question'  # For related objects
+```\n\n## Common Pitfalls\n\n1. **Not testing edge cases** — Always test model meta options with empty querysets, NULL values, and boundary conditions.\n2. **Premature optimization** — Profile queries with `.explain()` before applying complex optimizations.\n3. **Ignoring database-specific behavior** — Some model meta options features behave differently across PostgreSQL, MySQL, and SQLite.\n\n## Best Practices\n\n1. **Keep queries readable** — Use meaningful variable names and chain methods logically.\n2. **Test with realistic data** — Create fixtures that match production data patterns for accurate performance testing.\n3. **Document complex queries** — Add comments explaining the business logic behind non-obvious query patterns.\n\n## Summary\n\n- Model Meta Options is a core Django ORM feature for building efficient database queries.\n- Always consider query performance and use `.explain()` to verify query plans.\n- Test edge cases including empty results, NULL values, and large datasets.\n- Refer to the Django documentation for database-specific behavior and limitations.
+
+## Code Examples
+
+**Key example from Model Meta Options**
+
+```python
+from django.db import models
+
+
+class Article(models.Model):
+    title = models.CharField(max_length=200)
+    pub_date = models.DateTimeField()
+    author = models.ForeignKey('Author', on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ['-pub_date']  # Default ordering
+        verbose_name = 'Article'
+        verbose_name_plural = 'Articles'
 ```
+
 
 ## Resources
 

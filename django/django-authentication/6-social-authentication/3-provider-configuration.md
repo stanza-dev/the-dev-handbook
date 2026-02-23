@@ -15,6 +15,10 @@ Configure social providers correctly for secure authentication.
 
 **Client ID/Secret**: OAuth credentials.
 
+## Real World Context
+
+When deploying to production, you need separate OAuth apps for each environment because callback URLs differ. Storing credentials in environment variables (not in the database via Django admin) makes deployments reproducible and keeps secrets out of database dumps that might be shared across the team.
+
 ## Deep Dive
 
 ### Via Django Admin
@@ -59,6 +63,12 @@ GOOGLE_CLIENT_SECRET=xxx
 GITHUB_CLIENT_ID=xxx
 GITHUB_CLIENT_SECRET=xxx
 ```
+
+## Common Pitfalls
+
+1. **Committing client secrets to version control**: Even in a private repo, OAuth secrets in code are a security risk. Use environment variables or a secrets manager like AWS Secrets Manager.
+2. **Forgetting `SITE_ID` configuration**: django-allauth requires `django.contrib.sites` with a valid `SITE_ID`. If the Site object's domain does not match your actual domain, callback URLs break.
+3. **Requesting too many scopes**: Each additional scope triggers a more intimidating consent screen. Users are less likely to approve login if you request access to their contacts, repos, or calendar when you only need email and profile.
 
 ## Best Practices
 

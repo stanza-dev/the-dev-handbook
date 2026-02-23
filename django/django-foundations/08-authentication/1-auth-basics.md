@@ -93,6 +93,7 @@ Django provides authentication functions:
 
 ```python
 from django.contrib.auth import authenticate, login, logout
+from django.views.decorators.http import require_POST
 
 def login_view(request):
     if request.method == 'POST':
@@ -111,6 +112,7 @@ def login_view(request):
     return render(request, 'login.html')
 
 
+@require_POST
 def logout_view(request):
     logout(request)  # Clear session
     return redirect('home')
@@ -162,6 +164,8 @@ Create templates for the built-in views:
 
 ## Settings
 
+Django uses several settings to control authentication behavior, including where users are redirected after login and logout.
+
 ```python
 # settings.py
 
@@ -174,6 +178,46 @@ LOGOUT_REDIRECT_URL = 'home'
 # Login URL for @login_required
 LOGIN_URL = 'login'
 ```
+
+## Common Pitfalls
+
+- **Storing passwords in plain text**: Never store raw passwords. Always use `User.objects.create_user()` which hashes the password automatically.
+- **Forgetting to include auth middleware**: The `AuthenticationMiddleware` must be in `MIDDLEWARE` for `request.user` to be available.
+- **Using GET for logout**: Since Django 5.0, `LogoutView` requires POST requests. Using a simple link (`<a href="/logout/">`) no longer works.
+
+## Best Practices
+
+- **Use Django's built-in auth views** (`LoginView`, `LogoutView`, `PasswordResetView`) instead of writing your own.
+- **Set `LOGIN_REDIRECT_URL` and `LOGOUT_REDIRECT_URL`** in settings to control where users go after authentication.
+- **Use `include('django.contrib.auth.urls')`** to get all auth URL patterns with a single line.
+
+## Summary
+
+- Django includes a complete **authentication system** with users, groups, and permissions
+- The built-in `User` model provides username, email, password hashing, and permission fields
+- Use `authenticate()` and `login()` for custom login views, or use built-in `LoginView`
+- Include all auth URLs with `path('accounts/', include('django.contrib.auth.urls'))`
+- Set `LOGIN_REDIRECT_URL`, `LOGOUT_REDIRECT_URL`, and `LOGIN_URL` in settings
+
+## Code Examples
+
+**Custom login view using Django authenticate() and login() functions**
+
+```python
+from django.contrib.auth import authenticate, login
+from django.shortcuts import render, redirect
+
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('home')
+    return render(request, 'login.html')
+```
+
 
 ## Resources
 

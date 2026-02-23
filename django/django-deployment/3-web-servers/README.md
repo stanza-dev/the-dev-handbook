@@ -15,8 +15,8 @@ Configure Nginx or Apache as reverse proxy
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Nginx Proxy Headers
+- 🔗 Matching: Nginx Proxy Headers
 - 🧩 Multiple Choice: Static Files Serving
-- 🧩 Multiple Choice: HSTS Purpose
+- ✏️ Fill in the Blank: HSTS Purpose
 
 → [Practice in your IDE](https://stanza.dev/courses/django-deployment)

@@ -15,7 +15,7 @@ Build clean, reusable API views using Django's class-based approach
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Validation Error Response
+- ✏️ Fill in the Blank: Validation Error Status Code
 - 🧩 Multiple Choice: Method Decorator Usage
 - 🧩 Multiple Choice: N+1 Query Problem
 

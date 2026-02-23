@@ -31,6 +31,8 @@ Without proper JSON handling, your API responses will be inconsistent, hard to p
 
 ### Basic JsonResponse
 
+The simplest way to return JSON is to pass a Python dictionary to `JsonResponse`, which handles serialization and sets the correct `Content-Type` header automatically:
+
 ```python
 from django.http import JsonResponse
 
@@ -45,6 +47,8 @@ def api_articles(request):
     return JsonResponse(data)
 ```
 
+Notice that `JsonResponse` accepts a regular dictionary and returns it as a properly formatted JSON HTTP response with status 200 by default.
+
 ### Returning Lists (The safe Parameter)
 
 By default, `JsonResponse` only accepts dicts to prevent JSON hijacking attacks:
@@ -56,7 +60,11 @@ def api_tags(request):
     return JsonResponse(tags, safe=False)
 ```
 
+Setting `safe=False` explicitly acknowledges that you're returning a non-dict value, which bypasses Django's built-in protection against JSON hijacking.
+
 ### Setting HTTP Status Codes
+
+You can pass a `status` keyword argument to `JsonResponse` to return the appropriate HTTP status code for each situation:
 
 ```python
 # Success with 201 Created
@@ -68,6 +76,8 @@ return JsonResponse({'error': 'Invalid data'}, status=400)
 # Not found with 404
 return JsonResponse({'error': 'Article not found'}, status=404)
 ```
+
+Always match the status code to the outcome -- returning 200 for errors forces clients to parse the body to detect failures.
 
 ### Serializing Model Data
 
@@ -102,6 +112,8 @@ def api_article_list(request):
     return JsonResponse({'articles': list(articles)})
 ```
 
+Using `values()` is concise but offers less control over field naming and formatting compared to manual serialization.
+
 ### Handling Special Data Types
 
 Django's `DjangoJSONEncoder` handles common Python types:
@@ -121,7 +133,11 @@ def api_data(request):
     return JsonResponse(data)  # Automatically uses DjangoJSONEncoder
 ```
 
+`JsonResponse` uses `DjangoJSONEncoder` under the hood, so `datetime`, `date`, `Decimal`, and `UUID` values are automatically converted to their string representations.
+
 ### Custom JSON Encoder
+
+For objects that `DjangoJSONEncoder` does not handle, you can create a custom encoder by subclassing it and overriding the `default` method:
 
 ```python
 from django.core.serializers.json import DjangoJSONEncoder
@@ -135,6 +151,8 @@ class CustomEncoder(DjangoJSONEncoder):
 def api_view(request):
     return JsonResponse(data, encoder=CustomEncoder)
 ```
+
+The `encoder` parameter on `JsonResponse` lets you plug in your custom encoder. The `default` method is called for any object the encoder does not know how to serialize.
 
 ## Common Pitfalls
 
@@ -159,6 +177,25 @@ def api_view(request):
 ## Summary
 
 Django's `JsonResponse` is your primary tool for returning JSON from views. Use it with dictionaries directly, handle lists with `safe=False`, and always set appropriate status codes. For model data, create explicit serialization functions that control exactly what data is exposed. Remember to optimize queries with `select_related()` to avoid N+1 problems.
+
+## Code Examples
+
+**Returning JSON data from a Django view using JsonResponse**
+
+```python
+from django.http import JsonResponse
+
+def api_articles(request):
+    data = {
+        'articles': [
+            {'id': 1, 'title': 'First Post'},
+            {'id': 2, 'title': 'Second Post'},
+        ],
+        'count': 2
+    }
+    return JsonResponse(data)
+```
+
 
 ## Resources
 

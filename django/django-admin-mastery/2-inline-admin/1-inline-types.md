@@ -5,9 +5,31 @@ source_lesson: "django-admin-mastery-inline-types"
 
 # Inline Model Admin
 
+## Introduction
+
+Inlines let you edit related models on the same page as the parent model, eliminating the need to navigate between separate admin pages. In this lesson, you will learn the differences between TabularInline and StackedInline, and how to configure them for various use cases.
+
+## Key Concepts
+
+**TabularInline**: Displays each related object as a row in a compact table.
+
+**StackedInline**: Displays each related object vertically with full-width fields.
+
+**extra**: Number of empty forms shown for adding new related objects.
+
+**GenericTabularInline**: Inline for models using GenericForeignKey relationships.
+
+**show_change_link**: Adds a link to the full change form of the inline object.
+
+## Real World Context
+
+An online bookstore admin needs to manage books and their chapters. Without inlines, an editor would add a book, save it, navigate to chapters, add each chapter with a dropdown to find the parent book, and repeat. With a ChapterInline on BookAdmin, the editor adds all chapters directly on the book's page in a single form submission.
+
+## Deep Dive
+
 Inlines let you edit related models on the same page as the parent model.
 
-## TabularInline vs StackedInline
+### TabularInline vs StackedInline
 
 ```python
 from django.contrib import admin
@@ -36,7 +58,7 @@ class BookAdmin(admin.ModelAdmin):
     inlines = [ChapterInline]
 ```
 
-## Inline Configuration
+### Inline Configuration
 
 ```python
 class ChapterInline(admin.TabularInline):
@@ -71,7 +93,7 @@ class ChapterInline(admin.TabularInline):
     verbose_name_plural = 'Chapters'
 ```
 
-## Filtering Inline Queryset
+### Filtering Inline Queryset
 
 ```python
 class PublishedChapterInline(admin.TabularInline):
@@ -99,7 +121,7 @@ class BookAdmin(admin.ModelAdmin):
     inlines = [PublishedChapterInline, DraftChapterInline]
 ```
 
-## Read-Only Inline
+### Read-Only Inline
 
 ```python
 class OrderItemInline(admin.TabularInline):
@@ -117,7 +139,7 @@ class OrderItemInline(admin.TabularInline):
         return False
 ```
 
-## GenericInline for Generic Relations
+### GenericInline for Generic Relations
 
 ```python
 from django.contrib.contenttypes.admin import GenericTabularInline
@@ -141,7 +163,7 @@ class PhotoAdmin(admin.ModelAdmin):
     inlines = [CommentInline]  # Same inline works for any model
 ```
 
-## Inline Formsets
+### Inline Formsets
 
 ```python
 from django.forms import BaseInlineFormSet
@@ -168,6 +190,46 @@ class ChapterInline(admin.TabularInline):
     formset = RequiredChapterFormSet
     extra = 1
 ```
+
+## Common Pitfalls
+
+1. **Setting extra too high**: The default extra=3 creates 3 empty forms per inline. For models with many inlines or complex forms, this can make the page slow and cluttered. Set extra=0 or extra=1 for most use cases.
+
+2. **Forgetting show_change_link=True**: Without this, users cannot navigate to the inline object's own change form for detailed editing. Enable it when inlines have many fields you cannot display in the compact view.
+
+3. **Not using min_num/max_num for validation**: If a parent requires at least one child (e.g., an order needs at least one line item), set min_num=1 to enforce this at the form level.
+
+## Best Practices
+
+1. **Choose TabularInline for simple models**: When inline objects have 3-5 fields, tabular layout is more scannable and space-efficient than stacked.
+
+2. **Use ordering on inlines**: Set `ordering = ['position']` or similar to ensure inline objects appear in a predictable order.
+
+3. **Override get_queryset() for large datasets**: Filter the inline queryset to avoid loading thousands of related objects on every page load.
+
+## Summary
+
+- TabularInline shows related objects as compact table rows; StackedInline shows them vertically.
+- Configure extra, min_num, max_num to control the number of forms.
+- GenericTabularInline works with GenericForeignKey relations.
+- Use show_change_link, ordering, and get_queryset() for better usability.
+- Custom formsets enable cross-inline validation.
+
+## Code Examples
+
+**TabularInline for editing related Comment objects within the Article admin page**
+
+```python
+class CommentInline(admin.TabularInline):
+    model = Comment
+    extra = 1
+    readonly_fields = ['created_at']
+
+@admin.register(Article)
+class ArticleAdmin(admin.ModelAdmin):
+    inlines = [CommentInline]
+```
+
 
 ## Resources
 

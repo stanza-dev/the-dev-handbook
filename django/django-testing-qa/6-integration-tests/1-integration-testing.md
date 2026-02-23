@@ -5,7 +5,23 @@ source_lesson: "django-testing-qa-integration-testing"
 
 # Integration Test Strategies
 
-Integration tests verify that different parts of your application work together correctly.
+## Introduction
+
+Integration tests verify that multiple components of your application work together correctly. While unit tests check individual pieces in isolation, integration tests exercise the full request cycle: URL routing, middleware, views, forms, models, and templates working as a system.
+
+## Key Concepts
+
+**Integration Test**: A test that exercises multiple components working together through a realistic scenario.
+
+**LiveServerTestCase**: Starts a real HTTP server for browser-based testing with Selenium.
+
+**mail.outbox**: Django's test email backend that captures sent emails in a list for verification.
+
+## Real World Context
+
+Integration tests catch bugs that unit tests miss -- like a view that calls a service with the wrong arguments, or a template that references a missing context variable. In practice, a healthy Django test suite has about 70% unit tests and 30% integration tests. Integration tests are slower but provide confidence that your features actually work end-to-end.
+
+## Deep Dive
 
 ## Full Request Cycle Test
 
@@ -222,6 +238,57 @@ class BrowserTests(LiveServerTestCase):
         
         self.assertIn('Welcome', self.browser.page_source)
 ```
+
+## Common Pitfalls
+
+1. **Making integration tests too broad**: Each test should verify one workflow or scenario, not the entire application.
+2. **Forgetting to call refresh_from_db()**: After actions that modify the database, the in-memory object is stale.
+3. **Not cleaning up Selenium browsers**: Always quit the browser in tearDownClass to avoid resource leaks.
+
+## Best Practices
+
+1. **Test complete user workflows**: Create, read, update, delete cycles test the full stack.
+2. **Use django.core.mail.outbox for email tests**: Django captures emails in tests automatically.
+3. **Run Selenium tests headless in CI**: Use `--headless` Chrome option for faster, display-free testing.
+
+## Summary
+
+- Integration tests verify components work together through realistic scenarios
+- Test complete user workflows from authentication through data modification
+- Use django.core.mail.outbox to verify email sending
+- LiveServerTestCase enables Selenium browser testing
+- Balance integration tests with unit tests for speed and coverage
+
+## Code Examples
+
+**An integration test that creates an article via POST and verifies it appears in the list view.**
+
+```python
+from django.test import TestCase
+from django.urls import reverse
+from django.contrib.auth.models import User
+
+
+class ArticleWorkflowTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            'author', 'author@test.com', 'pass'
+        )
+
+    def test_create_and_view_article(self):
+        self.client.force_login(self.user)
+        # Create article
+        self.client.post(reverse('article-create'), {
+            'title': 'Integration Test',
+            'body': 'Content',
+            'status': 'published',
+        })
+        # Verify it appears in list
+        response = self.client.get(reverse('article-list'))
+        self.assertContains(response, 'Integration Test')
+
+```
+
 
 ## Resources
 

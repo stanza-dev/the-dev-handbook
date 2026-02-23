@@ -16,7 +16,7 @@ Understand REST principles and Django's API capabilities
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: HTTP Method Purpose
-- 🧩 Multiple Choice: API Status Codes
+- 🧩 Challenge: API Request-Response Cycle
 - ✏️ Fill in the Blank: JsonResponse Safe Parameter
 
 → [Practice in your IDE](https://stanza.dev/courses/django-rest-api)

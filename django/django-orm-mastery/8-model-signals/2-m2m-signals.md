@@ -165,7 +165,26 @@ class Article(models.Model):
         if not self.slug:
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
+```\n\n## Common Pitfalls\n\n1. **Not testing edge cases** — Always test manytomany signals with empty querysets, NULL values, and boundary conditions.\n2. **Premature optimization** — Profile queries with `.explain()` before applying complex optimizations.\n3. **Ignoring database-specific behavior** — Some manytomany signals features behave differently across PostgreSQL, MySQL, and SQLite.\n\n## Best Practices\n\n1. **Keep queries readable** — Use meaningful variable names and chain methods logically.\n2. **Test with realistic data** — Create fixtures that match production data patterns for accurate performance testing.\n3. **Document complex queries** — Add comments explaining the business logic behind non-obvious query patterns.\n\n## Summary\n\n- ManyToMany Signals is a core Django ORM feature for building efficient database queries.\n- Always consider query performance and use `.explain()` to verify query plans.\n- Test edge cases including empty results, NULL values, and large datasets.\n- Refer to the Django documentation for database-specific behavior and limitations.
+
+## Code Examples
+
+**m2m_changed signal for reacting to ManyToMany relationship changes**
+
+```python
+from django.db.models.signals import m2m_changed
+from django.dispatch import receiver
+
+@receiver(m2m_changed, sender=Article.tags.through)
+def handle_tags_changed(sender, instance, action, pk_set, **kwargs):
+    if action == 'post_add':
+        instance.update_search_index()
+    elif action == 'post_remove':
+        instance.update_search_index()
+    elif action == 'post_clear':
+        instance.clear_search_index()
 ```
+
 
 ## Resources
 

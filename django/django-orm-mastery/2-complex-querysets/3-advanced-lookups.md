@@ -149,7 +149,27 @@ Field.register_lookup(NotEqual)
 
 # Usage
 Product.objects.filter(status__ne='deleted')
+```\n\n## Common Pitfalls\n\n1. **Not testing edge cases** — Always test advanced field lookups with empty querysets, NULL values, and boundary conditions.\n2. **Premature optimization** — Profile queries with `.explain()` before applying complex optimizations.\n3. **Ignoring database-specific behavior** — Some advanced field lookups features behave differently across PostgreSQL, MySQL, and SQLite.\n\n## Best Practices\n\n1. **Keep queries readable** — Use meaningful variable names and chain methods logically.\n2. **Test with realistic data** — Create fixtures that match production data patterns for accurate performance testing.\n3. **Document complex queries** — Add comments explaining the business logic behind non-obvious query patterns.\n\n## Summary\n\n- Advanced Field Lookups is a core Django ORM feature for building efficient database queries.\n- Always consider query performance and use `.explain()` to verify query plans.\n- Test edge cases including empty results, NULL values, and large datasets.\n- Refer to the Django documentation for database-specific behavior and limitations.
+
+## Code Examples
+
+**Advanced field lookups: range, regex, and subquery-based in**
+
+```python
+# Range lookup
+from datetime import date
+Event.objects.filter(
+    start_date__range=(date(2025, 1, 1), date(2025, 12, 31))
+)
+
+# Regex lookup
+Product.objects.filter(sku__regex=r'^[A-Z]{2}-\d{4}$')
+
+# In subquery
+active_author_ids = Author.objects.filter(is_active=True).values('id')
+Article.objects.filter(author_id__in=active_author_ids)
 ```
+
 
 ## Resources
 

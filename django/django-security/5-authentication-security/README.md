@@ -16,7 +16,7 @@ Secure user authentication and session management
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Password Hasher Default
-- 🧩 Multiple Choice: Session Key Rotation
-- 🧩 Multiple Choice: Django Axes Purpose
+- 🔗 Matching: Session Key Rotation
+- 🧩 Challenge: Django Axes Purpose
 
 → [Practice in your IDE](https://stanza.dev/courses/django-security)

@@ -14,8 +14,8 @@ Organize users into groups and implement role-based access control
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- ✏️ Fill in the Blank: Adding User to Group
-- ✏️ Fill in the Blank: Group Membership Check
+- 🧩 Multiple Choice: Adding User to Group
+- 🔗 Matching: Group Membership Check
 - 🧩 Challenge: Group Permission Assignment
 
 → [Practice in your IDE](https://stanza.dev/courses/django-authentication)

@@ -87,6 +87,8 @@ for author in authors:
 
 ### Nested Prefetch
 
+The following example demonstrates how to use nested prefetch in practice:
+
 ```python
 # Authors → Articles → Comments
 authors = Author.objects.prefetch_related(
@@ -97,7 +99,11 @@ authors = Author.objects.prefetch_related(
 )
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### Prefetch with select_related
+
+The following example demonstrates how to use prefetch with select_related in practice:
 
 ```python
 # Articles with their author (select) and author's other articles (prefetch)
@@ -110,7 +116,11 @@ articles = Article.objects.select_related('author').prefetch_related(
 )
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### Ordered Prefetch
+
+The following example demonstrates how to use ordered prefetch in practice:
 
 ```python
 # Get latest comments only
@@ -152,7 +162,26 @@ for article in articles:
 1. **Use Prefetch for filtering**: Avoid filtering on prefetched relations
 2. **to_attr returns a list**: Not a queryset, so it's already evaluated
 3. **Limit prefetched items**: Use `[:n]` in Prefetch queryset
-4. **Combine wisely**: select_related for FK, prefetch_related for M2M/reverse
+4. **Combine wisely**: select_related for FK, prefetch_related for M2M/reverse\n\n## Common Pitfalls\n\n1. **Not testing edge cases** — Always test prefetch_related for many relations with empty querysets, NULL values, and boundary conditions.\n2. **Premature optimization** — Profile queries with `.explain()` before applying complex optimizations.\n3. **Ignoring database-specific behavior** — Some prefetch_related for many relations features behave differently across PostgreSQL, MySQL, and SQLite.\n\n## Best Practices\n\n1. **Keep queries readable** — Use meaningful variable names and chain methods logically.\n2. **Test with realistic data** — Create fixtures that match production data patterns for accurate performance testing.\n3. **Document complex queries** — Add comments explaining the business logic behind non-obvious query patterns.\n\n## Summary\n\n- prefetch_related for Many Relations is a core Django ORM feature for building efficient database queries.\n- Always consider query performance and use `.explain()` to verify query plans.\n- Test edge cases including empty results, NULL values, and large datasets.\n- Refer to the Django documentation for database-specific behavior and limitations.
+
+## Code Examples
+
+**Key example from prefetch_related for Many Relations**
+
+```python
+# ManyToMany: Articles have many tags
+articles = Article.objects.prefetch_related('tags')
+for article in articles:
+    for tag in article.tags.all():  # No additional queries
+        print(tag.name)
+
+# Reverse ForeignKey: Author has many articles
+authors = Author.objects.prefetch_related('article_set')
+for author in authors:
+    for article in author.article_set.all():  # No additional queries
+        print(article.title)
+```
+
 
 ## Resources
 

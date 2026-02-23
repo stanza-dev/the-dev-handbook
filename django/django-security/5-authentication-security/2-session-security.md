@@ -17,6 +17,12 @@ Sessions maintain user state across requests. Misconfigured sessions enable sess
 
 **Session Cookie Attributes**: Secure, HttpOnly, SameSite flags that protect cookies.
 
+
+
+## Real World Context
+
+Session hijacking was used in the Firesheep attack, which let anyone on a Wi-Fi network steal Facebook and Twitter sessions in real time. Without Secure and HttpOnly flags on session cookies, any network eavesdropper or XSS vulnerability can compromise user sessions.
+
 ## Deep Dive
 
 ### Secure Session Configuration
@@ -34,15 +40,21 @@ SESSION_SAVE_EVERY_REQUEST = True  # Refresh expiry on activity
 
 ### Preventing Session Fixation
 
+Django's `login()` function automatically calls `cycle_key()` to rotate the session ID, preventing session fixation attacks. You only need to call `cycle_key()` manually for other authentication state changes (e.g., privilege escalation).
+
 ```python
 from django.contrib.auth import login
 
 def login_view(request):
     user = authenticate(request, ...)
     if user:
-        login(request, user)
-        # Rotate session ID after login
-        request.session.cycle_key()
+        login(request, user)  # Automatically rotates session ID
+
+# Manual rotation for non-login auth state changes
+def elevate_privileges(request):
+    request.user.is_admin = True
+    request.user.save()
+    request.session.cycle_key()  # Rotate after privilege change
 ```
 
 ### Session Storage Options
@@ -59,9 +71,16 @@ SESSION_CACHE_ALIAS = 'default'
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 ```
 
+
+
+## Common Pitfalls
+
+1. **Not rotating session IDs on auth state changes** — Django's login() handles rotation automatically, but other privilege changes (e.g., elevating to admin) require a manual cycle_key() call.
+2. **Using signed cookie sessions for sensitive data** — Signed cookie sessions are tamper-proof but not encrypted; users can decode and read the session contents.
+
 ## Best Practices
 
-1. **Rotate on login**: Call cycle_key() after successful authentication.
+1. **Rotate on auth state changes**: Django's login() rotates automatically; call cycle_key() manually for other privilege changes.
 2. **Use HTTPS**: Set SESSION_COOKIE_SECURE=True.
 3. **Set HttpOnly**: Prevent JavaScript access to session cookie.
 4. **Short lifetimes**: Balance security vs user convenience.

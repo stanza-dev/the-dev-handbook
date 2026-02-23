@@ -13,10 +13,11 @@ Write comprehensive tests for your API endpoints
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Sending JSON in Tests
 - 🧩 Multiple Choice: Testing with Headers
-- 🧩 Multiple Choice: Test Setup Methods
+- 🧩 Challenge: Test Lifecycle Order
+- 🧩 Multiple Choice: Testing Race Conditions
 
 → [Practice in your IDE](https://stanza.dev/courses/django-rest-api)

@@ -17,9 +17,43 @@ Content Security Policy's frame-ancestors directive is the modern replacement fo
 
 **Supersedes X-Frame-Options**: Browsers prefer CSP when both are set.
 
+
+
+## Real World Context
+
+X-Frame-Options only supports DENY and SAMEORIGIN—it cannot allowlist specific partner domains. Organizations that need to embed content for trusted partners (widget marketplaces, embedded dashboards) must use CSP frame-ancestors for the flexibility to specify exact allowed domains.
+
 ## Deep Dive
 
-### Using django-csp
+### Django 6.0+ Native CSP (Recommended)
+
+```python
+# settings.py
+from django.utils.csp import CSP
+
+MIDDLEWARE = [
+    'django.middleware.csp.ContentSecurityPolicyMiddleware',
+    ...
+]
+
+SECURE_CSP = {
+    'frame-ancestors': [CSP.SELF],  # Replaces X-Frame-Options
+}
+
+# Or deny all framing
+SECURE_CSP = {
+    'frame-ancestors': [CSP.NONE],
+}
+
+# Allow specific trusted domains
+SECURE_CSP = {
+    'frame-ancestors': [CSP.SELF, 'https://trusted-partner.com', 'https://app.example.com'],
+}
+```
+
+### Legacy: Using django-csp (Django < 6.0)
+
+For Django < 6.0, use the third-party django-csp package:
 
 ```python
 # pip install django-csp
@@ -59,10 +93,17 @@ def partnered_widget(request):
 ```python
 # Keep both during transition
 X_FRAME_OPTIONS = 'DENY'
-CSP_FRAME_ANCESTORS = ("'none'",)
+# Use SECURE_CSP (Django 6.0+) or CSP_FRAME_ANCESTORS (django-csp)
 
 # Modern browsers use CSP, older use X-Frame-Options
 ```
+
+
+
+## Common Pitfalls
+
+1. **Setting frame-ancestors without keeping X-Frame-Options** — Older browsers (IE 11) don't support CSP frame-ancestors; keep both headers during the transition period.
+2. **Using frame-src instead of frame-ancestors** — frame-src controls what YOUR page can frame (children); frame-ancestors controls who can frame YOU (parents). Confusing these leaves you unprotected.
 
 ## Best Practices
 

@@ -15,6 +15,10 @@ Implement RBAC patterns for cleaner permission management.
 
 **RBAC**: Permission assignment through roles.
 
+## Real World Context
+
+In a media company CMS, the role hierarchy is clear: Viewers can read, Authors can write, Editors can publish, and Admins can delete. Mapping these roles to Django groups with inherited permissions means onboarding a new Author is a single `user.groups.add(authors)` call instead of assigning 15 individual permissions.
+
 ## Deep Dive
 
 ### Group-Based RBAC
@@ -57,6 +61,12 @@ class RoleChecker:
                 return True
         return False
 ```
+
+## Common Pitfalls
+
+1. **Assigning permissions directly to users instead of groups**: Direct permissions become impossible to audit at scale. When an employee changes roles, you must manually remove each old permission instead of just switching groups.
+2. **Not automating group setup**: If groups are created manually in the admin, they are inconsistent across environments. Use a management command or data migration to define roles as code.
+3. **Overly complex hierarchies**: More than 4-5 role levels become hard to reason about. If your hierarchy is deeper, consider using a dedicated RBAC library like django-role-permissions.
 
 ## Best Practices
 

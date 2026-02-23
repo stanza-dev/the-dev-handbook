@@ -17,6 +17,6 @@ This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Default Model Permissions
 - ✏️ Fill in the Blank: Template Permission Check
-- ✏️ Fill in the Blank: Permission String Format
+- 🧩 Challenge: Permission String Format
 
 → [Practice in your IDE](https://stanza.dev/courses/django-authentication)

@@ -120,6 +120,8 @@ Running migrations:
 
 ## Common Migration Commands
 
+Django provides several migration commands for different stages of the workflow. Here is a reference of the most useful ones.
+
 ```bash
 # Create migrations for all apps
 python manage.py makemigrations
@@ -171,6 +173,40 @@ You are trying to add a non-nullable field 'is_active' to question...
 ```
 
 Using `default=True` avoids this prompt.
+
+## Common Pitfalls
+
+- **Editing migration files manually**: Migration files are auto-generated. Manual edits can corrupt your migration history and cause hard-to-debug errors.
+- **Forgetting to commit migrations to version control**: Migration files must be shared with your team. Missing migrations cause deployment failures.
+- **Adding non-nullable fields without defaults**: When adding a new required field to an existing model, always provide a `default` value or Django will prompt you interactively.
+
+## Best Practices
+
+- **Run `makemigrations` before `migrate`**: Always generate migration files first, then apply them. Never skip `makemigrations`.
+- **Review migration files before applying**: Check what SQL Django will run with `python manage.py sqlmigrate app_name migration_number`.
+- **Use `showmigrations` to check status**: Run `python manage.py showmigrations` to see which migrations have been applied.
+
+## Summary
+
+- Migrations are Django's **version control for database schemas**
+- The workflow is: edit `models.py` -> `makemigrations` -> `migrate`
+- `makemigrations` creates migration files describing schema changes
+- `migrate` applies those changes to the database
+- Use `showmigrations` to check migration status and `sqlmigrate` to preview SQL
+
+## Code Examples
+
+**The standard Django migration workflow: edit models, create migrations, apply them**
+
+```bash
+# The three-step migration workflow
+# 1. Edit your models in models.py
+# 2. Create the migration file
+python manage.py makemigrations polls
+# 3. Apply the migration to the database
+python manage.py migrate
+```
+
 
 ## Resources
 

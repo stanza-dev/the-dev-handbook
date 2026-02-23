@@ -15,8 +15,8 @@ Protect against Cross-Site Request Forgery attacks
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: CSRF Template Tag
+- ✏️ Fill in the Blank: CSRF Template Tag
 - 🧩 Multiple Choice: CSRF in AJAX
-- 🧩 Multiple Choice: Safe CSRF Exemption
+- 🧩 Challenge: Safe CSRF Exemption
 
 → [Practice in your IDE](https://stanza.dev/courses/django-security)

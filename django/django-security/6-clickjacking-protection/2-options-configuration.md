@@ -17,6 +17,12 @@ X-Frame-Options is a simple but effective HTTP header that controls whether your
 
 **ALLOW-FROM**: Deprecated—use CSP frame-ancestors instead.
 
+
+
+## Real World Context
+
+Many admin panels and internal tools are served without X-Frame-Options because developers assume they are "internal only." Attackers who compromise any page on the same network can frame these tools to perform administrative actions through the victim's authenticated session.
+
 ## Deep Dive
 
 ### Global Configuration
@@ -59,6 +65,13 @@ def embed_widget(request):
 def public_video(request):
     pass
 ```
+
+
+
+## Common Pitfalls
+
+1. **Using SAMEORIGIN as default instead of DENY** — Unless you actively embed your own pages in iframes, DENY is safer and eliminates an entire class of same-origin clickjacking attacks.
+2. **Forgetting to protect API endpoints** — Framing attacks can target any page that performs actions, including non-HTML responses that render in certain browser contexts.
 
 ## Best Practices
 

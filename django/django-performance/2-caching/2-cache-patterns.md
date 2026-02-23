@@ -17,6 +17,10 @@ Different caching strategies suit different use cases. Understanding patterns he
 
 **TTL**: Time-to-live for cache entries.
 
+## Real World Context
+
+This topic directly impacts production application performance. Teams that master these techniques reduce page load times, lower infrastructure costs, and deliver better user experiences.
+
 ## Deep Dive
 
 ### Cache-Aside Pattern
@@ -74,6 +78,11 @@ def get_with_stale(key, compute_fn, timeout=3600):
     return value
 ```
 
+## Common Pitfalls
+
+1. **Premature optimization** — Always profile before optimizing. Fix the biggest bottleneck first rather than guessing.
+2. **Ignoring trade-offs** — Every optimization has costs. Caching adds complexity, indexes slow writes, and async adds cognitive overhead.
+
 ## Best Practices
 
 1. **Use meaningful cache keys**: Include version for invalidation.
@@ -83,6 +92,35 @@ def get_with_stale(key, compute_fn, timeout=3600):
 ## Summary
 
 Cache-aside is simplest for read-heavy workloads. Write-through ensures consistency. Stale-while-revalidate provides best user experience for expensive computations.
+
+## Code Examples
+
+**Cache-aside pattern — check cache first, fall back to database**
+
+```python
+import threading
+
+def get_with_stale(key, compute_fn, timeout=3600):
+    value = cache.get(key)
+    stale_key = f'{key}:stale'
+    
+    if value is None:
+        # Check for stale value
+        value = cache.get(stale_key)
+        
+        # Recompute in background
+        thread = threading.Thread(
+            target=lambda: cache.set(key, compute_fn(), timeout)
+        )
+        thread.start()
+        
+        if value is None:
+            value = compute_fn()
+            cache.set(key, value, timeout)
+    
+# ...
+```
+
 
 ## Resources
 

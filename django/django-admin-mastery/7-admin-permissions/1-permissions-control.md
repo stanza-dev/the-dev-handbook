@@ -5,9 +5,33 @@ source_lesson: "django-admin-mastery-admin-permissions-control"
 
 # Admin Permissions
 
+## Introduction
+
+Django's admin provides fine-grained permission control at the model, object, and field levels. In this lesson, you will learn how to use the has_*_permission methods, custom permissions, and queryset filtering to build a secure admin interface.
+
+## Key Concepts
+
+**has_add_permission**: Controls whether the user can create new objects.
+
+**has_change_permission**: Controls whether the user can edit objects (obj=None for list access).
+
+**has_delete_permission**: Controls whether the user can delete objects.
+
+**has_view_permission**: Controls read-only access to objects.
+
+**has_module_permission**: Controls whether the app appears on the admin index.
+
+**get_queryset()**: Filters which objects are visible to the user.
+
+## Real World Context
+
+A news organization has reporters who can only edit their own drafts, editors who can edit any article, and publishers who can change an article's status to 'published'. By implementing has_change_permission with object-level checks and custom 'publish' permissions, the admin enforces the editorial workflow without any external authorization library.
+
+## Deep Dive
+
 Django provides fine-grained control over what users can do in the admin interface.
 
-## Permission Methods
+### Permission Methods
 
 ```python
 @admin.register(Article)
@@ -40,7 +64,7 @@ class ArticleAdmin(admin.ModelAdmin):
         return request.user.has_perm('blog.view_article')
 ```
 
-## Custom Permissions
+### Custom Permissions
 
 ```python
 # models.py
@@ -81,7 +105,7 @@ class ArticleAdmin(admin.ModelAdmin):
         return actions
 ```
 
-## Field-Level Permissions
+### Field-Level Permissions
 
 ```python
 @admin.register(Article)
@@ -105,7 +129,7 @@ class ArticleAdmin(admin.ModelAdmin):
         return readonly
 ```
 
-## Object-Level Permissions
+### Object-Level Permissions
 
 ```python
 @admin.register(Article)
@@ -123,7 +147,7 @@ class ArticleAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 ```
 
-## Group-Based Access
+### Group-Based Access
 
 ```python
 @admin.register(Article)
@@ -144,6 +168,49 @@ class ArticleAdmin(admin.ModelAdmin):
             filters.append('author')
         return filters
 ```
+
+## Common Pitfalls
+
+1. **Not handling obj=None in permission methods**: has_change_permission is called twice: once with obj=None (for list view access) and once with the actual object (for the change form). Returning False when obj is None blocks the entire change list.
+
+2. **Relying only on get_queryset() for security**: Filtering the queryset hides objects from the list view, but a user who knows the object's ID can still access it via direct URL unless has_change_permission also checks ownership.
+
+3. **Forgetting to call super()**: Not calling super() in permission methods bypasses Django's default permission framework, including the is_staff check.
+
+## Best Practices
+
+1. **Layer permissions from broad to narrow**: Start with has_module_permission (can the user see this app?), then has_view/change_permission (can they view/edit?), then get_queryset (which objects?), then field-level restrictions.
+
+2. **Use get_readonly_fields() for field-level control**: Instead of hiding fields entirely, make them read-only for restricted users so they can still see the information.
+
+3. **Auto-assign ownership in save_model()**: When creating new objects, set the author/owner to request.user so object-level permissions work from the first save.
+
+## Summary
+
+- Django admin provides five permission methods: has_add/change/delete/view/module_permission.
+- Permission methods receive obj=None for list-level checks and the instance for object-level checks.
+- Combine get_queryset() with permission methods for proper security.
+- Custom permissions defined in Model Meta enable fine-grained action control.
+- Use get_readonly_fields() and get_fields() for field-level permission control.
+
+## Code Examples
+
+**Object-level permissions: authors can edit their own articles, published articles cannot be deleted**
+
+```python
+@admin.register(Article)
+class ArticleAdmin(admin.ModelAdmin):
+    def has_change_permission(self, request, obj=None):
+        if obj is None:
+            return request.user.has_perm('blog.change_article')
+        return obj.author == request.user or request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and obj.status == 'published':
+            return False
+        return super().has_delete_permission(request, obj)
+```
+
 
 ## Resources
 

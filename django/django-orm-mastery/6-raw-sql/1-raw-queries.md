@@ -17,7 +17,11 @@ for person in people:
     print(person.first_name)  # Access as normal model attributes
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### With Parameters (Safe from SQL Injection)
+
+The following example demonstrates how to use with parameters (safe from sql injection) in practice:
 
 ```python
 # ALWAYS use parameters for user input
@@ -40,7 +44,11 @@ people = Person.objects.raw(
 Person.objects.raw(f"SELECT * FROM myapp_person WHERE name = '{name}'")
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### Mapping Columns to Fields
+
+The following example demonstrates how to use mapping columns to fields in practice:
 
 ```python
 # When column names don't match field names
@@ -76,7 +84,11 @@ def get_statistics():
         return rows
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### Fetching Methods
+
+The following example demonstrates how to use fetching methods in practice:
 
 ```python
 with connection.cursor() as cursor:
@@ -95,7 +107,11 @@ with connection.cursor() as cursor:
     columns = [col[0] for col in cursor.description]
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### Return Dictionaries
+
+The following example demonstrates how to use return dictionaries in practice:
 
 ```python
 def dictfetchall(cursor):
@@ -159,7 +175,20 @@ Person.objects.raw("""
     SELECT * FROM myapp_person
     WHERE metadata->>'role' = %s
 """, ['admin'])
+```\n\n## Common Pitfalls\n\n1. **Not testing edge cases** — Always test raw sql queries with empty querysets, NULL values, and boundary conditions.\n2. **Premature optimization** — Profile queries with `.explain()` before applying complex optimizations.\n3. **Ignoring database-specific behavior** — Some raw sql queries features behave differently across PostgreSQL, MySQL, and SQLite.\n\n## Best Practices\n\n1. **Keep queries readable** — Use meaningful variable names and chain methods logically.\n2. **Test with realistic data** — Create fixtures that match production data patterns for accurate performance testing.\n3. **Document complex queries** — Add comments explaining the business logic behind non-obvious query patterns.\n\n## Summary\n\n- Raw SQL Queries is a core Django ORM feature for building efficient database queries.\n- Always consider query performance and use `.explain()` to verify query plans.\n- Test edge cases including empty results, NULL values, and large datasets.\n- Refer to the Django documentation for database-specific behavior and limitations.
+
+## Code Examples
+
+**Key example from Raw SQL Queries**
+
+```python
+# Returns model instances (Person objects)
+people = Person.objects.raw('SELECT * FROM myapp_person')
+
+for person in people:
+    print(person.first_name)  # Access as normal model attributes
 ```
+
 
 ## Resources
 

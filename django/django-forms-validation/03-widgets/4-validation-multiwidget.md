@@ -9,6 +9,17 @@ source_lesson: "django-forms-validation-multiwidget"
 
 MultiWidget combines multiple widgets into one, useful for complex data like phone numbers or date ranges.
 
+## Key Concepts
+
+- **MultiWidget**: Combines sub-widgets into one logical widget.
+- **MultiValueField**: Validates and compresses sub-values.
+- **decompress()**: Splits stored value into sub-widget list.
+- **compress()**: Combines sub-values into one.
+
+## Real World Context
+
+A phone number field with separate area code, prefix, and line inputs. A date range with from/to pickers. MultiWidget keeps a single field in cleaned_data.
+
 ## Deep Dive
 
 ### Creating a MultiWidget
@@ -40,6 +51,16 @@ class PhoneField(forms.MultiValueField):
     def compress(self, data_list):
         return '-'.join(data_list) if data_list else ''
 ```
+
+## Common Pitfalls
+
+1. **Mismatched widget/field count** -- Causes index errors.
+2. **Returning None from decompress()** -- Must return list matching sub-widget count.
+
+## Best Practices
+
+1. **Descriptive sub-widget placeholders** -- Help users know what to enter.
+2. **Handle partial input in compress()** -- Decide behavior for incomplete values.
 
 ## Summary
 

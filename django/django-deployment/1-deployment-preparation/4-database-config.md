@@ -7,7 +7,7 @@ source_lesson: "django-deployment-database-config"
 
 ## Introduction
 
-Production databases need connection pooling, SSL, proper credentials management, and backup strategies.
+Production database configuration goes beyond just connection parameters. You need to consider connection pooling, SSL encryption, connection timeouts, and failover strategies. Django 6 introduces built-in PostgreSQL connection pooling that simplifies this significantly.
 
 ## Key Concepts
 
@@ -16,6 +16,10 @@ Production databases need connection pooling, SSL, proper credentials management
 **CONN_MAX_AGE**: Django setting for persistent connections.
 
 **SSL/TLS**: Encrypted database connections.
+
+## Real World Context
+
+This topic directly impacts production application performance. Teams that master these techniques reduce page load times, lower infrastructure costs, and deliver better user experiences.
 
 ## Deep Dive
 
@@ -87,6 +91,15 @@ DATABASES = {
 DATABASE_ROUTERS = ['myproject.routers.PrimaryReplicaRouter']
 ```
 
+## Common Pitfalls
+
+1. **Premature optimization** — Always profile before optimizing. Fix the biggest bottleneck first rather than guessing.
+2. **Ignoring trade-offs** — Every optimization has costs. Caching adds complexity, indexes slow writes, and async adds cognitive overhead.
+
+
+
+> **ASGI Caveat (Django 6 docs)**: When using ASGI servers (Uvicorn, Daphne), persistent database connections must be disabled (`CONN_MAX_AGE = 0`). Use your database backend's built-in connection pooling (e.g., PostgreSQL `"pool": True` option, available since Django 5.1) or an external pooler like PgBouncer instead.
+
 ## Best Practices
 
 1. **Use CONN_MAX_AGE**: Reduces connection overhead.
@@ -97,6 +110,29 @@ DATABASE_ROUTERS = ['myproject.routers.PrimaryReplicaRouter']
 ## Summary
 
 Configure databases with connection pooling (CONN_MAX_AGE), SSL encryption, and consider PgBouncer for high-traffic applications. Use environment variables for credentials.
+
+## Code Examples
+
+**PostgreSQL configuration with connection pooling and SSL**
+
+```python
+# settings/production.py
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ['DB_NAME'],
+        'USER': os.environ['DB_USER'],
+        'PASSWORD': os.environ['DB_PASSWORD'],
+        'HOST': os.environ['DB_HOST'],
+        'PORT': os.environ.get('DB_PORT', '5432'),
+        'CONN_MAX_AGE': 60,  # Keep connections open
+        'OPTIONS': {
+            'sslmode': 'require',
+        },
+    }
+}
+```
+
 
 ## Resources
 

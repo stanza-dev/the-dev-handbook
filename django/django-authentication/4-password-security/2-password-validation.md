@@ -5,6 +5,28 @@ source_lesson: "django-authentication-password-validation"
 
 # Password Validation
 
+## Introduction
+
+Strong passwords are the first line of defense against account takeover. Django's password validation framework rejects weak passwords at registration and password change, and it is fully customizable to enforce your organization's security policy.
+
+## Key Concepts
+
+**AUTH_PASSWORD_VALIDATORS**: Setting that lists active validators and their options.
+
+**UserAttributeSimilarityValidator**: Rejects passwords too similar to the username, email, or name.
+
+**MinimumLengthValidator**: Enforces a minimum password length (default 8 characters).
+
+**CommonPasswordValidator**: Rejects the 20,000 most common passwords.
+
+**Custom Validator**: Any class with `validate()` and `get_help_text()` methods.
+
+## Real World Context
+
+A fintech application requires passwords with at least 12 characters, one uppercase letter, one digit, and one special character. By writing three small custom validators and adding them to `AUTH_PASSWORD_VALIDATORS`, the policy is enforced consistently across signup, password change, password reset, and the Django admin.
+
+## Deep Dive
+
 Django includes validators to enforce password policies. Configure them to meet your security requirements.
 
 ## Default Validators
@@ -181,6 +203,26 @@ help_texts = password_validators_help_texts()
 # ['Your password must contain at least 8 characters.',
 #  'Your password can't be a commonly used password.', ...]
 ```
+
+## Common Pitfalls
+
+1. **Disabling validators in development**: If you remove validators locally, you create test accounts with weak passwords like `123`. Those same passwords might end up in staging or production fixtures.
+2. **Not calling `validate_password()` in custom forms**: Django's built-in auth forms call validators automatically, but if you build a custom registration form and skip `validate_password()`, the validators are bypassed entirely.
+3. **Over-restricting passwords**: Requiring uppercase, lowercase, digits, and special characters frustrates users and pushes them toward predictable patterns like `Password1!`. Length is more important than complexity.
+
+## Best Practices
+
+1. **Prioritize length over complexity**: A 16-character passphrase is stronger than an 8-character complex password. Set `MinimumLengthValidator` to 10 or 12.
+2. **Use all four default validators**: They complement each other -- similarity, length, common list, and numeric checks together catch most weak passwords.
+3. **Show help text to users**: Call `password_validators_help_texts()` and display the rules on the registration form so users know the requirements upfront.
+
+## Summary
+
+- Django validates passwords using validators listed in `AUTH_PASSWORD_VALIDATORS`.
+- Four built-in validators cover similarity, length, common passwords, and numeric-only checks.
+- Custom validators need only `validate()` and `get_help_text()` methods.
+- Always call `validate_password()` in custom forms to enforce the policy.
+- Prefer longer minimum length over complex character requirements.
 
 ## Resources
 

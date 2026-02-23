@@ -142,6 +142,44 @@ context = {
 return render(request, 'polls/detail.html', context)
 ```
 
+## Common Pitfalls
+
+- **Calling methods with parentheses in templates**: In Django templates, write `{{ user.get_full_name }}` without parentheses. Adding `()` will cause a template syntax error.
+- **Forgetting `{% load static %}` before using `{% static %}`**: The static tag requires loading the static template tag library first.
+- **Not namespacing app templates**: Place templates in `app/templates/app/` (not just `app/templates/`) to avoid name collisions between apps.
+
+## Best Practices
+
+- **Keep templates simple**: Move complex logic to views or template tags, not inline template code.
+- **Use template filters for formatting**: Apply `|date`, `|truncatewords`, and `|default` filters instead of formatting data in Python views.
+- **Always escape user input**: Django auto-escapes variables by default. Only use `|safe` when you are certain the content is safe HTML.
+
+## Summary
+
+- Django templates combine HTML with `{{ variables }}` and `{% tags %}` for dynamic content
+- Use `render(request, template, context)` to pass data from views to templates
+- **Filters** (`|lower`, `|date`, `|default`) transform variable output
+- **Tags** (`{% if %}`, `{% for %}`, `{% url %}`) provide logic and control flow
+- Templates are stored in `app/templates/app/` directories for proper namespacing
+
+## Code Examples
+
+**Passing context data to a Django template using the render shortcut**
+
+```python
+from django.shortcuts import render
+from .models import Question
+
+def index(request):
+    questions = Question.objects.order_by('-pub_date')[:5]
+    context = {
+        'questions': questions,
+        'page_title': 'Latest Questions',
+    }
+    return render(request, 'polls/index.html', context)
+```
+
+
 ## Resources
 
 - [Django Templates](https://docs.djangoproject.com/en/6.0/topics/templates/) — Official guide to Django's template language

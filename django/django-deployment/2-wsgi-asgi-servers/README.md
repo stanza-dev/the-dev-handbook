@@ -15,8 +15,8 @@ Configure and run Django with production application servers
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Gunicorn Workers Formula
+- 🧩 Challenge: Gunicorn Workers Formula
 - 🧩 Multiple Choice: WSGI vs ASGI
-- 🧩 Multiple Choice: Gevent Workers
+- ✏️ Fill in the Blank: Gevent Workers
 
 → [Practice in your IDE](https://stanza.dev/courses/django-deployment)

@@ -51,6 +51,8 @@ def create_order(cart, user):
 
 ### Sending Notifications
 
+To fire a signal, call `.send()` with the sender class and any keyword arguments your receivers expect:
+
 ```python
 from django.db import transaction
 from .tasks import send_notification
@@ -76,7 +78,11 @@ def accept_friend_request(request_id):
     )
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### Queuing Background Tasks
+
+The following example demonstrates how to use queuing background tasks in practice:
 
 ```python
 from django.db import transaction
@@ -101,7 +107,11 @@ def handle_upload(file, user):
     return upload
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### Cache Invalidation
+
+The following example demonstrates how to use cache invalidation in practice:
 
 ```python
 from django.db import transaction
@@ -125,22 +135,22 @@ def update_product(product_id, data):
 
 ## Nested Transactions
 
-With nested `atomic()` blocks, `on_commit` only runs when the **outermost** transaction commits:
+With nested `atomic()` blocks, `on_commit` only runs when the **outermost** transaction commits. Callbacks run in **registration order**:
 
 ```python
 from django.db import transaction
 
 with transaction.atomic():  # Outer
     User.objects.create(username='outer')
-    transaction.on_commit(lambda: print('Outer committed'))  # Runs last
+    transaction.on_commit(lambda: print('Outer committed'))  # Registered first
     
     with transaction.atomic():  # Inner (savepoint)
         User.objects.create(username='inner')
-        transaction.on_commit(lambda: print('Inner committed'))  # Runs first
+        transaction.on_commit(lambda: print('Inner committed'))  # Registered second
 
-# Output:
-# Inner committed
+# Output (registration order):
 # Outer committed
+# Inner committed
 ```
 
 ## Testing on_commit
@@ -157,7 +167,23 @@ class OrderTests(TestCase):
         
         # Callbacks were executed
         self.assertEqual(len(mail.outbox), 1)
+```\n\n## Common Pitfalls\n\n1. **Not testing edge cases** — Always test on_commit hooks with empty querysets, NULL values, and boundary conditions.\n2. **Premature optimization** — Profile queries with `.explain()` before applying complex optimizations.\n3. **Ignoring database-specific behavior** — Some on_commit hooks features behave differently across PostgreSQL, MySQL, and SQLite.\n\n## Best Practices\n\n1. **Keep queries readable** — Use meaningful variable names and chain methods logically.\n2. **Test with realistic data** — Create fixtures that match production data patterns for accurate performance testing.\n3. **Document complex queries** — Add comments explaining the business logic behind non-obvious query patterns.\n\n## Summary\n\n- on_commit Hooks is a core Django ORM feature for building efficient database queries.\n- Always consider query performance and use `.explain()` to verify query plans.\n- Test edge cases including empty results, NULL values, and large datasets.\n- Refer to the Django documentation for database-specific behavior and limitations.
+
+## Code Examples
+
+**Key example from on_commit Hooks**
+
+```python
+from django.db import transaction
+
+def create_order(cart, user):
+    with transaction.atomic():
+        order = Order.objects.create(user=user)
+        # DON'T DO THIS:
+        send_order_confirmation_email(order)  # What if transaction rolls back?
+        return order
 ```
+
 
 ## Resources
 

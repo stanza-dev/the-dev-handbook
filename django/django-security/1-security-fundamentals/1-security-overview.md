@@ -5,16 +5,31 @@ source_lesson: "django-security-overview"
 
 # Django Security Overview
 
-Django provides many built-in protections against common web vulnerabilities.
+## Introduction
 
-## Security Checklist
+Django is one of the most security-conscious web frameworks available, providing built-in protections against the most common web vulnerabilities. This lesson covers Django's security architecture, essential production settings, and the tools you need to audit your deployment.
+
+## Key Concepts
+
+- **Defense in Depth**: Django layers multiple protections so a single failure doesn't compromise the whole system.
+- **Secure by Default**: Most dangerous features (DEBUG, wildcard ALLOWED_HOSTS) must be explicitly enabled.
+- **manage.py check --deploy**: Built-in command that audits your settings against known security risks.
+- **OWASP Top 10**: Industry-standard list of the most critical web application security risks.
+
+## Real World Context
+
+Misconfigured Django deployments are routinely discovered through automated scanners. A single forgotten DEBUG=True in production leaks your entire settings module, database credentials, and source code to anyone who triggers an error. Running `check --deploy` before every release catches these issues before attackers do.
+
+## Deep Dive
+
+### Security Checklist
 
 ```bash
 # Run Django's deployment security check
 python manage.py check --deploy
 ```
 
-## Essential Security Settings
+### Essential Security Settings
 
 ```python
 # settings/production.py
@@ -40,13 +55,14 @@ SECURE_HSTS_PRELOAD = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
-CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False  # Keep False if using cookie-based AJAX CSRF pattern
 
 # Prevent clickjacking
 X_FRAME_OPTIONS = 'DENY'
 
-# Prevent XSS in old browsers
-SECURE_BROWSER_XSS_FILTER = True
+# Note: SECURE_BROWSER_XSS_FILTER was removed in Django 4.0
+# Modern protection uses Content Security Policy instead (see SECURE_CSP)
+# SECURE_CSP is configured via django.middleware.csp.ContentSecurityPolicyMiddleware
 
 # Prevent MIME type sniffing
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -55,7 +71,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 ```
 
-## Security Middleware
+### Security Middleware
 
 ```python
 # Ensure security middleware is enabled
@@ -70,7 +86,7 @@ MIDDLEWARE = [
 ]
 ```
 
-## Secret Key Generation
+### Secret Key Generation
 
 ```python
 # Generate a new secret key
@@ -82,7 +98,7 @@ import secrets
 print(secrets.token_urlsafe(50))
 ```
 
-## OWASP Top 10 and Django
+### OWASP Top 10 and Django
 
 Django provides protection against many OWASP Top 10 vulnerabilities:
 
@@ -97,7 +113,7 @@ Django provides protection against many OWASP Top 10 vulnerabilities:
 9. **Using Components with Known Vulnerabilities** - Keep Django updated
 10. **Insufficient Logging** - Django logging framework
 
-## Keeping Django Updated
+### Keeping Django Updated
 
 ```bash
 # Check for security updates
@@ -105,12 +121,55 @@ pip list --outdated
 
 # Check for known vulnerabilities
 pip install safety
-safety check
+safety scan
 
 # Or pip-audit
 pip install pip-audit
 pip-audit
 ```
+
+## Common Pitfalls
+
+1. **Leaving DEBUG=True in production** — Exposes stack traces, settings, and SQL queries to anyone who triggers an error.
+2. **Forgetting to run check --deploy** — Many misconfigurations only surface under this flag, not during normal development.
+3. **Ordering middleware incorrectly** — SecurityMiddleware must be first; placing it later means earlier middleware operates without its protections.
+
+## Best Practices
+
+1. **Automate check --deploy in CI/CD** — Fail the build if security checks don't pass.
+2. **Use environment variables for secrets** — Never hardcode SECRET_KEY or database credentials.
+3. **Keep Django and dependencies updated** — Subscribe to Django's security mailing list for patch notifications.
+
+## Summary
+
+- Django ships with strong defaults, but production requires explicit configuration of HTTPS, cookies, and host validation.
+- Run `manage.py check --deploy` before every release to catch misconfigurations.
+- Layer your protections: middleware ordering, secure cookies, HSTS, and CSP all work together.
+
+## Code Examples
+
+**Essential Django production security settings that should be configured before any deployment**
+
+```python
+# settings/production.py
+import os
+
+DEBUG = False
+SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
+ALLOWED_HOSTS = ['example.com', 'www.example.com']
+
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+```
+
 
 ## Resources
 

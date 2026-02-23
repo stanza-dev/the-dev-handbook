@@ -5,9 +5,29 @@ source_lesson: "django-admin-mastery-admin-actions"
 
 # Custom Admin Actions
 
+## Introduction
+
+Admin actions let you perform bulk operations on selected objects directly from the change list. In this lesson, you will learn how to create custom actions for publishing, exporting, and managing records in bulk.
+
+## Key Concepts
+
+**Admin action**: A function that receives the ModelAdmin, the HTTP request, and a queryset of selected objects.
+
+**@admin.action**: Decorator that sets the human-readable description shown in the action dropdown.
+
+**message_user()**: Method to display success or error feedback after an action completes.
+
+**get_actions()**: Method to dynamically add or remove actions based on user permissions.
+
+## Real World Context
+
+In an e-commerce back office, a customer support team receives dozens of refund requests daily. Without bulk actions, each order must be opened individually to change its status. A custom 'Mark as refunded' action lets the team select 20 orders at once from the change list and process them in a single click, saving hours of repetitive work.
+
+## Deep Dive
+
 Admin actions let users perform bulk operations on selected objects.
 
-## Basic Action
+### Basic Action
 
 ```python
 from django.contrib import admin
@@ -34,7 +54,7 @@ class ArticleAdmin(admin.ModelAdmin):
         self.message_user(request, f'{count} articles marked as draft.')
 ```
 
-## Export Action
+### Export Action
 
 ```python
 import csv
@@ -63,7 +83,7 @@ class ArticleAdmin(admin.ModelAdmin):
         return response
 ```
 
-## Action with Confirmation
+### Action with Confirmation
 
 ```python
 from django.contrib.admin import helpers
@@ -96,7 +116,7 @@ class ArticleAdmin(admin.ModelAdmin):
         )
 ```
 
-## Conditional Actions
+### Conditional Actions
 
 ```python
 @admin.register(Article)
@@ -131,7 +151,7 @@ class ArticleAdmin(admin.ModelAdmin):
         )
 ```
 
-## Global Actions
+### Global Actions
 
 ```python
 # admin.py
@@ -162,6 +182,30 @@ export_selected_objects.short_description = 'Export selected objects'
 # Add to all admin sites
 admin.site.add_action(export_selected_objects, 'export_selected')
 ```
+
+## Common Pitfalls
+
+1. **Forgetting to call message_user()**: Actions that complete silently leave admins wondering if anything happened. Always provide feedback, even on partial success.
+
+2. **Not handling empty querysets**: If the user selects no objects or the queryset returns zero matches, your action should detect this and display a warning instead of silently doing nothing.
+
+3. **Using queryset.delete() without confirmation**: Destructive actions should either use Django's built-in deletion confirmation or implement a custom confirmation step to prevent accidental data loss.
+
+## Best Practices
+
+1. **Use @admin.action(permissions=[...])** to restrict actions to users with specific permissions rather than checking permissions inside the function body.
+
+2. **Return an HttpResponse for exports**: Actions that generate files (CSV, PDF) should return an HttpResponse with the appropriate content type and Content-Disposition header.
+
+3. **Keep actions focused**: Each action should do one thing. Instead of a single action with multiple behaviors based on flags, create separate named actions.
+
+## Summary
+
+- Admin actions process selected objects in bulk from the change list.
+- Define actions as methods on ModelAdmin and list them in the actions attribute.
+- The @admin.action decorator sets the display name and optional permissions.
+- Always call message_user() to provide feedback after the action completes.
+- Use get_actions() to conditionally show or hide actions based on user permissions.
 
 ## Resources
 

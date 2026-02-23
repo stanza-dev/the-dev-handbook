@@ -14,8 +14,8 @@ Add an extra layer of security with TOTP and SMS verification
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- ✏️ Fill in the Blank: OTP Required Decorator
 - 🧩 Challenge: TOTP Code Length
+- ✏️ Fill in the Blank: OTP Required Decorator
 - 🧩 Challenge: TOTP Time Window
 
 → [Practice in your IDE](https://stanza.dev/courses/django-authentication)

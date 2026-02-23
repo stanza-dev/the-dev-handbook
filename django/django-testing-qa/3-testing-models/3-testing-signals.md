@@ -80,6 +80,16 @@ class CustomSignalTests(TestCase):
             article_published.disconnect(handler)
 ```
 
+## Real World Context
+
+Signals are Django's way of implementing the observer pattern, commonly used for creating user profiles on registration, sending notifications on model changes, or invalidating caches. Because signals are decoupled from the code that triggers them, they are easy to break silently. Tests are the only reliable way to verify signal behavior.
+
+## Common Pitfalls
+
+1. **Not reconnecting signals after disconnecting**: If you disconnect a signal in setUp, always reconnect it in tearDown. Otherwise, later tests may fail.
+2. **Testing signal internals instead of effects**: Test that a profile was created, not that post_save was called. Test the outcome, not the mechanism.
+3. **Signals firing unexpectedly in tests**: setUpTestData and setUp both trigger post_save. Be aware of side effects from test data creation.
+
 ## Best Practices
 
 1. **Mock external effects**: Email sending, API calls, etc.

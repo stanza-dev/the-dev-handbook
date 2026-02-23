@@ -7,7 +7,7 @@ source_lesson: "django-deployment-metrics"
 
 ## Introduction
 
-Metrics provide quantitative data about your application's performance and health.
+Application metrics provide quantitative insight into how your Django application performs under real load. Prometheus-style metrics track request rates, error percentages, and latency distributions — the RED method (Rate, Errors, Duration) that powers modern observability.
 
 ## Key Metrics
 
@@ -49,6 +49,24 @@ def api_view(request):
     ORDERS.labels(status='success').inc()
 ```
 
+## Key Concepts
+
+The key terms and concepts for this topic are introduced in the Deep Dive section below.
+
+
+## Deep Dive
+
+See the detailed technical content and code examples throughout this lesson.
+
+## Real World Context
+
+This topic directly impacts production application performance. Teams that master these techniques reduce page load times, lower infrastructure costs, and deliver better user experiences.
+
+## Common Pitfalls
+
+1. **Premature optimization** — Always profile before optimizing. Fix the biggest bottleneck first rather than guessing.
+2. **Ignoring trade-offs** — Every optimization has costs. Caching adds complexity, indexes slow writes, and async adds cognitive overhead.
+
 ## Best Practices
 
 1. **Track RED metrics**: Rate, Errors, Duration.
@@ -58,6 +76,26 @@ def api_view(request):
 ## Summary
 
 Metrics help you understand application performance. Track request rate, latency, and errors. Use Prometheus and Grafana for collection and visualization.
+
+## Code Examples
+
+**Custom Prometheus metrics with Counter and Histogram in Django**
+
+```python
+# pip install django-prometheus
+
+INSTALLED_APPS = ['django_prometheus']
+
+MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+    ...,
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
+]
+
+# urls.py
+path('metrics/', include('django_prometheus.urls')),
+```
+
 
 ## Resources
 

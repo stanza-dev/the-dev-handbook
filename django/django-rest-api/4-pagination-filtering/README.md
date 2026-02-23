@@ -15,7 +15,7 @@ Handle large datasets with pagination, filtering, and search
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Pagination Types
+- 🔗 Matching: Pagination Types
 - 🧩 Multiple Choice: Search Multiple Fields
 - 🧩 Multiple Choice: Safe Ordering
 

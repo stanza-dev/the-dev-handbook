@@ -19,6 +19,12 @@ XSS isn't just about HTML. User data can appear in JavaScript, URLs, CSS, and at
 
 **Attribute Context**: Inside HTML attribute values.
 
+
+
+## Real World Context
+
+Many XSS vulnerabilities occur not in HTML body text but in JavaScript contexts, URL attributes, or CSS. The Samy worm on MySpace exploited CSS expression injection, and countless sites have been compromised through href="javascript:..." in user-supplied URLs.
+
 ## Deep Dive
 
 ### JavaScript Context
@@ -80,6 +86,13 @@ def safe_class(value):
     allowed = ['primary', 'secondary', 'danger']
     return value if value in allowed else 'default'
 ```
+
+
+
+## Common Pitfalls
+
+1. **Using HTML escaping inside <script> tags** — HTML entities like &lt; are not JavaScript-safe; always use |escapejs or json.dumps() for JavaScript contexts.
+2. **Allowing user-supplied URLs without scheme validation** — A href value of javascript:alert(1) bypasses HTML escaping entirely; always validate URL schemes.
 
 ## Best Practices
 

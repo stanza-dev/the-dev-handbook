@@ -17,6 +17,12 @@ CSRF protection depends on cookies and tokens working together. Proper cookie co
 
 **Double Submit Cookie**: Pattern where token in cookie must match token in request.
 
+
+
+## Real World Context
+
+Misconfigured CSRF cookies are a common source of 403 errors after deploying to HTTPS. Forgetting CSRF_TRUSTED_ORIGINS breaks cross-origin form submissions entirely, leaving developers scrambling to debug production issues that never appeared in local development.
+
 ## Deep Dive
 
 ### Cookie Configuration
@@ -27,8 +33,8 @@ CSRF protection depends on cookies and tokens working together. Proper cookie co
 # Secure: Only send over HTTPS
 CSRF_COOKIE_SECURE = True
 
-# HttpOnly: Prevent JavaScript access (use header instead)
-CSRF_COOKIE_HTTPONLY = True
+# HttpOnly: Set False if JavaScript needs to read the CSRF cookie
+CSRF_COOKIE_HTTPONLY = False
 
 # SameSite: Control cross-origin behavior
 CSRF_COOKIE_SAMESITE = 'Lax'  # or 'Strict'
@@ -55,6 +61,13 @@ Strict: Never send cookie cross-origin (breaks login from external links)
 Lax: Send on navigation, not on POST (good default)
 None: Always send (requires Secure=True)
 ```
+
+
+
+## Common Pitfalls
+
+1. **Setting CSRF_COOKIE_HTTPONLY=True with JavaScript CSRF reads** — If your frontend reads the CSRF token from the cookie (common in SPAs), HttpOnly blocks that access entirely.
+2. **Forgetting CSRF_TRUSTED_ORIGINS after moving to HTTPS** — Django 4.0+ requires explicit trusted origins for cross-origin HTTPS requests; omitting this causes silent 403 errors.
 
 ## Best Practices
 

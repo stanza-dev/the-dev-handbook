@@ -15,6 +15,10 @@ Django provides built-in views and forms for secure password reset via email.
 
 **Password Reset Views**: Built-in CBVs.
 
+## Real World Context
+
+Password reset is the most common support request in any web application. A broken reset flow means locked-out users, increased support costs, and lost revenue. Django's built-in views handle token generation, email sending, and secure confirmation, so you do not need to build (and inevitably mis-build) this critical workflow from scratch.
+
 ## Deep Dive
 
 ### URL Configuration
@@ -54,6 +58,12 @@ This link expires in {{ expiry }} hours.
 # settings.py
 PASSWORD_RESET_TIMEOUT = 3600  # 1 hour (in seconds)
 ```
+
+## Common Pitfalls
+
+1. **Revealing whether an email exists**: The default `PasswordResetView` intentionally shows the same confirmation page whether the email is registered or not. Customizing it to say "email not found" leaks user enumeration data.
+2. **Setting `PASSWORD_RESET_TIMEOUT` too long**: The default is 3 days (259200 seconds). For most apps, 1 hour is sufficient. Longer windows increase the risk of token interception.
+3. **Not configuring an email backend**: Without `EMAIL_BACKEND` set (or set to the console backend in production), users never receive the reset email and assume the feature is broken.
 
 ## Best Practices
 

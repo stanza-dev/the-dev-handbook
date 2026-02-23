@@ -19,6 +19,8 @@ Deploying Django to production requires careful configuration to ensure security
 
 ## Critical Production Settings
 
+These are the minimum settings you must change when deploying to production. Never use development defaults in a live environment.
+
 ```python
 # settings.py
 
@@ -48,6 +50,8 @@ DATABASES = {
 
 ## Security Settings
 
+Django provides several settings to enforce HTTPS, prevent clickjacking, and add content security policies.
+
 ```python
 # HTTPS Settings
 SECURE_SSL_REDIRECT = True  # Redirect HTTP to HTTPS
@@ -67,6 +71,13 @@ SECURE_CSP = {
     'script-src': [CSP.SELF],
     'style-src': [CSP.SELF],
 }
+
+# Important: You must add ContentSecurityPolicyMiddleware to MIDDLEWARE:
+# MIDDLEWARE = [
+#     ...
+#     'django.middleware.security.ContentSecurityPolicyMiddleware',
+#     ...
+# ]
 
 # Other security settings
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -172,6 +183,46 @@ load_dotenv()
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 ```
+
+## Common Pitfalls
+
+- **Leaving `DEBUG = True` in production**: This exposes source code, settings, and local variables in error pages to anyone visiting your site.
+- **Committing `SECRET_KEY` to version control**: The secret key is used for cryptographic signing. If compromised, attackers can forge cookies and tokens.
+- **Setting `ALLOWED_HOSTS = ['*']`**: This defeats the purpose of Host header validation. Always list your specific domains.
+
+## Best Practices
+
+- **Use environment variables** for all secrets (`SECRET_KEY`, database credentials, API keys).
+- **Split settings into multiple files**: Use `base.py`, `development.py`, and `production.py` to keep environment-specific settings separate.
+- **Run Django's deployment checklist**: Execute `python manage.py check --deploy` to identify security issues before going live.
+
+## Summary
+
+- Set `DEBUG = False` and configure `ALLOWED_HOSTS` with your actual domains
+- Use **environment variables** for `SECRET_KEY`, database credentials, and other secrets
+- Enable security settings: `SECURE_SSL_REDIRECT`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, HSTS
+- Split settings into `base.py`, `development.py`, and `production.py` for clean environment management
+- Run `python manage.py check --deploy` to verify production readiness
+
+## Code Examples
+
+**Essential Django production settings for security and deployment**
+
+```python
+import os
+
+# Production settings
+DEBUG = False
+ALLOWED_HOSTS = ['yourdomain.com', 'www.yourdomain.com']
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+
+# Security
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 31536000
+```
+
 
 ## Resources
 

@@ -3,6 +3,23 @@ source_course: "django-forms-validation"
 source_lesson: "django-forms-validation-built-in-widgets"
 ---
 
+## Introduction
+
+Widgets control the HTML Django renders for form fields, handling presentation while fields handle validation.
+
+## Key Concepts
+
+- **Widget**: Renders HTML input and extracts POST data.
+- **attrs**: Dict of HTML attributes for the widget.
+- **TextInput / Textarea / PasswordInput**: Text widgets.
+- **Select / RadioSelect**: Choice widgets.
+
+## Real World Context
+
+CSS framework integration uses `attrs` to add classes like `form-control`. Add `aria-label` for accessibility.
+
+## Deep Dive
+
 # Built-in Widgets
 
 Widgets control the HTML rendering of form fields. Django provides widgets for all common input types.
@@ -188,6 +205,50 @@ class ModifiedForm(forms.Form):
 {{ form.name.html_name }}  <!-- name -->
 {{ form.name.value }}  <!-- current value -->
 ```
+
+## Common Pitfalls
+
+1. **Wrong widget on EmailField** -- Use `EmailInput` not `TextInput`.
+2. **Shared attrs at class level** -- Copy in `__init__`.
+3. **DateInput defaults to text** -- Add `type=date` explicitly.
+
+## Best Practices
+
+1. **Loop attrs in `__init__`** -- Uniform CSS classes.
+2. **Match widget to field** -- Correct mobile keyboard.
+3. **Add `autocomplete`** -- Better browser autofill.
+
+## Summary
+
+- Widgets render HTML; fields validate.
+- Pass attrs for CSS/HTML attributes.
+- Use correct widget subclass for HTML5 types.
+- Choice widgets: dropdown, radio, checkbox.
+- Add autocomplete for UX.
+
+## Code Examples
+
+**Widgets control the HTML output of form fields -- use attrs to add CSS classes, placeholders, and other HTML attributes**
+
+```python
+from django import forms
+
+class StyledForm(forms.Form):
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'your@email.com',
+            'autocomplete': 'email',
+        })
+    )
+    priority = forms.ChoiceField(
+        choices=[('low', 'Low'), ('medium', 'Medium'), ('high', 'High')],
+        widget=forms.RadioSelect,
+    )
+# email renders: <input type="email" class="form-control" placeholder="your@email.com">
+# priority renders: <ul> with <input type="radio"> elements
+```
+
 
 ## Resources
 

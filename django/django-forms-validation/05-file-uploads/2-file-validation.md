@@ -9,6 +9,17 @@ source_lesson: "django-forms-validation-file-validation"
 
 Validate file type, size, and content to prevent security issues.
 
+## Key Concepts
+
+- **FileExtensionValidator**: Checks extensions against allowed list.
+- **Content-type validation**: Check actual content via python-magic.
+- **File size validation**: Custom validator checking file.size.
+- **clean_<field>()**: For image dimension validation.
+
+## Real World Context
+
+A document system must block executables disguised as PDFs. Combining extension and MIME type checking provides defense in depth.
+
 ## Deep Dive
 
 ### File Size Validator
@@ -49,6 +60,17 @@ def validate_file_type(file):
     if mime not in allowed:
         raise ValidationError('Invalid file type')
 ```
+
+## Common Pitfalls
+
+1. **Trusting extensions alone** -- Renamed malware passes extension check.
+2. **Not resetting file pointer** -- Call seek(0) after reading.
+3. **InMemory vs Temporary uploads** -- Both expose .size but behave differently.
+
+## Best Practices
+
+1. **Layer multiple validators** -- Extension + MIME + size.
+2. **Set DATA_UPLOAD_MAX_MEMORY_SIZE** -- Prevents DoS before validators run.
 
 ## Summary
 

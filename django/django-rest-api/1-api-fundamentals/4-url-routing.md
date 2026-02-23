@@ -31,6 +31,8 @@ Your URL structure directly impacts:
 
 ### Basic API URL Configuration
 
+Use `include()` to keep your API URLs in a separate file, then mount them under a prefix like `api/` in the project-level configuration:
+
 ```python
 # myproject/urls.py
 from django.urls import path, include
@@ -62,7 +64,11 @@ urlpatterns = [
 ]
 ```
 
+Naming each URL pattern (e.g., `name='api-article-list'`) enables reverse lookups with `reverse()`, making your code resilient to URL changes.
+
 ### Path Converters
+
+Django provides several built-in path converters that capture URL segments and automatically convert them to the correct Python type:
 
 ```python
 # Built-in converters
@@ -73,7 +79,11 @@ path('users/<uuid:id>/', ...)        # UUID: /users/550e8400-e29b-41d4.../
 path('tags/<str:name>/', ...)        # String (default): /tags/python/
 ```
 
+The `<int:pk>` converter rejects non-integer values with a 404 automatically, saving you from manual type-checking in the view.
+
 ### API Versioning with URLs
+
+Separate versioned URL files let you evolve your API without breaking existing clients. Each version gets its own URL module and namespace:
 
 ```python
 # myproject/urls.py
@@ -95,7 +105,11 @@ urlpatterns = [
 ]
 ```
 
+The `app_name` attribute creates a namespace so you can reference URLs as `api-v1:articles` without colliding with other apps.
+
 ### Using URL Names in Code
+
+The `reverse()` function generates URLs from pattern names, so your code stays correct even when URL paths change:
 
 ```python
 from django.urls import reverse
@@ -117,7 +131,11 @@ def article_detail(request, pk):
     })
 ```
 
+Using `reverse()` instead of hardcoded strings ensures your links stay valid as URL patterns evolve. The `request.build_absolute_uri()` helper generates a full URL including the domain.
+
 ### RESTful URL Patterns
+
+REST conventions dictate using plural nouns for resource collections and relying on HTTP methods for actions, not verb-based URLs:
 
 ```python
 # Following REST conventions
@@ -135,6 +153,8 @@ urlpatterns = [
     # path('getArticles/', ...)    # BAD
 ]
 ```
+
+The commented-out `BAD` examples show the anti-pattern of embedding actions in URLs. Instead, let `GET /articles/` handle listing and `POST /articles/` handle creation.
 
 ## Common Pitfalls
 
@@ -156,6 +176,27 @@ urlpatterns = [
 ## Summary
 
 Django's URL routing maps HTTP requests to view functions using `path()` patterns. Design RESTful URLs using plural nouns for resources, path converters for dynamic segments, and namespaces for organization. Always name your URL patterns to enable reverse URL lookups. Keep URLs consistent, lowercase, and limit nesting depth for maintainable APIs.
+
+## Code Examples
+
+**API URL routing with path converters and namespacing**
+
+```python
+from django.urls import path, include
+
+# myapp/api_urls.py
+urlpatterns = [
+    path('articles/', views.article_list, name='api-article-list'),
+    path('articles/<int:pk>/', views.article_detail, name='api-article-detail'),
+    path('articles/<int:article_id>/comments/', views.article_comments),
+]
+
+# project/urls.py
+urlpatterns = [
+    path('api/v1/', include('myapp.api_urls')),
+]
+```
+
 
 ## Resources
 

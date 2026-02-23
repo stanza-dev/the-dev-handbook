@@ -84,6 +84,39 @@ Django excels at building:
 - **Scientific computing platforms**
 - **News and publishing sites**
 
+## Common Pitfalls
+
+- **Confusing MTV with MVC**: Django's View is like MVC's Controller, and Django's Template is like MVC's View. The naming difference trips up developers coming from other frameworks.
+- **Assuming Django is only for large projects**: Django's "batteries included" philosophy works great for small projects too. You can ignore features you don't need.
+- **Skipping the official tutorial**: Django's documentation is exceptionally good. Jumping straight into third-party tutorials often means missing important conventions.
+
+## Best Practices
+
+- **Follow Django conventions**: Use the standard project structure and naming patterns. Fighting the framework leads to frustration.
+- **Keep apps small and focused**: Each app should do one thing well. This promotes reusability and clean architecture.
+- **Read the release notes**: Django's release notes document breaking changes, deprecations, and new features clearly.
+
+## Summary
+
+- Django is a high-level Python web framework following the **Model-Template-View (MTV)** architectural pattern
+- Core principles include DRY (Don't Repeat Yourself), explicit over implicit, and loose coupling
+- Django is "batteries included" with built-in authentication, admin, ORM, and security protections
+- It powers major sites like Instagram and Pinterest, proving its scalability
+- The framework excels at content management systems, APIs, e-commerce platforms, and social networks
+
+## Code Examples
+
+**A simple Django view function that returns an HTTP response, demonstrating the core request-response cycle**
+
+```python
+# A minimal Django view
+from django.http import HttpResponse
+
+def hello(request):
+    return HttpResponse("Hello, Django!")
+```
+
+
 ## Resources
 
 - [Django Overview](https://docs.djangoproject.com/en/6.0/intro/overview/) — Official overview of Django's capabilities and design philosophy

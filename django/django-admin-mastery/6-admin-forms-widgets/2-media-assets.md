@@ -5,9 +5,29 @@ source_lesson: "django-admin-mastery-admin-media-assets"
 
 # Admin Media and JavaScript
 
+## Introduction
+
+Django admin supports adding custom CSS and JavaScript to enhance the interface with interactive features, custom styling, and dynamic behavior. This lesson covers the Media class, inline scripts, and best practices for admin asset management.
+
+## Key Concepts
+
+**Media class**: Inner class on ModelAdmin or Form that declares CSS and JS assets.
+
+**django.jQuery**: The namespaced jQuery instance available in admin pages.
+
+**extrastyle block**: Template block for adding extra CSS in admin templates.
+
+**admin_change_form_document_ready**: Template block for inline JavaScript on the change form.
+
+## Real World Context
+
+A real estate listing admin needs a character counter on the description field, a map widget for the address field, and conditional field visibility based on property type. Adding these via the Media class keeps the admin enhancement code organized and loaded only on the pages that need it, without modifying Django core templates.
+
+## Deep Dive
+
 Add custom CSS and JavaScript to enhance admin functionality.
 
-## Media Class on ModelAdmin
+### Media Class on ModelAdmin
 
 ```python
 @admin.register(Article)
@@ -25,7 +45,7 @@ class ArticleAdmin(admin.ModelAdmin):
         )
 ```
 
-## Dynamic Media Based on View
+### Dynamic Media Based on View
 
 ```python
 @admin.register(Article)
@@ -38,7 +58,7 @@ class ArticleAdmin(admin.ModelAdmin):
         )
 ```
 
-## Custom JavaScript for Admin
+### Custom JavaScript for Admin
 
 ```javascript
 // static/admin/js/custom_admin.js
@@ -86,7 +106,7 @@ class ArticleAdmin(admin.ModelAdmin):
 })(django.jQuery);
 ```
 
-## Custom CSS for Admin
+### Custom CSS for Admin
 
 ```css
 /* static/admin/css/custom_admin.css */
@@ -147,7 +167,7 @@ class ArticleAdmin(admin.ModelAdmin):
 }
 ```
 
-## Inline JavaScript
+### Inline JavaScript
 
 ```python
 @admin.register(Article)
@@ -175,6 +195,30 @@ class ArticleAdmin(admin.ModelAdmin):
 </script>
 {% endblock %}
 ```
+
+## Common Pitfalls
+
+1. **Using `$` instead of `django.jQuery`**: The admin loads jQuery in a namespaced variable. Using bare `$` will fail if another library is loaded. Always use `(function($) { ... })(django.jQuery)` to safely alias it.
+
+2. **Loading large external libraries unconditionally**: Adding a charting library to every admin page via the Media class wastes bandwidth. Use change_view() with extra_context to load heavy assets only on specific pages.
+
+3. **Not checking if elements exist before binding**: Admin pages are dynamic. JavaScript that assumes an element exists will throw errors on list views where that element is not present.
+
+## Best Practices
+
+1. **Use static files, not CDN links in production**: CDN links can go down or introduce version mismatches. Bundle assets in your static files for reliability.
+
+2. **Scope CSS selectors to admin classes**: Use `.module`, `#content`, or Django's admin CSS class names to avoid styling conflicts with the rest of the admin interface.
+
+3. **Use the document-ready template block**: For page-specific JavaScript, use the `admin_change_form_document_ready` block in a custom template rather than the Media class to ensure the DOM is ready.
+
+## Summary
+
+- The inner Media class on ModelAdmin declares CSS and JavaScript assets.
+- Use `(function($) { ... })(django.jQuery)` for safe jQuery usage.
+- Override change_view() to load assets conditionally on specific pages.
+- Custom templates with extrastyle and document-ready blocks enable targeted enhancements.
+- Scope CSS selectors and check element existence to avoid conflicts.
 
 ## Resources
 

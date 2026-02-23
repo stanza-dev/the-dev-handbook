@@ -8,6 +8,7 @@ Design robust models with advanced field options and model inheritance
 
 1. [Model Meta Options](./1-meta-options.md)
 2. [Model Inheritance Patterns](./2-model-inheritance.md)
+3. [Model Inheritance Patterns](./3-inheritance-patterns.md)
 
 ## Practice Challenges
 

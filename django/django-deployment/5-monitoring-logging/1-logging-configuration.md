@@ -5,6 +5,28 @@ source_lesson: "django-deployment-logging-configuration"
 
 # Production Logging
 
+## Introduction
+
+Proper logging is the backbone of production observability. Django's logging framework, built on Python's `logging` module, supports multiple handlers, formatters, and log levels. Combined with error tracking tools like Sentry, it enables rapid debugging of production issues.
+
+## Key Concepts
+
+- **Logger**: A named channel that application code uses to emit log messages (e.g., `logging.getLogger(__name__)`).
+- **Handler**: A destination for log messages (console, file, email, external service).
+- **Formatter**: Defines the format of log output (text, JSON for structured logging).
+- **Sentry**: An error tracking platform that captures exceptions with full stack traces and context.
+
+## Real World Context
+
+Production Django applications typically use JSON-formatted logging for machine parseability, sent to stdout for container-based deployments. Log aggregation services (ELK stack, Datadog, CloudWatch) collect and index these logs for searching and alerting. Sentry integration captures unhandled exceptions automatically, providing stack traces, request data, and user context that make debugging 10x faster than reading raw logs.
+
+## Deep Dive
+
+Production logging must be structured, rotated, and centralized. Django's logging configuration uses Python's standard logging module with dictConfig format.
+
+
+## Introduction
+
 Proper logging is essential for debugging and monitoring production systems.
 
 ## Django Logging Configuration
@@ -196,6 +218,59 @@ urlpatterns = [
     path('', include('django_prometheus.urls')),
 ]
 ```
+
+## Summary
+
+- The techniques covered in this lesson are essential for production-quality applications.
+- Always measure before and after optimizing to verify improvements.
+- Start with the simplest approach and add complexity only when needed.
+
+## Common Pitfalls
+
+1. **Logging sensitive data** — Never log passwords, API keys, credit card numbers, or personally identifiable information. Use Sentry's `send_default_pii=False` setting.
+2. **Using print() instead of logging** — `print()` statements bypass the logging framework's filtering, formatting, and routing capabilities. Always use `logger.info()` etc.
+3. **Setting log level too low in production** — DEBUG-level logging generates enormous volumes that can fill disks and degrade performance. Use INFO or WARNING in production.
+
+## Best Practices
+
+1. **Use structured (JSON) logging** — JSON logs are parseable by log aggregation tools, enabling powerful search and alerting.
+2. **Set up Sentry for error tracking** — It automatically captures exceptions with context, eliminating the need to grep through logs for error details.
+3. **Implement health check endpoints** — Health checks let load balancers and monitoring systems verify your application is working without relying solely on logs.
+
+## Summary
+
+- The techniques covered in this lesson are essential for production-quality Django applications.
+- Always measure and profile before optimizing to ensure you're addressing the actual bottleneck.
+- Start with the simplest approach and add complexity only when monitoring shows it's needed.
+
+## Code Examples
+
+**Django production logging with JSON formatter, file rotation, and Sentry integration**
+
+```python
+# settings/production.py
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'json': {
+            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+            'format': '%(asctime)s %(levelname)s %(name)s %(message)s',
+        },
+    },
+    
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+# ...
+```
+
 
 ## Resources
 

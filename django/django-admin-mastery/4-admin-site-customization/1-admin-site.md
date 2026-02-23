@@ -5,9 +5,31 @@ source_lesson: "django-admin-mastery-custom-admin-site"
 
 # Custom Admin Site
 
+## Introduction
+
+Django's default admin site works out of the box, but you can customize its header, title, and behavior or create entirely separate admin sites for different audiences. This lesson covers site-level customization from simple branding to multiple admin interfaces.
+
+## Key Concepts
+
+**AdminSite**: The class representing an admin site instance.
+
+**site_header**: Text displayed in the admin page header.
+
+**site_title**: Text used in the browser tab title.
+
+**index_title**: Heading on the admin index page.
+
+**each_context()**: Method to inject variables into every admin template.
+
+## Real World Context
+
+A multi-tenant SaaS application serves both content editors and system administrators. Content editors need a simplified admin showing only articles and pages, while system admins need access to users, permissions, and audit logs. Creating two AdminSite subclasses with different registered models and has_permission() checks gives each audience a focused interface without any custom views.
+
+## Deep Dive
+
 You can customize the default admin site or create multiple admin sites for different purposes.
 
-## Basic Site Customization
+### Basic Site Customization
 
 ```python
 # admin.py
@@ -19,7 +41,7 @@ admin.site.site_title = 'My Company Admin Portal'
 admin.site.index_title = 'Welcome to the Admin Panel'
 ```
 
-## Custom AdminSite Class
+### Custom AdminSite Class
 
 ```python
 # admin.py
@@ -46,7 +68,7 @@ class MyAdminSite(AdminSite):
 my_admin_site = MyAdminSite(name='myadmin')
 ```
 
-## Register Models with Custom Site
+### Register Models with Custom Site
 
 ```python
 # admin.py
@@ -70,7 +92,7 @@ urlpatterns = [
 ]
 ```
 
-## Multiple Admin Sites
+### Multiple Admin Sites
 
 ```python
 # admin.py
@@ -102,7 +124,7 @@ super_admin.register(Group)
 super_admin.register(SystemSettings)
 ```
 
-## Custom Admin Templates
+### Custom Admin Templates
 
 Override templates by placing them in your templates directory:
 
@@ -137,7 +159,7 @@ templates/
 {% endblock %}
 ```
 
-## Custom CSS
+### Custom CSS
 
 ```css
 /* static/css/admin-custom.css */
@@ -159,6 +181,46 @@ a:link, a:visited {
     color: var(--accent);
 }
 ```
+
+## Common Pitfalls
+
+1. **Forgetting to set a unique name parameter**: Each AdminSite must have a unique name for URL namespacing. Without it, URL reversing breaks when you have multiple admin sites.
+
+2. **Not updating urls.py**: Creating a custom AdminSite without adding its urls to urlpatterns means it is unreachable. Each site needs its own path entry.
+
+3. **Overriding templates globally instead of per-site**: Template overrides in `templates/admin/` affect all admin sites. Use per-app template directories or set change_list_template per ModelAdmin to target specific sites.
+
+## Best Practices
+
+1. **Use each_context() for global variables**: Instead of repeating context in every custom view, override each_context() to add company name, version, or feature flags site-wide.
+
+2. **Subclass AdminSite instead of patching admin.site**: Setting admin.site.site_header works for simple cases, but subclassing gives you full control over has_permission(), get_urls(), and template context.
+
+3. **Keep template overrides minimal**: Extend the default admin templates and override only the blocks you need. Replacing entire templates breaks on Django upgrades.
+
+## Summary
+
+- Customize the default admin site with admin.site.site_header and similar attributes.
+- Subclass AdminSite for full control over behavior and permissions.
+- Create multiple admin sites to serve different user audiences.
+- Override templates by placing files in the correct template directory hierarchy.
+- Use each_context() to inject shared variables across all admin pages.
+
+## Code Examples
+
+**Custom AdminSite with customized header, title, and index title**
+
+```python
+from django.contrib.admin import AdminSite
+
+class MyAdminSite(AdminSite):
+    site_header = 'My Company Admin'
+    site_title = 'My Company Admin Portal'
+    index_title = 'Welcome to the Admin Portal'
+
+admin_site = MyAdminSite(name='myadmin')
+```
+
 
 ## Resources
 

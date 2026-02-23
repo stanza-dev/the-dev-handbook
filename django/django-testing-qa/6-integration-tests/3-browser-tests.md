@@ -86,6 +86,16 @@ def setUpClass(cls):
     cls.browser = webdriver.Chrome(options=options)
 ```
 
+## Real World Context
+
+Selenium tests are the most realistic form of testing -- they use a real browser just like a user would. They are essential for testing JavaScript interactions, dynamic forms, and complex UI workflows. However, they are also the slowest and most fragile tests, so they should be reserved for critical user paths like login, checkout, and key business workflows.
+
+## Common Pitfalls
+
+1. **Using time.sleep() instead of explicit waits**: sleep() either waits too long (slow) or not long enough (flaky). Always use WebDriverWait.
+2. **Not running headless in CI**: Browser tests fail in CI environments that lack a display unless you use headless mode.
+3. **Writing too many Selenium tests**: Browser tests are 10-100x slower than unit tests. Reserve them for critical paths that cannot be tested otherwise.
+
 ## Best Practices
 
 1. **Use explicit waits**: More reliable than implicit waits.

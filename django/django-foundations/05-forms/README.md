@@ -8,13 +8,14 @@ Handle user input securely with Django's forms framework
 
 1. [Introduction to Django Forms](./1-form-basics.md)
 2. [Model Forms](./2-model-forms.md)
+3. [Form Widgets and Customization](./3-form-widgets.md)
 
 ## Practice Challenges
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Form Validation Method
 - 🧩 Multiple Choice: CSRF Token Purpose
+- 🧩 Challenge: Form Validation Pipeline
 - 🧩 Multiple Choice: Modelform Save Commit
 
 → [Practice in your IDE](https://stanza.dev/courses/django-foundations)

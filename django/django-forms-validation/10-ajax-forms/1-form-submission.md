@@ -3,6 +3,23 @@ source_course: "django-forms-validation"
 source_lesson: "django-forms-validation-ajax-form-submission"
 ---
 
+## Introduction
+
+AJAX form submission validates and processes forms without page reloads, returning JSON with success data or error messages.
+
+## Key Concepts
+
+- **JsonResponse**: Serializes dicts to JSON with correct Content-Type.
+- **FormData**: JavaScript API capturing form data for fetch().
+- **X-CSRFToken**: Header for CSRF protection on AJAX POST.
+- **Inline validation**: Check fields via AJAX as user types.
+
+## Real World Context
+
+A comment system submits via AJAX and appends without reloading. A registration form validates usernames in real-time with green/red indicators.
+
+## Deep Dive
+
 # AJAX Form Submission
 
 Submit forms and handle responses without page reloads for a smoother user experience.
@@ -245,6 +262,48 @@ async function submitForm(form) {
     }
 }
 ```
+
+## Common Pitfalls
+
+1. **Missing CSRF token** -- Django rejects POST without it.
+2. **Returning HTML not JSON** -- response.json() throws parse error.
+3. **Not handling network errors** -- Check response.ok before parsing.
+
+## Best Practices
+
+1. **Return structured errors** -- form.errors with field names for inline display.
+2. **Add loading state** -- Disable button and show spinner.
+3. **Degrade gracefully** -- Form works without JavaScript.
+
+## Summary
+
+- Use JsonResponse for structured success/error data.
+- Include CSRF token via X-CSRFToken header.
+- Use FormData in JavaScript for file support.
+- Return form.errors as JSON for inline display.
+- Implement loading states and graceful degradation.
+
+## Code Examples
+
+**AJAX form view returns JsonResponse with either success data or form errors -- the frontend handles display**
+
+```python
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+
+@require_POST
+def contact_ajax(request):
+    form = ContactForm(request.POST)
+    if form.is_valid():
+        form.save()
+        return JsonResponse({'success': True, 'message': 'Sent!'})
+    else:
+        return JsonResponse({
+            'success': False,
+            'errors': form.errors,
+        }, status=400)
+```
+
 
 ## Resources
 

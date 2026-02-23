@@ -147,6 +147,40 @@ def my_view(request):
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 ```
 
+## Common Pitfalls
+
+- **Not handling missing objects**: Using `Model.objects.get()` directly in views will raise a 500 error if the object does not exist. Always use `get_object_or_404()` instead.
+- **Forgetting to check `request.method`**: Views that handle both GET and POST should check `request.method` to avoid processing form submissions on initial page loads.
+- **Returning strings instead of HttpResponse**: Views must return `HttpResponse` objects (or subclasses). Returning a plain string will raise a `ValueError`.
+
+## Best Practices
+
+- **Use `render()` shortcut** instead of manually loading templates and creating `HttpResponse` objects.
+- **Use `get_object_or_404()`** for retrieving single objects to automatically return 404 for missing records.
+- **Keep views thin**: Move complex business logic to model methods or service functions, not view functions.
+
+## Summary
+
+- Views are Python functions that receive an `HttpRequest` and return an `HttpResponse`
+- URL path converters (`<int:pk>`, `<slug:slug>`) capture URL segments as view arguments
+- Use `render()` to combine a template with context data into a response
+- Use `get_object_or_404()` to safely retrieve objects or return a 404 page
+- The `request` object provides access to method, GET/POST data, user, and headers
+
+## Code Examples
+
+**A function-based view using get_object_or_404 and render shortcuts**
+
+```python
+from django.shortcuts import render, get_object_or_404
+from .models import Question
+
+def detail(request, question_id):
+    question = get_object_or_404(Question, pk=question_id)
+    return render(request, 'polls/detail.html', {'question': question})
+```
+
+
 ## Resources
 
 - [Writing Views](https://docs.djangoproject.com/en/6.0/topics/http/views/) — Official guide to writing Django views

@@ -84,7 +84,7 @@ Article.objects.select_related('author').filter(is_published=True)
 # With order_by
 Article.objects.select_related('author').order_by('-pub_date')
 
-# With values (select_related is ignored)
+# With values (the JOIN still happens, but prefetched data is redundant/unused)
 Article.objects.select_related('author').values('title', 'author__name')
 ```
 
@@ -137,7 +137,19 @@ print(order.customer.email)
 print(order.customer.profile.phone)
 print(order.shipping_address.street)
 print(order.billing_address.city)
+```\n\n## Common Pitfalls\n\n1. **Not testing edge cases** — Always test select_related for foreign keys with empty querysets, NULL values, and boundary conditions.\n2. **Premature optimization** — Profile queries with `.explain()` before applying complex optimizations.\n3. **Ignoring database-specific behavior** — Some select_related for foreign keys features behave differently across PostgreSQL, MySQL, and SQLite.\n\n## Best Practices\n\n1. **Keep queries readable** — Use meaningful variable names and chain methods logically.\n2. **Test with realistic data** — Create fixtures that match production data patterns for accurate performance testing.\n3. **Document complex queries** — Add comments explaining the business logic behind non-obvious query patterns.\n\n## Summary\n\n- select_related for Foreign Keys is a core Django ORM feature for building efficient database queries.\n- Always consider query performance and use `.explain()` to verify query plans.\n- Test edge cases including empty results, NULL values, and large datasets.\n- Refer to the Django documentation for database-specific behavior and limitations.
+
+## Code Examples
+
+**Key example from select_related for Foreign Keys**
+
+```python
+# BAD: N+1 queries (1 query + N queries for authors)
+articles = Article.objects.all()  # 1 query
+for article in articles:
+    print(article.author.name)  # N queries!
 ```
+
 
 ## Resources
 

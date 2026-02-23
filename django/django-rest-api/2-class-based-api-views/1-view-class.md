@@ -31,9 +31,11 @@ In production Django applications, CBVs are preferred for APIs because:
 
 ### Basic API View Structure
 
+This class maps each HTTP method to a descriptive handler method, keeping the routing logic clean and each operation isolated:
+
 ```python
 import json
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -82,10 +84,14 @@ class ArticleAPIView(View):
     
     def destroy(self, request, pk):
         Article.objects.filter(pk=pk).delete()
-        return JsonResponse({}, status=204)
+        return HttpResponse(status=204)
 ```
 
+The `@method_decorator(csrf_exempt, name='dispatch')` applies CSRF exemption to all methods at once by targeting the `dispatch()` entry point. Each handler method like `list()` and `create()` reads clearly on its own.
+
 ### URL Configuration
+
+Connect the class-based view to URLs by calling `.as_view()`, which returns a callable that Django's URL dispatcher can use:
 
 ```python
 from django.urls import path
@@ -97,7 +103,11 @@ urlpatterns = [
 ]
 ```
 
+Both URL patterns point to the same view class. When `pk` is present, the `get()` method routes to `retrieve()`; otherwise it calls `list()`.
+
 ### Creating Reusable Mixins
+
+Mixins let you extract common behavior into small, focused classes that can be combined through multiple inheritance:
 
 ```python
 class JSONMixin:
@@ -127,7 +137,11 @@ class CRUDMixin:
         return {f: getattr(obj, f) for f in self.fields}
 ```
 
+Each mixin handles a single concern: `JSONMixin` handles parsing and response formatting, while `CRUDMixin` provides queryset access and serialization.
+
 ### Combining Mixins
+
+With both mixins in place, the final view class only needs to declare its `model` and `fields` -- all the CRUD logic is inherited:
 
 ```python
 @method_decorator(csrf_exempt, name='dispatch')
@@ -143,6 +157,8 @@ class ArticleAPIView(JSONMixin, CRUDMixin, View):
             return self.json_response(self.serialize(obj))
         return self.json_response({'data': [self.serialize(o) for o in self.get_queryset()[:20]]})
 ```
+
+In Python's MRO (Method Resolution Order), mixins listed first take precedence. Here, `JSONMixin` provides `error_response()` and `json_response()`, while `CRUDMixin` provides `get_queryset()` and `serialize()`.
 
 ## Common Pitfalls
 
@@ -165,6 +181,32 @@ class ArticleAPIView(JSONMixin, CRUDMixin, View):
 ## Summary
 
 Class-based views organize API code by mapping HTTP methods to class methods. Use `@method_decorator` to apply decorators, call `.as_view()` in URL configuration, and extract reusable functionality into mixins. CBVs provide better organization, testability, and extensibility compared to function-based views for complex APIs.
+
+## Code Examples
+
+**Class-based API view with HTTP method dispatching**
+
+```python
+from django.views import View
+from django.http import JsonResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ArticleAPIView(View):
+    def get(self, request, pk=None):
+        if pk:
+            article = Article.objects.get(pk=pk)
+            return JsonResponse({'id': article.id, 'title': article.title})
+        articles = Article.objects.all()[:20]
+        return JsonResponse({'data': list(articles.values('id', 'title'))})
+
+    def post(self, request):
+        data = json.loads(request.body)
+        article = Article.objects.create(title=data['title'])
+        return JsonResponse({'id': article.id}, status=201)
+```
+
 
 ## Resources
 

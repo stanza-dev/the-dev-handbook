@@ -5,17 +5,27 @@ source_lesson: "django-testing-qa-test-basics"
 
 # Introduction to Django Testing
 
-Django includes a testing framework based on Python's unittest module, with additional features for web development.
+## Introduction
 
-## Why Test?
+Django ships with a robust testing framework built on top of Python's unittest module. Understanding how to write and organize tests is fundamental to building reliable Django applications. This lesson covers the core testing infrastructure, test structure, and essential assertions.
 
-Tests ensure your code works correctly and continues to work as you make changes:
-- **Catch bugs early** before they reach production
-- **Refactor with confidence** knowing tests will catch regressions
-- **Document behavior** through test cases
-- **Speed up development** by reducing manual testing
+## Key Concepts
 
-## Test Structure
+**TestCase**: Django's base test class that provides database isolation via transactions.
+
+**Test Runner**: The command `python manage.py test` that discovers and runs tests.
+
+**Assertion**: A method that checks whether a condition is true and fails the test if not.
+
+**Test Database**: A separate database Django creates automatically for test isolation.
+
+## Real World Context
+
+In production Django projects, tests are the safety net that lets teams deploy confidently. Without tests, every code change risks breaking existing features. Companies like Instagram and Disqus run thousands of Django tests on every pull request to catch regressions before they reach users.
+
+## Deep Dive
+
+### Test Structure
 
 ```python
 # tests.py or tests/test_models.py
@@ -50,7 +60,7 @@ class ArticleModelTests(TestCase):
         self.assertIsNotNone(self.article.pub_date)
 ```
 
-## Running Tests
+### Running Tests
 
 ```bash
 # Run all tests
@@ -75,7 +85,7 @@ python manage.py test --parallel
 python manage.py test --keepdb
 ```
 
-## Test Organization
+### Test Organization
 
 ```
 blog/
@@ -90,7 +100,7 @@ blog/
 └── forms.py
 ```
 
-## TestCase Classes
+### TestCase Classes
 
 ```python
 from django.test import TestCase, SimpleTestCase, TransactionTestCase
@@ -128,7 +138,7 @@ class TransactionTests(TransactionTestCase):
         self.assertEqual(Article.objects.count(), 0)
 ```
 
-## Assertions
+### Assertions
 
 ```python
 class ArticleTests(TestCase):
@@ -162,6 +172,54 @@ class ArticleTests(TestCase):
         with self.assertRaises(ValidationError):
             article.full_clean()  # Missing required field
 ```
+
+## Common Pitfalls
+
+1. **Forgetting to run migrations before tests**: Tests use the current schema, so always run `makemigrations` and `migrate` first.
+2. **Tests depending on execution order**: Each test should be independent. Never rely on state from a previous test.
+3. **Using `print()` for debugging instead of `--verbosity=2`**: The test runner's verbose mode gives structured output that is easier to parse.
+
+## Best Practices
+
+1. **One test file per module**: Mirror your app structure in your test directory.
+2. **Use `--parallel` in CI**: Run tests in parallel to speed up your test suite.
+3. **Choose the right TestCase class**: Use SimpleTestCase when you do not need the database.
+
+## Summary
+
+- Django's test framework extends Python's unittest with web-specific features
+- Use `python manage.py test` to discover and run tests
+- Choose between SimpleTestCase, TestCase, and TransactionTestCase based on needs
+- Organize tests in a dedicated `tests/` directory mirroring your app structure
+- Use assertions to verify expected behavior in each test method
+
+## Code Examples
+
+**A basic Django TestCase that creates an article in setUp and tests creation and string representation.**
+
+```python
+from django.test import TestCase
+from .models import Article
+
+
+class ArticleModelTests(TestCase):
+    def setUp(self):
+        self.article = Article.objects.create(
+            title='Test Article',
+            body='Test content',
+            status='draft'
+        )
+
+    def test_article_creation(self):
+        self.assertEqual(self.article.title, 'Test Article')
+        self.assertEqual(self.article.status, 'draft')
+        self.assertIsNotNone(self.article.pk)
+
+    def test_article_str(self):
+        self.assertEqual(str(self.article), 'Test Article')
+
+```
+
 
 ## Resources
 

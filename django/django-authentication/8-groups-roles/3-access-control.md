@@ -15,6 +15,10 @@ Use middleware for site-wide access control that applies to all views.
 
 **URL-Based Access**: Control access by URL pattern.
 
+## Real World Context
+
+A B2B platform has 50+ views that should only be accessible to paying subscribers. Instead of adding `@subscription_required` to every view, a single middleware checks the subscription status for any URL under `/app/`, keeping access control centralized and impossible to forget.
+
 ## Deep Dive
 
 ### Role-Required Middleware
@@ -55,6 +59,12 @@ class SubscriptionMiddleware:
                 return redirect('upgrade')
         return self.get_response(request)
 ```
+
+## Common Pitfalls
+
+1. **Blocking static files and login pages**: If your middleware applies to all URLs, unauthenticated users cannot reach the login page or load CSS/JS. Always exclude authentication URLs and static file paths.
+2. **Not ordering middleware correctly**: Access control middleware must come after `AuthenticationMiddleware` so that `request.user` is available. Placing it before causes `AttributeError`.
+3. **Heavy database queries in middleware**: Middleware runs on every request. Fetching group memberships or subscription status from the database on each request adds latency. Cache the result in the session or use Django's caching framework.
 
 ## Best Practices
 

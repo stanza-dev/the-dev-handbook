@@ -7,7 +7,7 @@ source_lesson: "django-deployment-ssl-certificates"
 
 ## Introduction
 
-HTTPS is mandatory for production. Let's Encrypt provides free certificates with automatic renewal.
+SSL/TLS encryption is mandatory for production web applications. It protects data in transit, prevents man-in-the-middle attacks, and is required for HTTP/2. Let's Encrypt provides free, automated certificates that can be set up in minutes with Certbot.
 
 ## Key Concepts
 
@@ -16,6 +16,10 @@ HTTPS is mandatory for production. Let's Encrypt provides free certificates with
 **Let's Encrypt**: Free, automated Certificate Authority.
 
 **Certbot**: Tool for obtaining and renewing certificates.
+
+## Real World Context
+
+This topic directly impacts production application performance. Teams that master these techniques reduce page load times, lower infrastructure costs, and deliver better user experiences.
 
 ## Deep Dive
 
@@ -58,6 +62,11 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 ```
 
+## Common Pitfalls
+
+1. **Premature optimization** — Always profile before optimizing. Fix the biggest bottleneck first rather than guessing.
+2. **Ignoring trade-offs** — Every optimization has costs. Caching adds complexity, indexes slow writes, and async adds cognitive overhead.
+
 ## Best Practices
 
 1. **Use Let's Encrypt**: Free, automatic, widely trusted.
@@ -67,6 +76,18 @@ CSRF_COOKIE_SECURE = True
 ## Summary
 
 Use Let's Encrypt with Certbot for free SSL certificates. Configure Nginx for TLS 1.2/1.3 and enable HTTP/2 for better performance.
+
+## Code Examples
+
+**Let's Encrypt SSL certificate setup with Certbot and Nginx**
+
+```bash
+SECURE_SSL_REDIRECT = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+```
+
 
 ## Resources
 

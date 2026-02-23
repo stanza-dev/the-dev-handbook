@@ -13,10 +13,11 @@ Protect your API from abuse with rate limiting
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Rate Limit Status Code
-- 🧩 Multiple Choice: Token Bucket Algorithm
+- 🔗 Matching: Rate Limiting Algorithms
 - 🧩 Multiple Choice: Rate Limit Headers
+- 🧩 Multiple Choice: Distributed Rate Limiting
 
 → [Practice in your IDE](https://stanza.dev/courses/django-rest-api)

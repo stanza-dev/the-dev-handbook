@@ -69,6 +69,16 @@ class ArticleClassMethodTests(TestCase):
         self.assertEqual(Article.published_count(), 2)
 ```
 
+## Real World Context
+
+Model properties and methods often contain critical business logic -- calculating prices, determining user permissions, or formatting display data. These are fast to test (no HTTP overhead) and provide high confidence in your domain logic. Testing edge cases in properties prevents subtle bugs that appear only with unusual data.
+
+## Common Pitfalls
+
+1. **Not testing edge cases in properties**: What does `word_count` return for an empty string? What about a single word?
+2. **Forgetting refresh_from_db after method calls**: Methods that call save() update the database but not the in-memory object.
+3. **Testing computed properties with stale data**: If a property depends on related objects, ensure those objects are up to date.
+
 ## Best Practices
 
 1. **Test edge cases**: Empty strings, None values, boundary conditions.

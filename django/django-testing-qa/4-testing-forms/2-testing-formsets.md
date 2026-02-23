@@ -76,6 +76,16 @@ class FormsetValidationTests(TestCase):
         self.assertFalse(formset.is_valid())
 ```
 
+## Real World Context
+
+Formsets appear whenever users need to edit multiple items at once: adding several images to a product, managing line items on an invoice, or editing all authors of a book. They are notoriously tricky to test because of the management form and prefixed field names. Getting the test data format right is the main challenge.
+
+## Common Pitfalls
+
+1. **Forgetting the management form fields**: TOTAL_FORMS and INITIAL_FORMS are required. Without them, Django rejects the formset.
+2. **Using the wrong prefix**: Inline formsets use the model name as prefix, not 'form'. Check your formset configuration.
+3. **Not testing deletion**: If `can_delete=True`, you need to test that the DELETE checkbox works correctly.
+
 ## Best Practices
 
 1. **Always include management form data**: TOTAL_FORMS, INITIAL_FORMS, etc.

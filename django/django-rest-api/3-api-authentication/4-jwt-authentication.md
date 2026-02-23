@@ -42,10 +42,12 @@ SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
 
 ### Simple JWT Implementation
 
+This module creates access and refresh tokens using the PyJWT library. Access tokens are short-lived (15 minutes) while refresh tokens last longer (7 days):
+
 ```python
 import jwt
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from django.conf import settings
 from django.http import JsonResponse
 from django.contrib.auth import authenticate
@@ -57,7 +59,9 @@ REFRESH_TOKEN_LIFETIME = timedelta(days=7)
 
 def generate_tokens(user):
     """Generate access and refresh tokens."""
-    now = datetime.utcnow()
+    # Note: datetime.utcnow() is deprecated since Python 3.12
+    # Use datetime.now(timezone.utc) instead
+    now = datetime.now(timezone.utc)
     
     access_payload = {
         'user_id': user.id,
@@ -92,7 +96,11 @@ def verify_token(token, token_type='access'):
         return None
 ```
 
+The `generate_tokens()` function embeds a `type` field (`'access'` or `'refresh'`) in each payload so `verify_token()` can reject a refresh token used as an access token and vice versa.
+
 ### Auth Endpoints
+
+The token-obtain endpoint validates credentials and returns both tokens, while the refresh endpoint exchanges a valid refresh token for a new token pair:
 
 ```python
 from django.views.decorators.csrf import csrf_exempt
@@ -134,7 +142,11 @@ def api_token_refresh(request):
     return JsonResponse(tokens)
 ```
 
+The refresh endpoint re-fetches the user from the database to ensure revoked or deleted accounts cannot obtain new tokens.
+
 ### JWT Authentication Middleware
+
+This middleware extracts the JWT from the Authorization header, verifies its signature and expiration, and attaches the user to the request:
 
 ```python
 class JWTAuthMiddleware:
@@ -159,6 +171,8 @@ class JWTAuthMiddleware:
         return self.get_response(request)
 ```
 
+Unlike database-token middleware, JWT verification requires no database query -- the signature check alone confirms authenticity. The user lookup only happens when the token is valid.
+
 ## Common Pitfalls
 
 1. **Storing JWTs in localStorage**: Vulnerable to XSS attacks. Use httpOnly cookies for web apps.
@@ -180,6 +194,36 @@ class JWTAuthMiddleware:
 ## Summary
 
 JWTs provide stateless authentication suitable for distributed systems. They consist of a header, payload, and signature. Implement short-lived access tokens with refresh tokens for security. Be aware of storage security—httpOnly cookies are safer than localStorage for web applications.
+
+## Code Examples
+
+**JWT access and refresh token generation with PyJWT**
+
+```python
+import jwt
+from datetime import datetime, timedelta, timezone
+from django.conf import settings
+
+def generate_tokens(user):
+    now = datetime.now(timezone.utc)
+    access_payload = {
+        'user_id': user.id,
+        'exp': now + timedelta(minutes=15),
+        'iat': now,
+        'type': 'access'
+    }
+    refresh_payload = {
+        'user_id': user.id,
+        'exp': now + timedelta(days=7),
+        'iat': now,
+        'type': 'refresh'
+    }
+    return {
+        'access': jwt.encode(access_payload, settings.SECRET_KEY, 'HS256'),
+        'refresh': jwt.encode(refresh_payload, settings.SECRET_KEY, 'HS256'),
+    }
+```
+
 
 ## Resources
 

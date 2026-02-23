@@ -186,7 +186,32 @@ Usage:
 posts = Post.objects.published().by_category('python').optimized()[:10]
 
 results = Post.objects.published().search('django').with_comment_count()
+```\n\n## Common Pitfalls\n\n1. **Not testing edge cases** — Always test custom querysets with empty querysets, NULL values, and boundary conditions.\n2. **Premature optimization** — Profile queries with `.explain()` before applying complex optimizations.\n3. **Ignoring database-specific behavior** — Some custom querysets features behave differently across PostgreSQL, MySQL, and SQLite.\n\n## Best Practices\n\n1. **Keep queries readable** — Use meaningful variable names and chain methods logically.\n2. **Test with realistic data** — Create fixtures that match production data patterns for accurate performance testing.\n3. **Document complex queries** — Add comments explaining the business logic behind non-obvious query patterns.\n\n## Summary\n\n- Custom QuerySets is a core Django ORM feature for building efficient database queries.\n- Always consider query performance and use `.explain()` to verify query plans.\n- Test edge cases including empty results, NULL values, and large datasets.\n- Refer to the Django documentation for database-specific behavior and limitations.
+
+## Code Examples
+
+**Custom QuerySet with chainable methods exposed via as_manager()**
+
+```python
+from django.db import models
+
+class ArticleQuerySet(models.QuerySet):
+    def published(self):
+        return self.filter(status='published')
+
+    def by_author(self, author):
+        return self.filter(author=author)
+
+    def recent(self, days=30):
+        cutoff = timezone.now() - timedelta(days=days)
+        return self.filter(pub_date__gte=cutoff)
+
+class Article(models.Model):
+    objects = ArticleQuerySet.as_manager()
+
+# Chainable: Article.objects.published().by_author(user).recent()
 ```
+
 
 ## Resources
 

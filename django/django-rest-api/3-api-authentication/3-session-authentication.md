@@ -47,7 +47,11 @@ MIDDLEWARE = [
 ]
 ```
 
+These three middleware components work together: `SessionMiddleware` manages session cookies, `CsrfViewMiddleware` protects against cross-site request forgery, and `AuthenticationMiddleware` attaches the user to each request.
+
 ### Login/Logout API Endpoints
+
+These endpoints use Django's built-in `authenticate()`, `login()`, and `logout()` functions, which manage session creation and destruction automatically:
 
 ```python
 import json
@@ -90,7 +94,11 @@ def api_current_user(request):
     return JsonResponse({'user': None})
 ```
 
+The `@require_POST` decorator rejects non-POST requests with 405. The `login()` call creates a session and sets the session cookie, while `logout()` destroys it.
+
 ### CSRF with AJAX
+
+Session-based APIs require CSRF tokens for state-changing requests. Extract the token from the cookie and include it as a header:
 
 ```javascript
 // Get CSRF token from cookie
@@ -112,7 +120,11 @@ fetch('/api/articles/', {
 });
 ```
 
+The `credentials: 'same-origin'` option is essential -- without it, `fetch` does not send cookies, and the session will not be recognized.
+
 ### Secure Session Settings
+
+In production, harden your session cookies with these security settings:
 
 ```python
 # settings.py (production)
@@ -122,6 +134,8 @@ SESSION_COOKIE_SAMESITE = 'Lax'     # CSRF protection
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = False        # JS needs to read this
 ```
+
+Note that `CSRF_COOKIE_HTTPONLY` stays `False` because JavaScript must read the CSRF cookie to include it in request headers. The session cookie, however, should always be `httponly`.
 
 ## Common Pitfalls
 
@@ -142,6 +156,31 @@ CSRF_COOKIE_HTTPONLY = False        # JS needs to read this
 ## Summary
 
 Session authentication leverages Django's built-in session framework for API security. It works best for same-origin applications where cookies are automatically sent. Remember to handle CSRF tokens for non-GET requests and configure secure cookie settings in production.
+
+## Code Examples
+
+**Session-based login endpoint for same-origin web applications**
+
+```python
+import json
+from django.http import JsonResponse
+from django.contrib.auth import authenticate, login, logout
+from django.views.decorators.http import require_POST
+
+@require_POST
+def api_login(request):
+    data = json.loads(request.body)
+    user = authenticate(
+        request,
+        username=data.get('username'),
+        password=data.get('password')
+    )
+    if user is None:
+        return JsonResponse({'error': 'Invalid credentials'}, status=401)
+    login(request, user)
+    return JsonResponse({'user': {'id': user.id, 'username': user.username}})
+```
+
 
 ## Resources
 

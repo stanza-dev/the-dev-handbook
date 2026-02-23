@@ -14,8 +14,8 @@ Test Django forms and form validation
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Form Errors Key
+- ✏️ Fill in the Blank: Form Errors Key
 - 🧩 Multiple Choice: Form Save Commit
-- 🧩 Multiple Choice: SimpleUploadedFile Usage
+- 🧩 Challenge: SimpleUploadedFile Usage
 
 → [Practice in your IDE](https://stanza.dev/courses/django-testing-qa)

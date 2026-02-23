@@ -15,6 +15,10 @@ The request.user attribute is your gateway to the current user. Understanding ho
 
 **is_authenticated**: Boolean property for auth status.
 
+## Real World Context
+
+In a SaaS dashboard, almost every view needs to know who is making the request. You use `request.user` to filter data to the current tenant, display personalized content, and log audit trails. Getting this wrong means users see each other's data -- a critical security flaw.
+
 ## Deep Dive
 
 ### Checking Authentication
@@ -55,6 +59,12 @@ articles = Article.objects.filter(
     author=request.user
 ) if request.user.is_authenticated else Article.objects.none()
 ```
+
+## Common Pitfalls
+
+1. **Accessing user attributes without checking `is_authenticated`**: `request.user.email` on an `AnonymousUser` returns an empty string, which can silently corrupt queries like `filter(email=request.user.email)` by returning unrelated rows.
+2. **Comparing `request.user` to `None`**: `request.user` is never `None` -- it is either a `User` or an `AnonymousUser`. Use `is_authenticated` instead.
+3. **Caching `request.user` across requests**: The user object is request-scoped. Storing it in a module-level variable leads to thread-safety bugs.
 
 ## Best Practices
 

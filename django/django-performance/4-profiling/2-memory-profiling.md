@@ -11,9 +11,14 @@ Memory leaks and excessive memory usage can crash your application. Profiling he
 
 ## Key Concepts
 
-**Memory Leak**: Objects not garbage collected.
+- **iterator()**: A QuerySet method that fetches results in chunks instead of loading the entire result set into memory. Essential for processing large datasets.
+- **chunk_size**: Parameter for `iterator()` that controls how many rows are fetched per database round-trip (default: 2000).
+- **Memory Profiling**: The process of measuring memory allocation and identifying objects that consume excessive memory.
+- **tracemalloc**: Python's built-in module for tracing memory allocations, useful for finding memory leaks in Django views.
 
-**Memory Profile**: Snapshot of memory usage.
+## Real World Context
+
+This topic directly impacts production application performance. Teams that master these techniques reduce page load times, lower infrastructure costs, and deliver better user experiences.
 
 ## Deep Dive
 
@@ -74,6 +79,11 @@ for article in Article.objects.iterator(chunk_size=1000):
     process(article)
 ```
 
+## Common Pitfalls
+
+1. **Premature optimization** — Always profile before optimizing. Fix the biggest bottleneck first rather than guessing.
+2. **Ignoring trade-offs** — Every optimization has costs. Caching adds complexity, indexes slow writes, and async adds cognitive overhead.
+
 ## Best Practices
 
 1. **Use iterator() for large querysets**: Doesn't cache results.
@@ -83,6 +93,29 @@ for article in Article.objects.iterator(chunk_size=1000):
 ## Summary
 
 Use memory_profiler to identify memory-heavy code. Use iterator() and chunking for large querysets. Monitor memory in production with APM tools.
+
+## Code Examples
+
+**Using iterator() with chunk_size for memory-efficient QuerySet processing**
+
+```python
+# BAD: Loads all objects into memory
+for article in Article.objects.all():
+    process(article)
+
+# GOOD: Process in chunks
+from django.core.paginator import Paginator
+
+paginator = Paginator(Article.objects.all(), 1000)
+for page_num in paginator.page_range:
+    for article in paginator.page(page_num):
+        process(article)
+
+# BETTER: Use iterator()
+for article in Article.objects.iterator(chunk_size=1000):
+    process(article)
+```
+
 
 ## Resources
 

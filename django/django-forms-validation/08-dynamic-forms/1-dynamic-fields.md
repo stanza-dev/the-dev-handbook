@@ -3,6 +3,23 @@ source_course: "django-forms-validation"
 source_lesson: "django-forms-validation-dynamic-fields"
 ---
 
+## Introduction
+
+Dynamic forms have fields determined at runtime, not class definition time. Survey forms, filters, and permission-based editors need this.
+
+## Key Concepts
+
+- **self.fields in __init__**: Modifiable field dictionary.
+- **Dynamic choices**: Set ChoiceField choices in __init__.
+- **del self.fields[name]**: Remove fields dynamically.
+- **kwargs.pop()**: Extract custom constructor arguments.
+
+## Real World Context
+
+A survey platform where admins define questions through a UI. The view passes questions to __init__ which creates fields dynamically for each question.
+
+## Deep Dive
+
 # Dynamic Form Fields
 
 Sometimes you need forms where the fields change based on user data, model state, or other runtime conditions.
@@ -172,6 +189,49 @@ class RegistrationForm(forms.Form):
         for field in self.fields.values():
             field.widget.attrs['class'] = 'form-control'
 ```
+
+## Common Pitfalls
+
+1. **Accessing fields before super().__init__()** -- Raises AttributeError.
+2. **Modifying class-level fields** -- Call super() first.
+3. **Not popping custom kwargs** -- Django __init__ gets unexpected arguments.
+
+## Best Practices
+
+1. **Use kwargs.pop()** -- Cleanly extract custom arguments.
+2. **Loop attrs** -- Apply uniform CSS classes.
+3. **Document constructor signature** -- Non-standard constructors need docs.
+
+## Summary
+
+- Modify self.fields in __init__ to add/remove/reconfigure.
+- Call super().__init__() before accessing fields.
+- Pop custom arguments from kwargs.
+- Use dynamic choices for database-driven options.
+- del self.fields[name] for conditional removal.
+
+## Code Examples
+
+**Dynamic forms add fields in __init__ based on runtime data -- each form instance can have different fields**
+
+```python
+from django import forms
+
+class SurveyForm(forms.Form):
+    name = forms.CharField(max_length=100)
+
+    def __init__(self, questions, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for i, question in enumerate(questions):
+            self.fields[f'question_{i}'] = forms.CharField(
+                label=question.text,
+                required=question.required,
+            )
+
+# Usage: fields are created at runtime based on data
+form = SurveyForm(questions=Question.objects.all())
+```
+
 
 ## Resources
 

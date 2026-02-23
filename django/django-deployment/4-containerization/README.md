@@ -15,8 +15,8 @@ Containerize Django applications with Docker
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Pythonunbuffered
-- 🧩 Multiple Choice: Multi Stage Benefit
-- 🧩 Multiple Choice: Non-Root Docker
+- ✏️ Fill in the Blank: Pythonunbuffered
+- 🧩 Challenge: Multi Stage Benefit
+- 🧩 Challenge: Non-Root Docker
 
 → [Practice in your IDE](https://stanza.dev/courses/django-deployment)

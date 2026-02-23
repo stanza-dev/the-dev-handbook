@@ -15,6 +15,10 @@ Changing user models mid-project is complex. Understanding migration strategies 
 
 **Data Migration**: Moving data between user models.
 
+## Real World Context
+
+A startup that began with Django's default `auth.User` now needs to add a `company` field and use email-based login. Changing `AUTH_USER_MODEL` mid-project requires resetting every migration that references the user model -- a process that often takes days in production. The Profile model pattern avoids this pain entirely.
+
 ## Deep Dive
 
 ### Starting Fresh (Recommended)
@@ -67,6 +71,12 @@ class User(AbstractUser):
 
 # This makes future changes much easier
 ```
+
+## Common Pitfalls
+
+1. **Changing `AUTH_USER_MODEL` after the first migration**: Django does not support swapping the user model after migrations have been applied. All ForeignKeys to the old model break, and data must be manually migrated.
+2. **Hardcoding `from django.contrib.auth.models import User`**: If you later switch to a custom model, every import breaks. Always use `get_user_model()` in code and `settings.AUTH_USER_MODEL` in models.
+3. **Forgetting to create the custom model before `migrate`**: Running `migrate` without the custom model registered in `AUTH_USER_MODEL` creates the default `auth_user` table, making the switch much harder.
 
 ## Best Practices
 

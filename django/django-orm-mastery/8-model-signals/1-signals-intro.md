@@ -123,13 +123,19 @@ def article_post_delete(sender, instance, **kwargs):
 
 ### Method 1: Decorator
 
+The following example demonstrates how to use method 1: decorator in practice:
+
 ```python
 @receiver(post_save, sender=Article)
 def my_handler(sender, instance, **kwargs):
     pass
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### Method 2: Manual Connection
+
+The following example demonstrates how to use method 2: manual connection in practice:
 
 ```python
 from django.db.models.signals import post_save
@@ -187,7 +193,32 @@ def update_related(sender, instance, **kwargs):
     Article.objects.filter(pk=instance.pk).update(
         updated_at=timezone.now()
     )
+```\n\n## Common Pitfalls\n\n1. **Not testing edge cases** — Always test introduction to signals with empty querysets, NULL values, and boundary conditions.\n2. **Premature optimization** — Profile queries with `.explain()` before applying complex optimizations.\n3. **Ignoring database-specific behavior** — Some introduction to signals features behave differently across PostgreSQL, MySQL, and SQLite.\n\n## Best Practices\n\n1. **Keep queries readable** — Use meaningful variable names and chain methods logically.\n2. **Test with realistic data** — Create fixtures that match production data patterns for accurate performance testing.\n3. **Document complex queries** — Add comments explaining the business logic behind non-obvious query patterns.\n\n## Summary\n\n- Introduction to Signals is a core Django ORM feature for building efficient database queries.\n- Always consider query performance and use `.explain()` to verify query plans.\n- Test edge cases including empty results, NULL values, and large datasets.\n- Refer to the Django documentation for database-specific behavior and limitations.
+
+## Code Examples
+
+**Key example from Introduction to Signals**
+
+```python
+from django.db.models.signals import post_save, pre_save, post_delete
+from django.dispatch import receiver
+from .models import Article, Profile
+
+
+@receiver(post_save, sender=Article)
+def article_saved(sender, instance, created, **kwargs):
+    """
+    Called after an Article is saved.
+    
+    Args:
+        sender: The model class (Article)
+        instance: The actual instance saved
+        created: True if new record, False if update
+        **kwargs: Additional arguments
+    """
+    if created
 ```
+
 
 ## Resources
 

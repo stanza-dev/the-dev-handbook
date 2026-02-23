@@ -31,6 +31,8 @@ Product.objects.update(price=F('price') * 1.1)
 
 ### Updating Based on Current Value
 
+The following example demonstrates how to use updating based on current value in practice:
+
 ```python
 from django.db.models import F
 
@@ -43,7 +45,11 @@ Product.objects.filter(category='sale').update(
 )
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### Comparing Fields
+
+The following example demonstrates how to use comparing fields in practice:
 
 ```python
 # Find products where stock is below reorder level
@@ -56,7 +62,11 @@ Company.objects.filter(num_employees__gt=F('num_chairs'))
 Article.objects.filter(updated_at__gt=F('created_at'))
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### Spanning Relationships
+
+The following example demonstrates how to use spanning relationships in practice:
 
 ```python
 # Products cheaper than their category's average
@@ -150,7 +160,19 @@ Product.objects.annotate(
 Product.objects.filter(pk=1).update(stock=F('stock') - 1)
 product.refresh_from_db()  # Get the new stock value
 print(product.stock)
+```\n\n## Common Pitfalls\n\n1. **Not testing edge cases** — Always test f expressions for field references with empty querysets, NULL values, and boundary conditions.\n2. **Premature optimization** — Profile queries with `.explain()` before applying complex optimizations.\n3. **Ignoring database-specific behavior** — Some f expressions for field references features behave differently across PostgreSQL, MySQL, and SQLite.\n\n## Best Practices\n\n1. **Keep queries readable** — Use meaningful variable names and chain methods logically.\n2. **Test with realistic data** — Create fixtures that match production data patterns for accurate performance testing.\n3. **Document complex queries** — Add comments explaining the business logic behind non-obvious query patterns.\n\n## Summary\n\n- F Expressions for Field References is a core Django ORM feature for building efficient database queries.\n- Always consider query performance and use `.explain()` to verify query plans.\n- Test edge cases including empty results, NULL values, and large datasets.\n- Refer to the Django documentation for database-specific behavior and limitations.
+
+## Code Examples
+
+**Key example from F Expressions for Field References**
+
+```python
+# BAD: Loads all products into Python
+for product in Product.objects.all():
+    product.price = product.price * 1.1  # 10% increase
+    product.save()  # One query per product!
 ```
+
 
 ## Resources
 

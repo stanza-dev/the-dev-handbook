@@ -134,6 +134,8 @@ Book.objects.aggregate(
 
 ### E-commerce Statistics
 
+The following example demonstrates how to use e-commerce statistics in practice:
+
 ```python
 from django.db.models import Avg, Count, Sum, F
 
@@ -150,7 +152,11 @@ print(f"Revenue: ${order_stats['total_revenue']}")
 print(f"AOV: ${order_stats['avg_order_value']:.2f}")
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### Content Statistics
+
+The following example demonstrates how to use content statistics in practice:
 
 ```python
 article_stats = Article.objects.aggregate(
@@ -160,7 +166,29 @@ article_stats = Article.objects.aggregate(
     avg_views=Avg('views'),
     top_views=Max('views')
 )
+```\n\n## Common Pitfalls\n\n1. **Not testing edge cases** — Always test aggregation functions with empty querysets, NULL values, and boundary conditions.\n2. **Premature optimization** — Profile queries with `.explain()` before applying complex optimizations.\n3. **Ignoring database-specific behavior** — Some aggregation functions features behave differently across PostgreSQL, MySQL, and SQLite.\n\n## Best Practices\n\n1. **Keep queries readable** — Use meaningful variable names and chain methods logically.\n2. **Test with realistic data** — Create fixtures that match production data patterns for accurate performance testing.\n3. **Document complex queries** — Add comments explaining the business logic behind non-obvious query patterns.\n\n## Summary\n\n- Aggregation Functions is a core Django ORM feature for building efficient database queries.\n- Always consider query performance and use `.explain()` to verify query plans.\n- Test edge cases including empty results, NULL values, and large datasets.\n- Refer to the Django documentation for database-specific behavior and limitations.
+
+## Code Examples
+
+**aggregate() returns a single dict; annotate() adds computed columns to each row**
+
+```python
+from django.db.models import Count, Avg, Sum, Max, Min
+
+# Aggregate: returns a dict
+stats = Order.objects.aggregate(
+    total=Sum('amount'),
+    avg_amount=Avg('amount'),
+    order_count=Count('id')
+)
+# {'total': Decimal('15230.00'), 'avg_amount': ...}
+
+# Annotate: adds per-row values
+authors = Author.objects.annotate(
+    article_count=Count('article')
+).order_by('-article_count')
 ```
+
 
 ## Resources
 

@@ -9,6 +9,16 @@ source_lesson: "django-forms-validation-formset-validation"
 
 Customize formset validation beyond individual form validation.
 
+## Key Concepts
+
+- **BaseFormSet.clean()**: Cross-form validation logic.
+- **min_num/max_num**: Form count limits with validate_min/validate_max.
+- **self.forms**: List of form instances.
+
+## Real World Context
+
+A quiz builder requiring 5-50 unique questions. The formset clean() checks duplicates while min_num enforces minimums.
+
 ## Deep Dive
 
 ### Custom Formset Class
@@ -47,6 +57,16 @@ BookFormSet = formset_factory(
     validate_max=True,
 )
 ```
+
+## Common Pitfalls
+
+1. **Not checking self.errors first** -- Always start with if any(self.errors): return.
+2. **Validating deleted forms** -- Skip forms with DELETE flag.
+
+## Best Practices
+
+1. **Combine min_num with validate_min** -- min_num alone is display-only.
+2. **Specific error messages** -- "Duplicate titles" beats "Invalid formset".
 
 ## Summary
 

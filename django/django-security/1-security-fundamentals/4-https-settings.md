@@ -17,6 +17,12 @@ HTTPS encrypts all communication between browser and server. Without it, passwor
 
 **Secure Cookies**: Cookies that are only sent over HTTPS connections.
 
+
+
+## Real World Context
+
+In 2014, the Heartbleed bug exposed millions of HTTPS-protected sites. But even without such vulnerabilities, any application serving login forms or sensitive data over plain HTTP exposes credentials to anyone on the same network—coffee shop Wi-Fi, hotel networks, or compromised ISPs.
+
 ## Deep Dive
 
 ### Essential HTTPS Settings

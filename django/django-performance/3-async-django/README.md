@@ -14,7 +14,7 @@ Leverage async views and ORM for improved concurrency
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- ✏️ Fill in the Blank: Async ORM Methods
+- 🧩 Challenge: Async ORM Methods
 - 🧩 Multiple Choice: Sync to Async
 - 🧩 Challenge: Async Benefits
 

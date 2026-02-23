@@ -31,9 +31,11 @@ In large applications, you might have dozens of models, each needing similar CRU
 
 ### Building a Generic API View Base
 
+Start with a base class that provides error handling and JSON parsing so every API view inherits these capabilities:
+
 ```python
 from django.views import View
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 import json
 
 class APIView(View):
@@ -52,7 +54,11 @@ class APIView(View):
             return None
 ```
 
+The `dispatch()` override wraps every request in a try/except, ensuring unhandled exceptions return a JSON error instead of an HTML 500 page.
+
 ### List and Detail Mixins
+
+These mixins provide reusable `list()` and `retrieve()` methods that any view can inherit by setting `model` and field attributes:
 
 ```python
 class ListMixin:
@@ -88,7 +94,11 @@ class DetailMixin:
         return JsonResponse(data)
 ```
 
+`ListMixin` handles pagination via slicing, while `DetailMixin` uses `_meta.fields` to auto-discover all model fields when `detail_fields` is not explicitly set.
+
 ### Create, Update, Delete Mixins
+
+These three mixins handle write operations. Each filters incoming data through a whitelist of allowed fields to prevent mass-assignment vulnerabilities:
 
 ```python
 class CreateMixin:
@@ -131,10 +141,14 @@ class DeleteMixin:
         deleted, _ = self.model.objects.filter(pk=pk).delete()
         if not deleted:
             return JsonResponse({'error': 'Not found'}, status=404)
-        return JsonResponse({}, status=204)
+        return HttpResponse(status=204)
 ```
 
+`CreateMixin` filters input to only `create_fields`, `UpdateMixin` applies changes field-by-field with `setattr()`, and `DeleteMixin` returns 404 if no rows were deleted.
+
 ### Combining into a Complete View
+
+All the mixins compose into a single `ModelAPIView` base class. Concrete views only need to declare their `model` and field lists:
 
 ```python
 from django.utils.decorators import method_decorator
@@ -167,6 +181,8 @@ class ArticleAPIView(ModelAPIView):
     update_fields = ['title', 'body']
 ```
 
+`ArticleAPIView` inherits complete CRUD functionality with just four class attributes. Adding a new model endpoint takes only a few lines.
+
 ## Common Pitfalls
 
 1. **Mixin order matters**: In Python, mixins are resolved left-to-right. Place more specific mixins first.
@@ -188,6 +204,31 @@ class ArticleAPIView(ModelAPIView):
 ## Summary
 
 Generic views and mixins enable DRY API development by extracting common CRUD patterns into reusable components. Build a base `APIView` with error handling, create focused mixins for each operation (List, Detail, Create, Update, Delete), then compose them into complete views. This approach reduces boilerplate while maintaining flexibility.
+
+## Code Examples
+
+**Generic CRUD view composed from reusable mixins**
+
+```python
+class ModelAPIView(APIView, ListMixin, DetailMixin, CreateMixin, UpdateMixin, DeleteMixin):
+    """Complete CRUD API view."""
+    def get(self, request, pk=None):
+        if pk:
+            return self.retrieve(request, pk)
+        return self.list(request)
+    def post(self, request):
+        return self.create(request)
+    def put(self, request, pk):
+        return self.update(request, pk)
+    def delete(self, request, pk):
+        return self.destroy(request, pk)
+
+class ArticleAPIView(ModelAPIView):
+    model = Article
+    list_fields = ['id', 'title', 'created_at']
+    create_fields = ['title', 'body']
+```
+
 
 ## Resources
 

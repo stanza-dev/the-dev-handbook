@@ -160,12 +160,16 @@ Order.objects.annotate(
     )
 )
 
-# Compare with previous row
-StockPrice.objects.annotate(
+# Compare with previous row (two .annotate() calls needed)
+# First: compute window function
+queryset = StockPrice.objects.annotate(
     previous_price=Window(
         expression=Lag('price', 1),
         order_by=F('date').asc()
-    ),
+    )
+)
+# Second: reference the window result
+queryset = queryset.annotate(
     price_change=F('price') - F('previous_price')
 )
 ```
@@ -187,7 +191,36 @@ class Log(Func):
 Point.objects.annotate(
     y=Sin(F('angle'))
 )
+```\n\n## Common Pitfalls\n\n1. **Not testing edge cases** — Always test database functions with empty querysets, NULL values, and boundary conditions.\n2. **Premature optimization** — Profile queries with `.explain()` before applying complex optimizations.\n3. **Ignoring database-specific behavior** — Some database functions features behave differently across PostgreSQL, MySQL, and SQLite.\n\n## Best Practices\n\n1. **Keep queries readable** — Use meaningful variable names and chain methods logically.\n2. **Test with realistic data** — Create fixtures that match production data patterns for accurate performance testing.\n3. **Document complex queries** — Add comments explaining the business logic behind non-obvious query patterns.\n\n## Summary\n\n- Database Functions is a core Django ORM feature for building efficient database queries.\n- Always consider query performance and use `.explain()` to verify query plans.\n- Test edge cases including empty results, NULL values, and large datasets.\n- Refer to the Django documentation for database-specific behavior and limitations.
+
+## Code Examples
+
+**Key example from Database Functions**
+
+```python
+from django.db.models.functions import (
+    Concat, Lower, Upper, Length, Left, Right,
+    LPad, RPad, Replace, Reverse, StrIndex, Substr, Trim
+)
+from django.db.models import Value
+
+# Concatenate fields
+Person.objects.annotate(
+    full_name=Concat('first_name', Value(' '), 'last_name')
+)
+
+# Transform case
+Person.objects.annotate(
+    name_upper=Upper('first_name'),
+    name_lower=Lower('last_name')
+)
+
+# Get length
+Article.objects.annotate(
+    title_length=Length('title')
+).filter(title_length
 ```
+
 
 ## Resources
 

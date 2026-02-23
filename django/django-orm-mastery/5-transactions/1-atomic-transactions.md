@@ -140,7 +140,11 @@ def deduct_stock(product_id, quantity):
         return False
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### select_for_update Options
+
+The following example demonstrates how to use select_for_update options in practice:
 
 ```python
 # Basic lock
@@ -168,7 +172,22 @@ DATABASES = {
 }
 ```
 
-With `ATOMIC_REQUESTS=True`, if a view raises an exception, all database changes in that request are rolled back.
+With `ATOMIC_REQUESTS=True`, if a view raises an exception, all database changes in that request are rolled back.\n\n## Common Pitfalls\n\n1. **Not testing edge cases** — Always test atomic transactions with empty querysets, NULL values, and boundary conditions.\n2. **Premature optimization** — Profile queries with `.explain()` before applying complex optimizations.\n3. **Ignoring database-specific behavior** — Some atomic transactions features behave differently across PostgreSQL, MySQL, and SQLite.\n\n## Best Practices\n\n1. **Keep queries readable** — Use meaningful variable names and chain methods logically.\n2. **Test with realistic data** — Create fixtures that match production data patterns for accurate performance testing.\n3. **Document complex queries** — Add comments explaining the business logic behind non-obvious query patterns.\n\n## Summary\n\n- Atomic Transactions is a core Django ORM feature for building efficient database queries.\n- Always consider query performance and use `.explain()` to verify query plans.\n- Test edge cases including empty results, NULL values, and large datasets.\n- Refer to the Django documentation for database-specific behavior and limitations.
+
+## Code Examples
+
+**Key example from Atomic Transactions**
+
+```python
+# WITHOUT transactions - DANGEROUS!
+def transfer_money(from_account, to_account, amount):
+    from_account.balance -= amount
+    from_account.save()
+    # What if server crashes here?
+    to_account.balance += amount
+    to_account.save()
+```
+
 
 ## Resources
 

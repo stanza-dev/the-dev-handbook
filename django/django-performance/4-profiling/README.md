@@ -16,6 +16,6 @@ This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Debug Toolbar Feature
 - ✏️ Fill in the Blank: Connection Queries
-- 🧩 Multiple Choice: QuerySet Iterator
+- 🧩 Challenge: QuerySet Iterator
 
 → [Practice in your IDE](https://stanza.dev/courses/django-performance)

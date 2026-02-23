@@ -5,7 +5,25 @@ source_lesson: "django-testing-qa-test-fixtures"
 
 # Test Data and Fixtures
 
-Managing test data efficiently is crucial for maintainable tests.
+## Introduction
+
+Managing test data efficiently is one of the most important skills for writing maintainable tests. Poor test data management leads to slow, brittle tests that are hard to understand. This lesson covers setUp methods, JSON fixtures, and the factory pattern.
+
+## Key Concepts
+
+**setUpTestData**: Class method that creates shared test data once per TestCase class (fast, read-only).
+
+**setUp**: Instance method that creates fresh test data before each test method.
+
+**Fixture**: A JSON or YAML file containing serialized database records for loading into tests.
+
+**Factory**: A pattern that creates test objects with sensible defaults and easy customization.
+
+## Real World Context
+
+Large Django projects can have thousands of tests. If each test creates its own data from scratch via setUp(), the test suite becomes painfully slow. Factories and setUpTestData are how teams at scale keep test suites running in minutes instead of hours. Libraries like factory_boy are standard in most professional Django codebases.
+
+## Deep Dive
 
 ## setUp and setUpTestData
 
@@ -207,6 +225,26 @@ class ArticleFactory(DjangoModelFactory):
             pub_date=factory.LazyFunction(timezone.now)
         )
 ```
+
+## Common Pitfalls
+
+1. **Modifying setUpTestData objects**: Data created by setUpTestData is shared across all tests in the class. Modifying it corrupts other tests.
+2. **Overusing JSON fixtures**: Fixtures are hard to maintain as your schema evolves. Prefer factories for complex data.
+3. **Creating unnecessary data**: Each test should create only the data it needs. Excessive setup slows tests and obscures intent.
+
+## Best Practices
+
+1. **Use setUpTestData for read-only data**: It runs once per class, making tests significantly faster.
+2. **Use factories over fixtures**: Factories are more flexible and self-documenting.
+3. **Keep test data minimal**: Create only what each test requires.
+
+## Summary
+
+- setUpTestData creates data once per class (fast); setUp creates per test (fresh)
+- JSON fixtures load pre-defined data but are hard to maintain
+- The factory pattern creates test data with sensible defaults
+- factory_boy is the industry-standard library for Django test factories
+- Choose the right approach based on whether tests need shared or isolated data
 
 ## Resources
 

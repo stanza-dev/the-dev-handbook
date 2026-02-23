@@ -3,6 +3,23 @@ source_course: "django-forms-validation"
 source_lesson: "django-forms-validation-field-validation"
 ---
 
+## Introduction
+
+Field-level validation enforces rules on individual fields using `clean_<fieldname>()` methods and reusable validators.
+
+## Key Concepts
+
+- **clean_<fieldname>()**: Validates and transforms a single field value.
+- **Validator function**: Callable that raises `ValidationError`.
+- **Validator class**: Configurable callable with `__call__`.
+- **ValidationError**: Exception for invalid data with error codes.
+
+## Real World Context
+
+In a SaaS registration, `clean_username()` checks reserved names and uniqueness. A reusable `FileSizeValidator(max_mb=10)` works on any FileField.
+
+## Deep Dive
+
 # Field-Level Validation
 
 Validate individual fields with custom logic using clean_<fieldname> methods and validators.
@@ -179,6 +196,47 @@ username = forms.CharField(
     validators=[validate_length_range(3, 20)]
 )
 ```
+
+## Common Pitfalls
+
+1. **Forgetting to return from `clean_<field>()`** -- Value becomes `None`.
+2. **No `code` in `ValidationError`** -- Include `code=` for programmatic handling.
+3. **Uncached DB queries in validators** -- Can cause performance issues.
+
+## Best Practices
+
+1. **Normalize in `clean_<field>()`** -- e.g. `return email.lower()`.
+2. **Use validator classes for configuration** -- `MinWordsValidator(min_words=100)`.
+3. **Use built-in validators first** -- `RegexValidator`, `MinLengthValidator`.
+
+## Summary
+
+- `clean_<fieldname>()` validates one field and must return the value.
+- Validators are reusable across forms.
+- Include `code=` in `ValidationError`.
+- Normalize input in `clean_<field>()`.
+- Prefer built-in validators.
+
+## Code Examples
+
+**Field-level validation with clean_<fieldname>() -- validates and normalizes a single field's value**
+
+```python
+from django import forms
+from django.core.exceptions import ValidationError
+
+class RegistrationForm(forms.Form):
+    username = forms.CharField(max_length=30)
+    email = forms.EmailField()
+
+    def clean_username(self):
+        username = self.cleaned_data['username']
+        reserved = ['admin', 'root', 'system']
+        if username.lower() in reserved:
+            raise ValidationError('This username is reserved.')
+        return username.lower()  # normalize to lowercase
+```
+
 
 ## Resources
 

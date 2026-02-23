@@ -79,7 +79,7 @@ POST /deleteArticle?id=1
 | GET | Retrieve | Yes | Yes | No |
 | POST | Create | No | No | Yes |
 | PUT | Replace | Yes | No | Yes |
-| PATCH | Update | Yes | No | Yes |
+| PATCH | Update | Not guaranteed | No | Yes |
 | DELETE | Remove | Yes | No | No |
 
 ### HTTP Status Codes
@@ -120,6 +120,21 @@ POST /deleteArticle?id=1
 ## Summary
 
 REST APIs follow six architectural constraints that make them scalable, maintainable, and predictable. The key principles are: use resources (nouns) in URLs, leverage HTTP methods for actions, return appropriate status codes, and keep requests stateless. Mastering these fundamentals will help you design APIs that other developers love to use.
+
+## Code Examples
+
+**RESTful URL pattern design using resource-based nouns**
+
+```python
+# RESTful URL patterns in Django
+from django.urls import path
+
+urlpatterns = [
+    path('api/articles/', views.article_list),      # GET=list, POST=create
+    path('api/articles/<int:pk>/', views.article_detail),  # GET, PUT, DELETE
+]
+```
+
 
 ## Resources
 

@@ -79,6 +79,16 @@ class FollowRedirectTests(TestCase):
         self.assertTemplateUsed(response, 'dashboard.html')
 ```
 
+## Real World Context
+
+Redirect and error handling tests are often overlooked but are critical for user experience. A broken redirect after form submission leaves users staring at a blank page. Missing 404 handlers expose Django's debug page in production. These tests catch issues that are hard to spot in development but immediately visible to users.
+
+## Common Pitfalls
+
+1. **Not testing the full redirect chain**: Use `follow=True` to verify the final destination, not just the first redirect.
+2. **Forgetting to test custom error templates**: Django serves default error pages unless you provide custom 404.html and 500.html templates.
+3. **Checking only status codes**: A 200 response might still show an error message in the body. Always check content too.
+
 ## Best Practices
 
 1. **Test both status code and destination**: Use assertRedirects.

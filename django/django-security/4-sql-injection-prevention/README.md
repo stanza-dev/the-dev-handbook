@@ -16,7 +16,7 @@ Protect against SQL injection attacks
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Orm Protection
-- 🧩 Multiple Choice: Safe Raw Queries
-- 🧩 Multiple Choice: Extra() Safety
+- 🧩 Challenge: Safe Raw Queries
+- ✏️ Fill in the Blank: Extra() Safety
 
 → [Practice in your IDE](https://stanza.dev/courses/django-security)

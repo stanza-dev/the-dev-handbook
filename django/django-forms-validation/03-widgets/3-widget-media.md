@@ -9,6 +9,14 @@ source_lesson: "django-forms-validation-widget-media"
 
 Widgets can declare their CSS and JavaScript dependencies using the Media class.
 
+## Key Concepts
+
+- **Media class**: Declares CSS/JS deps on widgets.
+
+## Real World Context
+
+Widgets need their own CSS/JS. Media class handles deduplication.
+
 ## Deep Dive
 
 ### Defining Widget Media
@@ -35,6 +43,16 @@ class DatePickerWidget(forms.DateInput):
     {{ form.media.js }}
 </body>
 ```
+
+## Common Pitfalls
+
+1. **Wrong placement** -- Separate css and js.
+2. **Missing static config** -- Paths use STATIC_URL.
+
+## Best Practices
+
+1. **Media on widgets** -- Not forms.
+2. **Use tuples** -- Convention.
 
 ## Summary
 

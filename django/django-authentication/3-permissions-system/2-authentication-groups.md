@@ -5,6 +5,26 @@ source_lesson: "django-authentication-groups"
 
 # Groups and Role-Based Access
 
+## Introduction
+
+Groups are Django's built-in mechanism for role-based access control. Instead of assigning permissions to individual users, you assign them to groups, making permission management scalable across hundreds of users.
+
+## Key Concepts
+
+**Group**: A named collection of permissions that can be assigned to multiple users.
+
+**ManyToMany Relationship**: Users can belong to multiple groups, and groups can have multiple users.
+
+**Group Permissions**: Any permission assigned to a group is automatically available to all its members.
+
+**`user_passes_test`**: Decorator for custom access checks like group membership.
+
+## Real World Context
+
+A magazine publisher creates Editor, Writer, and Reviewer groups. When a freelancer joins, adding them to the Writer group grants exactly the right permissions. When they leave, removing them from the group revokes everything -- no risk of leftover permissions.
+
+## Deep Dive
+
 Groups let you assign permissions to multiple users at once, implementing role-based access control (RBAC).
 
 ## Creating Groups
@@ -170,6 +190,26 @@ class Command(BaseCommand):
 ```
 
 Run with: `python manage.py setup_groups`
+
+## Common Pitfalls
+
+1. **Checking group membership with `user.groups.all()` in a loop**: This fires a database query per iteration. Use `user.groups.filter(name__in=[...]).exists()` for efficient batch checking.
+2. **Creating groups manually in Django admin without automation**: Groups created in the admin are not version-controlled and may differ between environments. Use a management command or data migration.
+3. **Assuming group names are case-insensitive**: Django group names are case-sensitive. `Editors` and `editors` are two different groups, which can cause subtle permission bugs.
+
+## Best Practices
+
+1. **Define groups in a management command**: Run it during deployment to ensure consistent groups across all environments.
+2. **Use `get_or_create()` for idempotent group setup**: This prevents errors when the setup command runs multiple times.
+3. **Create a `group_required` decorator**: Wrap the common `user.groups.filter(name__in=groups).exists()` check in a reusable decorator for cleaner views.
+
+## Summary
+
+- Groups are Django's built-in tool for role-based access control (RBAC).
+- Assign permissions to groups, then add users to groups for scalable management.
+- Use `user.groups.filter(name='X').exists()` for efficient membership checks.
+- Automate group creation with management commands for consistency across environments.
+- Group permissions combine with direct user permissions -- `has_perm()` checks both.
 
 ## Resources
 

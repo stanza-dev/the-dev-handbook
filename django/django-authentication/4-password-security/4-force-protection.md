@@ -15,6 +15,10 @@ Protect your login form from brute force attacks with rate limiting and account 
 
 **Account Lockout**: Temporarily disable accounts.
 
+## Real World Context
+
+Credential stuffing attacks test millions of stolen username/password pairs from data breaches against your login form. Without rate limiting, an attacker can try thousands of combinations per minute. Even a simple 5-attempt lockout with a 15-minute cooldown makes automated attacks impractical.
+
 ## Deep Dive
 
 ### Using django-axes
@@ -56,6 +60,12 @@ def check_rate_limit(request, username):
     cache.set(key, attempts + 1, timeout=900)  # 15 min
     return True
 ```
+
+## Common Pitfalls
+
+1. **Locking only by username**: An attacker can target different usernames from the same IP. Lock by both IP and username to catch distributed attacks.
+2. **Leaking lockout status**: Returning a different error message like "account locked" tells attackers the username is valid. Use the same generic "invalid credentials" message whether the account is locked or the password is wrong.
+3. **No monitoring or alerting**: Rate limiting without logging is flying blind. Log every failed attempt with IP, username, and timestamp so your security team can detect coordinated attacks.
 
 ## Best Practices
 

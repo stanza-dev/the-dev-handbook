@@ -34,6 +34,8 @@ python3 --version
 
 ### On Ubuntu/Debian
 
+On Ubuntu or Debian-based systems, Python is available through the system package manager.
+
 ```bash
 # Update package list
 sudo apt update
@@ -93,6 +95,8 @@ python -m django --version
 
 ## Step 4: Verify Everything Works
 
+Let's confirm that Django is installed correctly and accessible from Python.
+
 ```bash
 # Start a Python shell
 python
@@ -136,6 +140,39 @@ Never use `sudo pip install`. Always use a virtual environment.
 
 ### "No module named django"
 Make sure your virtual environment is activated (`source venv/bin/activate`).
+
+## Common Pitfalls
+
+- **Installing Django globally with sudo**: Never use `sudo pip install django`. Always use a virtual environment to avoid permission issues and dependency conflicts.
+- **Forgetting to activate the virtual environment**: If your terminal prompt does not show `(venv)`, Django commands will fail with "No module named django".
+- **Using an unsupported Python version**: Django 6.0 requires Python 3.12 or later. Check your version with `python3 --version` before installing.
+
+## Best Practices
+
+- **Always use virtual environments**: Create a new virtual environment for each project to isolate dependencies.
+- **Pin your Django version**: Use `pip install django==6.0.*` to avoid unexpected upgrades.
+- **Create a requirements.txt early**: Run `pip freeze > requirements.txt` after installing packages so others can replicate your environment.
+
+## Summary
+
+- Django 6.0 requires **Python 3.12, 3.13, or 3.14**
+- Always use a **virtual environment** (`python3 -m venv venv`) to isolate project dependencies
+- Install Django with `pip install django` inside the activated virtual environment
+- Verify installation with `python -m django --version`
+- Use VS Code with the Python and Django extensions for the best development experience
+
+## Code Examples
+
+**Setting up an isolated Python virtual environment and installing Django 6.0**
+
+```bash
+# Create and activate a virtual environment, then install Django
+python3 -m venv venv
+source venv/bin/activate
+pip install django
+python -m django --version
+```
+
 
 ## Resources
 

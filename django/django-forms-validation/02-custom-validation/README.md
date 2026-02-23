@@ -16,7 +16,7 @@ Build powerful validation rules for complex requirements
 This section includes **3 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: Adding Field Errors
-- 🧩 Multiple Choice: clean() Return Value
-- 🧩 Challenge: Validator Types
+- 🧩 Challenge: clean() Return Value
+- 🧩 Challenge: Django Validator Approaches
 
 → [Practice in your IDE](https://stanza.dev/courses/django-forms-validation)

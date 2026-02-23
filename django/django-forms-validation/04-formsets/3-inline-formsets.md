@@ -9,6 +9,16 @@ source_lesson: "django-forms-validation-inline-formsets"
 
 Inline formsets edit child objects through a parent relationship, like editing chapters for a book.
 
+## Key Concepts
+
+- **inlineformset_factory()**: Creates formset for ForeignKey child objects.
+- **instance**: Parent model object for both GET and POST.
+- **can_delete**: Delete checkbox on each child form.
+
+## Real World Context
+
+A course editor where each course has multiple lessons. Inline formset edits all lessons on one page with add/edit/delete.
+
 ## Deep Dive
 
 ### Creating an Inline Formset
@@ -41,6 +51,16 @@ def edit_book(request, pk):
     
     return render(request, 'books/edit.html', {'book': book, 'formset': formset})
 ```
+
+## Common Pitfalls
+
+1. **Passing child not parent instance** -- Causes ValueError.
+2. **Missing instance on POST** -- Cannot associate new children with parent.
+
+## Best Practices
+
+1. **Use get_object_or_404 for parent** -- Prevents orphaned children.
+2. **Set extra=1 for production** -- Less clutter than default extra=3.
 
 ## Summary
 

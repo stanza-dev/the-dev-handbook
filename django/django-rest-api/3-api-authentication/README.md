@@ -15,7 +15,7 @@ Secure your APIs with token-based and session authentication
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Bearer Token Format
+- ✏️ Fill in the Blank: Bearer Token Format
 - 🧩 Multiple Choice: Permission Denied Status
 - 🧩 Multiple Choice: Secure JWT Storage
 

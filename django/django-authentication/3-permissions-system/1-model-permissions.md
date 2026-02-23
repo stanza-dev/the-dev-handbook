@@ -5,6 +5,28 @@ source_lesson: "django-authentication-model-permissions"
 
 # Model Permissions
 
+## Introduction
+
+Django automatically creates four permissions (add, change, delete, view) for every model. Understanding how to check, assign, and customize these permissions is the foundation of access control in any Django application.
+
+## Key Concepts
+
+**Default Permissions**: Django creates `add_<model>`, `change_<model>`, `delete_<model>`, and `view_<model>` for each model.
+
+**Permission String**: Format is `app_label.codename` (e.g., `blog.add_article`).
+
+**`has_perm()`**: Method on User to check a single permission.
+
+**`permission_required`**: Decorator that restricts view access to users with specific permissions.
+
+**`Meta.permissions`**: Define custom permissions beyond the default four.
+
+## Real World Context
+
+In a multi-author blog, only staff members should be able to delete articles, while regular authors can only add and edit their own. Using Django's permission system with `@permission_required('blog.delete_article')` on the delete view enforces this rule without any custom logic in the view itself.
+
+## Deep Dive
+
 Django automatically creates permissions for each model. Learn to use and customize them.
 
 ## Default Model Permissions
@@ -161,6 +183,41 @@ class Article(models.Model):
             ('publish_article', 'Can publish'),
         ]
 ```
+
+## Common Pitfalls
+
+1. **Forgetting that superusers bypass all permission checks**: `has_perm()` always returns `True` for superusers, even for permissions that do not exist. This can mask bugs in your permission logic during development.
+2. **Not refetching the user after assigning permissions**: Django caches permissions on the user object. After `user.user_permissions.add(perm)`, you must refetch the user or delete `user._perm_cache` to see the change.
+3. **Using `permission_required` without `raise_exception=True`**: By default, the decorator redirects to the login page -- even for already-authenticated users who lack the permission. Set `raise_exception=True` to return a 403 instead.
+
+## Best Practices
+
+1. **Use `permission_required` decorator or `PermissionRequiredMixin`**: Declarative access control is easier to audit than manual `has_perm()` checks scattered in view logic.
+2. **Assign permissions via groups, not directly to users**: This makes permission management scalable -- change the group's permissions once and all members are updated.
+3. **Customize `default_permissions` for models that do not need all four**: Set `default_permissions = ('view',)` on read-only models to avoid creating unused permissions.
+
+## Summary
+
+- Django creates add, change, delete, and view permissions for every model automatically.
+- Check permissions with `user.has_perm('app.codename')` or the `@permission_required` decorator.
+- Custom permissions are defined in `Meta.permissions` and created by migrations.
+- Assign permissions to groups, not individual users, for maintainability.
+- Use the `perms` template variable for conditional display in templates.
+
+## Code Examples
+
+**Using Django's permission_required decorator to protect views**
+
+```python
+from django.contrib.auth.decorators import permission_required, login_required
+
+@login_required
+@permission_required('blog.add_article', raise_exception=True)
+def create_article(request):
+    # Only users with 'blog.add_article' permission can access
+    pass
+```
+
 
 ## Resources
 

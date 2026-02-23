@@ -15,7 +15,7 @@ Optimize delivery of CSS, JavaScript, and images
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Whitenoise Purpose
-- 🧩 Multiple Choice: Manifest Storage Benefit
 - ✏️ Fill in the Blank: Cache Control Header
+- 🧩 Multiple Choice: Manifest Storage Benefit
 
 → [Practice in your IDE](https://stanza.dev/courses/django-performance)

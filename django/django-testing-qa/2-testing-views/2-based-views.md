@@ -68,6 +68,16 @@ class LoginRequiredViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 ```
 
+## Real World Context
+
+Most modern Django applications use class-based views extensively. Testing them through URLs is preferred because it exercises the full middleware stack, URL routing, and template rendering. RequestFactory is reserved for cases where you need to test a single view method in isolation, such as a custom `get_queryset()` override.
+
+## Common Pitfalls
+
+1. **Testing CBV internals instead of behavior**: Do not test that `get_context_data` returns a specific dict. Test that the rendered page contains expected content.
+2. **Forgetting to set request.user with RequestFactory**: RequestFactory does not process middleware, so you must manually set the user attribute.
+3. **Not testing permission mixins**: LoginRequiredMixin and PermissionRequiredMixin need explicit tests for both allowed and denied access.
+
 ## Best Practices
 
 1. **Test via URL first**: Most realistic way to test views.

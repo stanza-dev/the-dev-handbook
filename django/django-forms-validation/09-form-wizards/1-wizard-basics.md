@@ -3,6 +3,24 @@ source_course: "django-forms-validation"
 source_lesson: "django-forms-validation-wizard-basics"
 ---
 
+## Introduction
+
+Form wizards break long forms into steps, guiding users through smaller forms while preserving data between steps.
+
+## Key Concepts
+
+- **SessionWizardView**: Stores wizard data server-side in session.
+- **form_list**: List of (name, FormClass) tuples defining steps.
+- **done()**: Called when all steps complete, saves combined data.
+- **management_form**: Hidden fields tracking current step.
+- **condition_dict**: Callables controlling step visibility.
+
+## Real World Context
+
+A registration wizard: personal info step 1, address step 2, preferences step 3. Each validated independently. done() combines all data to create the account.
+
+## Deep Dive
+
 # Multi-Step Forms with django-formtools
 
 Form wizards break long forms into manageable steps, improving user experience for complex data entry.
@@ -199,6 +217,51 @@ class FileWizard(SessionWizardView):
                     # Process file
                     pass
 ```
+
+## Common Pitfalls
+
+1. **Missing wizard.management_form** -- POST fails with validation error.
+2. **get_cleaned_data_for_step() returns None** -- Unvisited steps. Handle gracefully.
+3. **File uploads without file_storage** -- Files lost between steps.
+
+## Best Practices
+
+1. **Use named steps** -- More readable condition_dict references.
+2. **Show progress indicator** -- Reduces user anxiety about form length.
+3. **Pre-populate later steps** -- Override get_form_initial().
+
+## Summary
+
+- SessionWizardView breaks forms into validated steps.
+- Define named tuples in form_list.
+- done() saves combined data after all steps.
+- Include wizard.management_form in template.
+- Set file_storage for file uploads.
+
+## Code Examples
+
+**SessionWizardView breaks a long form into named steps -- done() is called after all steps pass validation**
+
+```python
+from formtools.wizard.views import SessionWizardView
+
+class RegistrationWizard(SessionWizardView):
+    form_list = [
+        ('personal', PersonalInfoForm),
+        ('address', AddressForm),
+        ('preferences', PreferencesForm),
+    ]
+    template_name = 'registration_wizard.html'
+
+    def done(self, form_list, form_dict, **kwargs):
+        # Called when all steps complete
+        data = {}
+        for form in form_list:
+            data.update(form.cleaned_data)
+        User.objects.create(**data)
+        return redirect('welcome')
+```
+
 
 ## Resources
 

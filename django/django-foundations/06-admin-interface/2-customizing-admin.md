@@ -81,6 +81,8 @@ admin.site.register(Question, QuestionAdmin)
 
 ## List View Customization
 
+The list view supports several options for controlling how data is displayed, which fields are editable inline, and how many items appear per page.
+
 ```python
 class QuestionAdmin(admin.ModelAdmin):
     # Columns to display
@@ -96,9 +98,9 @@ class QuestionAdmin(admin.ModelAdmin):
     list_per_page = 25
     
     # Custom method for display
+    @admin.display(description='Number of Choices')
     def choice_count(self, obj):
         return obj.choice_set.count()
-    choice_count.short_description = 'Number of Choices'
 ```
 
 ## Using the Decorator Syntax
@@ -126,6 +128,44 @@ admin.site.site_header = 'My Site Administration'
 admin.site.site_title = 'My Site Admin'
 admin.site.index_title = 'Welcome to the Admin Panel'
 ```
+
+## Common Pitfalls
+
+- **Putting a non-existent field in `list_display`**: Django raises a `FieldDoesNotExist` error. Double-check field names match your model.
+- **Using `list_editable` without `list_display`**: Fields in `list_editable` must also appear in `list_display`, and the first field in `list_display` cannot be editable.
+- **Forgetting `extra = 0` on inlines**: By default, Django shows 3 empty inline forms. Set `extra = 0` to show only existing related objects.
+
+## Best Practices
+
+- **Use `@admin.register(Model)` decorator** instead of `admin.site.register()` for cleaner code.
+- **Add `search_fields` and `list_filter`** to every ModelAdmin for easy data discovery.
+- **Use fieldsets** to organize the change form into logical groups with collapsible sections.
+
+## Summary
+
+- Customize the admin by creating `ModelAdmin` classes with options like `list_display`, `list_filter`, and `search_fields`
+- Use `fieldsets` to organize edit forms into collapsible sections
+- **Inline editing** (`TabularInline`, `StackedInline`) lets you edit related objects on the same page
+- Add computed columns with `@admin.display` decorated methods
+- Customize the admin site header and title with `admin.site.site_header`
+
+## Code Examples
+
+**Customizing the admin list view with display columns, filters, search, and computed fields**
+
+```python
+@admin.register(Question)
+class QuestionAdmin(admin.ModelAdmin):
+    list_display = ['question_text', 'pub_date', 'choice_count']
+    list_filter = ['pub_date']
+    search_fields = ['question_text']
+    ordering = ['-pub_date']
+
+    @admin.display(description='Number of Choices')
+    def choice_count(self, obj):
+        return obj.choice_set.count()
+```
+
 
 ## Resources
 

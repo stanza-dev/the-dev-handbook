@@ -5,9 +5,24 @@ source_lesson: "django-security-sql-injection-protection"
 
 # SQL Injection Protection
 
-SQL injection attacks manipulate database queries by inserting malicious SQL code.
+## Introduction
 
-## How SQL Injection Works
+SQL injection is one of the most dangerous and common web vulnerabilities. Attackers manipulate database queries by inserting malicious SQL code through user input. Django's ORM provides strong protection by automatically parameterizing all queries, but raw SQL usage requires careful handling.
+
+## Key Concepts
+
+- **SQL Injection**: Attack that inserts malicious SQL through user input to read, modify, or delete database data.
+- **Parameterized Queries**: Technique where SQL structure and user values are sent separately, preventing injection.
+- **Django ORM**: Object-Relational Mapper that automatically generates parameterized queries.
+- **Raw SQL**: Direct SQL that bypasses ORM protection and requires manual parameterization.
+
+## Real World Context
+
+SQL injection has caused some of the largest data breaches in history, including the theft of millions of user records from major companies. Automated tools like sqlmap can exploit injection vulnerabilities in seconds. Even a single unparameterized query can expose your entire database, because attackers can use UNION SELECT to read any table.
+
+## Deep Dive
+
+### How SQL Injection Works
 
 ```python
 # VULNERABLE CODE - Never do this!
@@ -20,7 +35,7 @@ SELECT * FROM users WHERE username = '' OR '1'='1'
 # Returns ALL users!
 ```
 
-## Django ORM Protection
+### Django ORM Protection
 
 Django's ORM automatically parameterizes queries:
 
@@ -35,7 +50,7 @@ user = User.objects.get(username=username)
 # The input is never interpolated into the query
 ```
 
-## Safe Raw Queries
+### Safe Raw Queries
 
 ```python
 # If you must use raw SQL, use parameters
@@ -53,7 +68,7 @@ User.objects.raw(
 )
 ```
 
-## Direct Database Queries
+### Direct Database Queries
 
 ```python
 from django.db import connection
@@ -73,7 +88,7 @@ with connection.cursor() as cursor:
     )
 ```
 
-## Extra() and RawSQL (Careful!)
+### Extra() and RawSQL (Careful!)
 
 ```python
 from django.db.models import F
@@ -96,7 +111,7 @@ Article.objects.annotate(
 )
 ```
 
-## LIKE Patterns
+### LIKE Patterns
 
 ```python
 # Django handles LIKE escaping automatically
@@ -108,7 +123,7 @@ Article.objects.filter(title__endswith=user_input)
 # User input: "100%" is safely searched as "100\%"
 ```
 
-## Validating User Input
+### Validating User Input
 
 ```python
 # Even with ORM protection, validate input types
@@ -128,7 +143,7 @@ class SearchForm(forms.Form):
     category = forms.ChoiceField(choices=CATEGORY_CHOICES)
 ```
 
-## Aggregation Safety
+### Aggregation Safety
 
 ```python
 from django.db.models import Count, Sum, F, Value
@@ -147,6 +162,46 @@ Article.objects.annotate(
     status_label=Coalesce('status', Value('unknown'))
 )
 ```
+
+## Common Pitfalls
+
+1. **Using f-strings or .format() in raw SQL** — Even experienced developers fall back to string interpolation out of habit; always use %s placeholders.
+2. **Assuming ORM is always enough** — Complex queries sometimes require raw SQL, but that raw SQL still needs parameterization.
+3. **Forgetting to escape LIKE wildcards** — The % and _ characters have special meaning in LIKE queries and must be escaped in raw SQL.
+
+## Best Practices
+
+1. **Use the ORM for everything possible** — It parameterizes automatically and handles escaping edge cases.
+2. **Always parameterize raw SQL** — Use %s placeholders with a values list, never string formatting.
+3. **Validate input types early** — Coerce IDs to integers, validate choices against allowlists before they reach the database layer.
+
+## Summary
+
+- Django's ORM automatically prevents SQL injection through parameterized queries.
+- Raw SQL must always use %s placeholders with separate value parameters.
+- Validate and type-check user input even when using the ORM for defense in depth.
+
+## Code Examples
+
+**Comparison of dangerous string interpolation vs safe parameterized queries using Django ORM and raw SQL**
+
+```python
+from django.db import connection
+
+# DANGEROUS: String interpolation in SQL
+# cursor.execute(f"SELECT * FROM users WHERE name = '{name}'")
+
+# SAFE: ORM (automatic parameterization)
+user = User.objects.get(username=name)
+
+# SAFE: Raw SQL with %s placeholders
+with connection.cursor() as cursor:
+    cursor.execute(
+        "SELECT * FROM users WHERE name = %s AND active = %s",
+        [name, True]
+    )
+```
+
 
 ## Resources
 

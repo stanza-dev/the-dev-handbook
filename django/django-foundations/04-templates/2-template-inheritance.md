@@ -167,6 +167,49 @@ For reusable snippets that don't need inheritance:
 {% include 'includes/card.html' with title=question.question_text %}
 ```
 
+## Common Pitfalls
+
+- **Not putting `{% extends %}` as the first tag**: The `{% extends %}` tag must be the very first template tag in a child template, or Django will not recognize the inheritance.
+- **Forgetting `{% endblock %}`**: Every `{% block name %}` must have a matching `{% endblock %}`. Missing it causes a template syntax error.
+- **Overusing `{% include %}` instead of inheritance**: Use inheritance for page structure and `{% include %}` only for reusable snippets like navigation or cards.
+
+## Best Practices
+
+- **Define many blocks in the base template**: More blocks give child templates more flexibility to override specific sections.
+- **Use `{{ block.super }}`** when you want to extend (not replace) a parent block's content.
+- **Follow three-level inheritance** for complex sites: `base.html` -> `base_section.html` -> `page.html`.
+
+## Summary
+
+- Template inheritance lets you define a **base skeleton** with `{% block %}` placeholders
+- Child templates use `{% extends 'base.html' %}` and override specific blocks
+- `{% extends %}` must be the **first tag** in a child template
+- Use `{{ block.super }}` to include the parent block's content alongside new content
+- `{% include %}` is for reusable snippets; inheritance is for page structure
+
+## Code Examples
+
+**Template inheritance with a base template defining blocks and a child template overriding them**
+
+```html
+<!-- base.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}My Site{% endblock %}</title>
+</head>
+<body>
+    <main>{% block content %}{% endblock %}</main>
+</body>
+</html>
+
+<!-- child.html -->
+{% extends "base.html" %}
+{% block title %}My Page{% endblock %}
+{% block content %}<h1>Hello!</h1>{% endblock %}
+```
+
+
 ## Resources
 
 - [Template Inheritance](https://docs.djangoproject.com/en/6.0/ref/templates/language/#template-inheritance) — Official documentation on template inheritance

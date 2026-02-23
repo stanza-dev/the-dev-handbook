@@ -16,7 +16,7 @@ Understand Django's built-in security features and best practices
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Debug False Reason
-- 🧩 Multiple Choice: Check Deploy Command
+- ✏️ Fill in the Blank: Check Deploy Command
 - 🧩 Multiple Choice: ALLOWED_HOSTS Danger
 
 → [Practice in your IDE](https://stanza.dev/courses/django-security)

@@ -15,7 +15,7 @@ Test views and HTTP responses in Django
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Assertcontains Usage
-- 🧩 Multiple Choice: force_login vs login
+- 🧩 Challenge: force_login vs login
 - 🧩 Multiple Choice: RequestFactory Purpose
 
 → [Practice in your IDE](https://stanza.dev/courses/django-testing-qa)

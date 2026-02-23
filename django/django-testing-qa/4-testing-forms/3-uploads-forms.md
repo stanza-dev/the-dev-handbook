@@ -81,6 +81,16 @@ class FileSizeValidationTests(TestCase):
         self.assertIn('document', form.errors)
 ```
 
+## Real World Context
+
+File upload testing is essential for any application that handles user-submitted images, documents, or media. Real files on disk slow tests and create cleanup headaches. SimpleUploadedFile keeps everything in memory, making tests fast and self-contained. Always test both valid and invalid file types to prevent security issues.
+
+## Common Pitfalls
+
+1. **Using invalid file headers**: Some validators check magic bytes, not just file extensions. Use real file headers in SimpleUploadedFile.
+2. **Forgetting to clean up uploaded files**: Test files can accumulate on disk. Use a temporary directory or override MEDIA_ROOT in test settings.
+3. **Not testing file size limits**: Upload size validation should be tested to prevent users from uploading excessively large files.
+
 ## Best Practices
 
 1. **Use real file headers**: Some validators check magic bytes.

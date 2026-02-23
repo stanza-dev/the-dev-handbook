@@ -19,9 +19,19 @@ Different rate limiting strategies serve different purposes. Understanding when 
 
 **Leaky Bucket**: Smooths out request rate by processing at a constant rate.
 
+## Real World Context
+
+Different strategies suit different scenarios:
+- **Fixed window**: Simple APIs with predictable traffic patterns
+- **Sliding window**: APIs needing smooth, consistent rate enforcement
+- **Token bucket**: APIs that need to handle legitimate bursts (e.g., batch operations)
+- **Leaky bucket**: APIs requiring constant throughput (e.g., message queues)
+
 ## Deep Dive
 
 ### Fixed Window (Simplest)
+
+The fixed window approach counts requests within discrete time blocks (e.g., each minute). The cache key includes the window timestamp so the counter resets automatically:
 
 ```python
 def fixed_window_limit(request, limit=100, window=60):
@@ -39,6 +49,8 @@ def fixed_window_limit(request, limit=100, window=60):
 **Cons**: Burst at window boundaries (200 requests if timed right)
 
 ### Sliding Window Log
+
+The sliding window approach stores the timestamp of every recent request, providing smooth rate enforcement without boundary-burst issues:
 
 ```python
 def sliding_window_limit(request, limit=100, window=60):
@@ -62,6 +74,8 @@ def sliding_window_limit(request, limit=100, window=60):
 
 ### Per-Endpoint Limits
 
+Different endpoints have different costs. Define a configuration dict that maps view names to their limits:
+
 ```python
 RATE_LIMITS = {
     'default': (100, 60),      # 100/min
@@ -74,7 +88,11 @@ def get_rate_limit(view_name):
     return RATE_LIMITS.get(view_name, RATE_LIMITS['default'])
 ```
 
+Expensive operations like search and export get stricter limits, while the default covers standard CRUD endpoints. The tuple format is `(max_requests, window_seconds)`.
+
 ### Tiered Limits by User
+
+Return different limits based on the user's subscription tier, enabling a freemium pricing model for your API:
 
 ```python
 def get_user_limit(user):
@@ -90,6 +108,16 @@ def get_user_limit(user):
     return limits.get(tier, 100)
 ```
 
+Anonymous users get the lowest limit (30), while enterprise customers get 10,000. This function integrates with any of the rate limiting algorithms above.
+
+## Common Pitfalls
+
+1. **Fixed window boundary bursts**: A client can send 100 requests at 11:59:59 and 100 more at 12:00:00, getting 200 in 2 seconds.
+
+2. **Sliding window memory usage**: Storing timestamps for every request uses more memory than simple counters.
+
+3. **Wrong algorithm choice**: Using token bucket for login attempts (where bursts are bad) or fixed window for batch APIs (where bursts are normal).
+
 ## Best Practices
 
 1. **Different limits for different operations**: Login should have stricter limits than read operations.
@@ -100,6 +128,35 @@ def get_user_limit(user):
 ## Summary
 
 Choose rate limiting strategies based on your needs: fixed window for simplicity, sliding window for accuracy, token bucket for burst tolerance. Apply different limits based on endpoint cost and user tier.
+
+## Code Examples
+
+**Token bucket algorithm for rate limiting with burst support**
+
+```python
+import time
+from django.core.cache import cache
+
+class TokenBucket:
+    def __init__(self, key, max_tokens, refill_rate):
+        self.key = key
+        self.max_tokens = max_tokens
+        self.refill_rate = refill_rate
+
+    def consume(self, tokens=1):
+        now = time.time()
+        bucket = cache.get(self.key, {'tokens': self.max_tokens, 'last_update': now})
+        elapsed = now - bucket['last_update']
+        bucket['tokens'] = min(self.max_tokens, bucket['tokens'] + elapsed * self.refill_rate)
+        bucket['last_update'] = now
+        if bucket['tokens'] >= tokens:
+            bucket['tokens'] -= tokens
+            cache.set(self.key, bucket, 3600)
+            return True
+        cache.set(self.key, bucket, 3600)
+        return False
+```
+
 
 ## Resources
 

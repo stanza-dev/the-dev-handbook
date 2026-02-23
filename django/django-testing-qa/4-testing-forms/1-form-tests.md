@@ -5,7 +5,25 @@ source_lesson: "django-testing-qa-form-tests"
 
 # Form Testing
 
-Test form validation, cleaning, and rendering.
+## Introduction
+
+Forms are where user input enters your application, making them a critical testing target. Form tests verify validation rules, custom cleaning logic, error messages, and save behavior. Thorough form testing prevents invalid data from reaching your database.
+
+## Key Concepts
+
+**is_valid()**: Returns True if the form data passes all validation rules.
+
+**form.errors**: A dictionary mapping field names to lists of error messages.
+
+**__all__**: The key in form.errors that holds non-field errors from the clean() method.
+
+**commit=False**: Saves the form to a model instance without writing to the database yet.
+
+## Real World Context
+
+Form validation is your first line of defense against bad data. In real applications, forms handle user registration, content creation, file uploads, and settings changes. A missing validation rule can lead to corrupted data, security vulnerabilities, or cryptic errors downstream. Testing forms is faster than testing the same validation through views.
+
+## Deep Dive
 
 ## Testing Form Validity
 
@@ -197,6 +215,55 @@ class FormRenderingTests(TestCase):
             'Enter article title'
         )
 ```
+
+## Common Pitfalls
+
+1. **Only testing valid data**: Most bugs hide in validation logic. Always test invalid inputs and verify the correct error messages appear.
+2. **Forgetting to test non-field errors**: Errors from the clean() method are stored under '__all__', not under any field name.
+3. **Not testing form rendering**: If you use custom widgets or attributes, verify the HTML output matches expectations.
+
+## Best Practices
+
+1. **Test both valid and invalid inputs**: Cover required fields, field length limits, and custom validators.
+2. **Verify error messages explicitly**: Check that users see helpful, accurate error text.
+3. **Test form save behavior**: Verify commit=False and save() both work correctly, including ManyToMany fields.
+
+## Summary
+
+- Test is_valid() with both valid and invalid data dictionaries
+- Check form.errors for specific field errors and '__all__' for non-field errors
+- Test custom clean methods and cross-field validation
+- Use commit=False to test save behavior without persisting
+- Test formsets with management form data and correct prefixes
+
+## Code Examples
+
+**Testing form validity with both valid and invalid data, checking form.errors for specific fields.**
+
+```python
+from django.test import TestCase
+from .forms import ArticleForm
+
+
+class ArticleFormTests(TestCase):
+    def test_valid_form(self):
+        form = ArticleForm(data={
+            'title': 'Test Article',
+            'body': 'Content here',
+            'status': 'draft',
+        })
+        self.assertTrue(form.is_valid())
+
+    def test_missing_title_shows_error(self):
+        form = ArticleForm(data={
+            'body': 'Content',
+            'status': 'draft',
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn('title', form.errors)
+
+```
+
 
 ## Resources
 

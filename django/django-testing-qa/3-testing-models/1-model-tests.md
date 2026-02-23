@@ -5,7 +5,23 @@ source_lesson: "django-testing-qa-model-tests"
 
 # Model Testing Strategies
 
-Model tests verify your data layer works correctly.
+## Introduction
+
+Model tests verify that your data layer works correctly, including creation, validation, relationships, custom methods, and query managers. Since models are the foundation of a Django application, thorough model testing prevents data integrity issues from propagating through the entire system.
+
+## Key Concepts
+
+**full_clean()**: Triggers all model validation including field validators and the custom clean() method.
+
+**IntegrityError**: Database-level exception raised when constraints like unique or foreign key are violated.
+
+**refresh_from_db()**: Reloads an object's field values from the database after external modifications.
+
+## Real World Context
+
+Model tests are fast because they interact directly with the database without HTTP overhead. In production codebases, model tests often make up 40-60% of the test suite because they cover business logic, validation rules, and data relationships. A bug in a model method can cascade through views, serializers, and templates, so catching it early at the model level saves significant debugging time.
+
+## Deep Dive
 
 ## Testing Model Creation
 
@@ -205,6 +221,55 @@ class ArticleManagerTests(TestCase):
         self.assertEqual(drafts.count(), 1)
         self.assertIn(self.draft, drafts)
 ```
+
+## Common Pitfalls
+
+1. **Forgetting that save() does not call full_clean()**: Django's save() skips validation by default. Always call full_clean() explicitly in tests to verify validators.
+2. **Not using refresh_from_db() after database operations**: When another query or method modifies the database, your in-memory object becomes stale.
+3. **Testing Django internals**: Do not test that Django's ORM creates objects correctly. Test your custom logic, methods, and validation rules.
+
+## Best Practices
+
+1. **Test validation explicitly**: Call full_clean() and verify expected ValidationError messages.
+2. **Test edge cases**: Empty strings, None values, boundary lengths, and duplicate values.
+3. **Use setUpTestData for shared read-only data**: Related objects like users and categories rarely change between tests.
+
+## Summary
+
+- Test model creation, validation, methods, relationships, and managers
+- Always call full_clean() to trigger validation in tests
+- Use refresh_from_db() after database modifications
+- Test custom managers and querysets for filtering logic
+- Focus on testing your custom business logic, not Django internals
+
+## Code Examples
+
+**Testing model validation with full_clean() and a model method with refresh_from_db().**
+
+```python
+from django.test import TestCase
+from django.core.exceptions import ValidationError
+from .models import Article
+
+
+class ArticleValidationTests(TestCase):
+    def test_title_required(self):
+        article = Article(body='Content', status='draft')
+        with self.assertRaises(ValidationError) as cm:
+            article.full_clean()
+        self.assertIn('title', cm.exception.message_dict)
+
+    def test_publish_sets_date(self):
+        article = Article.objects.create(
+            title='Test', status='draft'
+        )
+        article.publish()
+        article.refresh_from_db()
+        self.assertEqual(article.status, 'published')
+        self.assertIsNotNone(article.pub_date)
+
+```
+
 
 ## Resources
 

@@ -17,9 +17,19 @@ HATEOAS (Hypermedia as the Engine of Application State) is a REST constraint whe
 
 **Link Relations**: Standard names describing what each link represents (self, next, author, etc.).
 
+## Real World Context
+
+HATEOAS is used in production by:
+- **GitHub API**: Responses include URLs for related resources and pagination
+- **PayPal API**: Payment responses include links for capture, void, and refund actions
+- **AWS APIs**: Resource responses include ARNs and links to related services
+- **HAL-based APIs**: A popular format for hypermedia-driven REST APIs
+
 ## Deep Dive
 
 ### Adding Links to Responses
+
+Include a `links` dict for navigation to related resources and an `actions` dict for operations the current user can perform:
 
 ```python
 def get_article(request, pk):
@@ -45,7 +55,11 @@ def get_article(request, pk):
     })
 ```
 
+Conditional action links (returning `None` when unavailable) tell clients what the user can do without requiring a separate permissions endpoint.
+
 ### Pagination Links
+
+Pagination links let clients navigate through pages by following URLs instead of constructing them manually:
 
 ```python
 def list_articles(request):
@@ -64,7 +78,11 @@ def list_articles(request):
     })
 ```
 
+Setting `prev` and `next` to `None` at the boundaries signals to clients that there are no more pages in that direction.
+
 ### API Root Discovery
+
+A root endpoint serves as the entry point for the entire API, listing all available top-level resources:
 
 ```python
 def api_root(request):
@@ -81,6 +99,16 @@ def api_root(request):
     })
 ```
 
+Clients bookmark this single URL and discover everything else by following links. When URLs change, only the root response needs to be updated.
+
+## Common Pitfalls
+
+1. **Hardcoded URLs in clients**: If clients build URLs from patterns instead of following links, URL changes break them.
+
+2. **Including actions the user cannot perform**: Only include links for actions the authenticated user is authorized to do.
+
+3. **Over-engineering**: Not every API needs full HATEOAS. Start with self-links and pagination, add more as needed.
+
 ## Best Practices
 
 1. **Include self link**: Every resource should link to itself.
@@ -91,6 +119,30 @@ def api_root(request):
 ## Summary
 
 HATEOAS makes APIs discoverable by embedding links to related resources and available actions. Include self-links, pagination links, and conditional action links based on user permissions.
+
+## Code Examples
+
+**HATEOAS response with resource links and conditional actions**
+
+```python
+def get_article(request, pk):
+    article = Article.objects.get(pk=pk)
+    return JsonResponse({
+        'data': {
+            'id': article.id,
+            'title': article.title,
+        },
+        'links': {
+            'self': f'/api/articles/{pk}/',
+            'author': f'/api/users/{article.author_id}/',
+            'comments': f'/api/articles/{pk}/comments/',
+        },
+        'actions': {
+            'edit': f'/api/articles/{pk}/' if can_edit(request.user, article) else None,
+        }
+    })
+```
+
 
 ## Resources
 

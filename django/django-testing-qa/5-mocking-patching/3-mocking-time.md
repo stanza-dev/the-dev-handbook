@@ -79,6 +79,16 @@ class ScheduledTaskTests(TestCase):
             self.assertTrue(task.should_run)
 ```
 
+## Real World Context
+
+Time-dependent features are everywhere: subscription expiration, trial periods, scheduled tasks, rate limiting, and 'posted 3 hours ago' displays. Testing these without freezegun requires fragile approaches like sleeping or using approximate assertions. Freezegun makes time deterministic, so tests always produce the same result.
+
+## Common Pitfalls
+
+1. **Using naive datetimes**: Always use timezone-aware datetimes with `tzinfo=timezone.utc`. Naive datetimes cause subtle bugs in time comparisons.
+2. **Not testing boundary conditions**: If a token expires after 24 hours, test at 23:59 and 24:01, not just 'before' and 'after'.
+3. **Forgetting that freezegun affects all code**: When time is frozen, auto_now and auto_now_add fields also use the frozen time.
+
 ## Best Practices
 
 1. **Use timezone-aware datetimes**: Always include tzinfo.

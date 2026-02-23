@@ -33,9 +33,11 @@ Poor request handling leads to security vulnerabilities, data corruption, and fr
 
 ### Parsing JSON Request Body
 
+This view demonstrates the full pattern for safely receiving JSON data: checking the HTTP method, parsing the body, validating fields, and returning appropriate status codes:
+
 ```python
 import json
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt  # Use token auth instead for APIs
@@ -66,7 +68,11 @@ def api_create_article(request):
     return JsonResponse({'id': article.id, 'title': article.title}, status=201)
 ```
 
+The `@csrf_exempt` decorator disables CSRF protection for this view since API clients typically use token authentication instead. The `json.loads(request.body)` call is wrapped in a try/except to handle malformed JSON gracefully.
+
 ### Query Parameters
+
+Query parameters are read from `request.GET` and are ideal for filtering, pagination, and sorting. This example shows how to parse, validate, and apply multiple query parameters:
 
 ```python
 def api_articles(request):
@@ -104,7 +110,11 @@ def api_articles(request):
     })
 ```
 
+Notice the use of `min()` to cap `per_page` at 100, preventing clients from requesting excessive data. Always provide defaults with `request.GET.get()` and handle type conversion errors.
+
 ### Complete CRUD View
+
+Here is a single view function that handles all CRUD operations by branching on `request.method`. This pattern keeps related logic together:
 
 ```python
 @csrf_exempt
@@ -117,13 +127,19 @@ def api_article(request, pk=None):
         return JsonResponse({'data': list(articles.values('id', 'title'))})
     
     elif request.method == 'POST':
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
         article = Article.objects.create(title=data['title'], body=data.get('body', ''))
         return JsonResponse({'id': article.id}, status=201)
     
     elif request.method == 'PUT':  # Full replacement
         article = get_object_or_404(Article, pk=pk)
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
         article.title = data['title']  # Required
         article.body = data['body']    # Required
         article.save()
@@ -131,7 +147,10 @@ def api_article(request, pk=None):
     
     elif request.method == 'PATCH':  # Partial update
         article = get_object_or_404(Article, pk=pk)
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
         if 'title' in data:
             article.title = data['title']
         if 'body' in data:
@@ -142,12 +161,16 @@ def api_article(request, pk=None):
     elif request.method == 'DELETE':
         article = get_object_or_404(Article, pk=pk)
         article.delete()
-        return JsonResponse({}, status=204)
+        return HttpResponse(status=204)
     
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 ```
 
+The key difference between PUT and PATCH is that PUT requires all fields (full replacement), while PATCH only updates the fields present in the request body. DELETE returns status 204 with no body.
+
 ### Reading Request Headers
+
+Django exposes request headers through `request.headers`, a case-insensitive dictionary. This is useful for reading authentication tokens, content types, and custom headers:
 
 ```python
 def api_protected(request):
@@ -159,6 +182,8 @@ def api_protected(request):
     if not api_key or api_key != settings.API_KEY:
         return JsonResponse({'error': 'Invalid API key'}, status=401)
 ```
+
+The `request.headers` dict was introduced in Django 2.2. Custom headers like `X-API-Key` follow the same access pattern as standard ones.
 
 ## Common Pitfalls
 
@@ -183,6 +208,30 @@ def api_protected(request):
 ## Summary
 
 Handling request data involves parsing JSON bodies with `json.loads(request.body)`, reading query parameters from `request.GET`, and accessing headers via `request.headers`. Always validate input, handle parsing errors gracefully, and return meaningful error messages. Remember that PUT expects complete resource replacement while PATCH handles partial updates.
+
+## Code Examples
+
+**Parsing and validating JSON request body with error handling**
+
+```python
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def api_create_article(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    if 'title' not in data:
+        return JsonResponse({'error': 'title is required'}, status=400)
+    article = Article.objects.create(title=data['title'])
+    return JsonResponse({'id': article.id}, status=201)
+```
+
 
 ## Resources
 

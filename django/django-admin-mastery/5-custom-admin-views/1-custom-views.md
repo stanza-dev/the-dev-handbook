@@ -5,9 +5,29 @@ source_lesson: "django-admin-mastery-adding-custom-views"
 
 # Adding Custom Admin Views
 
+## Introduction
+
+Django admin supports custom views for reports, dashboards, and specialized workflows. By overriding get_urls() on a ModelAdmin or AdminSite, you can add any view to the admin while inheriting its authentication and permission system.
+
+## Key Concepts
+
+**get_urls()**: Method that returns URL patterns for the admin. Override it to add custom routes.
+
+**admin_view()**: Wrapper that enforces admin authentication and CSRF protection on custom views.
+
+**TemplateResponse**: Response class that uses Django's template system for rendering.
+
+**each_context()**: Provides standard admin context variables (site_header, etc.) to custom templates.
+
+## Real World Context
+
+A marketing team wants a dashboard inside the admin showing article publication statistics, top authors, and content gaps. Instead of building a separate analytics application, a custom statistics_view on ArticleAdmin renders a TemplateResponse with aggregated data, giving the team real-time insights without leaving the admin.
+
+## Deep Dive
+
 Django admin allows you to add custom views for reports, dashboards, and specialized functionality.
 
-## Custom View on ModelAdmin
+### Custom View on ModelAdmin
 
 ```python
 from django.contrib import admin
@@ -71,7 +91,7 @@ class ArticleAdmin(admin.ModelAdmin):
         )
 ```
 
-## Template for Custom View
+### Template for Custom View
 
 ```html
 <!-- templates/admin/blog/article/statistics.html -->
@@ -116,7 +136,7 @@ class ArticleAdmin(admin.ModelAdmin):
 {% endblock %}
 ```
 
-## Adding Links to Custom Views
+### Adding Links to Custom Views
 
 ```python
 from django.utils.html import format_html
@@ -150,7 +170,7 @@ class ArticleAdmin(admin.ModelAdmin):
 {% endblock %}
 ```
 
-## Custom Admin Site Views
+### Custom Admin Site Views
 
 ```python
 from django.contrib.admin import AdminSite
@@ -187,6 +207,54 @@ class MyAdminSite(AdminSite):
         }
         return TemplateResponse(request, 'admin/dashboard.html', context)
 ```
+
+## Common Pitfalls
+
+1. **Placing custom URLs after super().get_urls()**: Django's default URL patterns include catch-all patterns. If your custom URLs come after them, they will never match. Always prepend custom URLs.
+
+2. **Forgetting to wrap views with admin_view()**: Without self.admin_site.admin_view(), your custom view has no authentication check, making it publicly accessible to anyone who knows the URL.
+
+3. **Not including each_context()**: Custom views that skip `self.admin_site.each_context(request)` in the template context will render without the standard admin header, sidebar, and navigation.
+
+## Best Practices
+
+1. **Use TemplateResponse instead of render()**: TemplateResponse allows middleware to modify the response before rendering, which is the pattern Django admin uses internally.
+
+2. **Link custom views from the change list**: Add buttons in the object-tools block or use format_html in list_display to make custom views discoverable.
+
+3. **Reuse admin base templates**: Extend admin/base_site.html so your custom pages get the admin look and feel, including breadcrumbs and navigation.
+
+## Summary
+
+- Override get_urls() to add custom URL patterns to any ModelAdmin or AdminSite.
+- Wrap custom views with admin_site.admin_view() for authentication.
+- Include each_context() in template context for the standard admin chrome.
+- Place custom URLs before super().get_urls() to avoid catch-all conflicts.
+- Use TemplateResponse and extend admin templates for consistent styling.
+
+## Code Examples
+
+**Adding a custom statistics view to ModelAdmin via get_urls()**
+
+```python
+class MyModelAdmin(admin.ModelAdmin):
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('statistics/',
+                 self.admin_site.admin_view(self.statistics_view),
+                 name='model_statistics'),
+        ]
+        return custom_urls + urls
+
+    def statistics_view(self, request):
+        context = {
+            **self.admin_site.each_context(request),
+            'title': 'Statistics',
+        }
+        return TemplateResponse(request, 'admin/statistics.html', context)
+```
+
 
 ## Resources
 

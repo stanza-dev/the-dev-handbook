@@ -81,6 +81,16 @@ class TaskTests(TestCase):
         mock_delay.assert_called_once()
 ```
 
+## Real World Context
+
+Modern Django applications integrate with payment processors (Stripe, PayPal), email services (SendGrid, SES), cloud storage (S3), and dozens of third-party APIs. Without mocking, your test suite would require active accounts with every service, internet access, and would run orders of magnitude slower. Mocking is not optional for professional Django development.
+
+## Common Pitfalls
+
+1. **Mocking too deep**: Mock at the boundary (requests.get, stripe.Charge.create), not internal helper functions.
+2. **Forgetting to test error responses**: Mock both success and failure cases -- 200 and 503 responses from external APIs.
+3. **Not verifying request parameters**: Use assert_called_with() to ensure your code sends the right data to external services.
+
 ## Best Practices
 
 1. **Mock at the boundary**: Mock where your code meets external systems.

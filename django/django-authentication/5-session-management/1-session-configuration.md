@@ -5,6 +5,28 @@ source_lesson: "django-authentication-session-configuration"
 
 # Session Configuration
 
+## Introduction
+
+Sessions are how Django remembers who is logged in between requests. A cookie containing a session ID is sent to the browser, and the server looks up the associated user data on each request. Configuring sessions correctly affects both security and performance.
+
+## Key Concepts
+
+**SESSION_ENGINE**: Controls where session data is stored (database, cache, files, or cookies).
+
+**SESSION_COOKIE_AGE**: How long the session cookie lasts in seconds (default: 2 weeks).
+
+**SESSION_COOKIE_SECURE**: Restricts the cookie to HTTPS connections.
+
+**SESSION_COOKIE_HTTPONLY**: Prevents JavaScript from accessing the cookie.
+
+**`request.session`**: Dictionary-like object for reading and writing session data.
+
+## Real World Context
+
+An online exam platform needs short sessions (30 minutes) to prevent cheating by sharing session links. Setting `SESSION_COOKIE_AGE = 1800` and `SESSION_SAVE_EVERY_REQUEST = True` creates a sliding window that resets on each page load, so active students stay logged in while idle sessions expire.
+
+## Deep Dive
+
 Sessions store authentication state between requests. Configure them properly for security and performance.
 
 ## Session Backends
@@ -151,6 +173,41 @@ class RedisSession(SessionBase):
     def _get_redis_key(self, session_key=None):
         return f'session:{session_key or self.session_key}'
 ```
+
+## Common Pitfalls
+
+1. **Storing large objects in sessions**: Sessions are serialized on every request. Storing entire querysets or file data causes slow responses and may exceed cookie size limits (4KB for signed_cookies backend).
+2. **Not setting `SESSION_COOKIE_SECURE` in production**: Without this flag, the session cookie is sent over plain HTTP, allowing an attacker on the same network to steal the session ID.
+3. **Mixing up `set_expiry(0)` behavior**: `set_expiry(0)` makes the session expire when the browser closes (session cookie), not immediately. This confuses developers who expect it to invalidate the session.
+
+## Best Practices
+
+1. **Use `cached_db` backend for production**: It provides fast reads from cache with reliable writes to the database, balancing performance and durability.
+2. **Enable all cookie security flags**: Set `SECURE=True`, `HTTPONLY=True`, and `SAMESITE='Lax'` in production.
+3. **Run `clearsessions` periodically**: Add `manage.py clearsessions` to a daily cron job to clean up expired sessions from the database.
+
+## Summary
+
+- Django supports five session backends: database, cache, cached_db, file, and signed cookies.
+- Configure `SESSION_COOKIE_AGE`, `SESSION_COOKIE_SECURE`, and `SESSION_COOKIE_HTTPONLY` for security.
+- Use `request.session` as a dictionary to read and write per-user data.
+- `cached_db` is the recommended backend for production.
+- Run `clearsessions` periodically to clean up expired sessions.
+
+## Code Examples
+
+**Session configuration settings for secure session management**
+
+```python
+# settings.py
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+```
+
 
 ## Resources
 

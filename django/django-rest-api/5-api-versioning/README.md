@@ -13,10 +13,11 @@ Version your APIs and provide clear documentation
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Versioning Best Practice
+- 🧩 Challenge: Versioning Best Practices
 - 🧩 Multiple Choice: Error Response Structure
 - 🧩 Multiple Choice: Sunset Header Purpose
+- 🧩 Multiple Choice: API Versioning Edge Case
 
 → [Practice in your IDE](https://stanza.dev/courses/django-rest-api)

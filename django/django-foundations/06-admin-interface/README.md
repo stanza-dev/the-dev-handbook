@@ -8,12 +8,14 @@ Use Django's powerful built-in admin to manage your data
 
 1. [Setting Up the Admin](./1-admin-setup.md)
 2. [Customizing the Admin](./2-customizing-admin.md)
+3. [Admin Actions](./3-admin-actions.md)
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Admin List Display
+- 🔗 Matching: Admin List Options
 - 🧩 Multiple Choice: Admin Inline Editing
+- 🧩 Challenge: Admin Action Definition
 
 → [Practice in your IDE](https://stanza.dev/courses/django-foundations)

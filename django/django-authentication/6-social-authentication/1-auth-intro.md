@@ -5,6 +5,28 @@ source_lesson: "django-authentication-social-auth-intro"
 
 # Social Authentication with django-allauth
 
+## Introduction
+
+Social authentication lets users log in with their existing Google, GitHub, or Facebook accounts instead of creating yet another username and password. django-allauth is the most popular package for adding social login to Django, supporting over 80 providers.
+
+## Key Concepts
+
+**django-allauth**: A comprehensive Django package for authentication, registration, and social login.
+
+**SocialApp**: Model storing provider credentials (client ID and secret).
+
+**Provider**: A third-party service (Google, GitHub, etc.) that authenticates users.
+
+**Callback URL**: The URL the provider redirects to after authentication.
+
+**SOCIALACCOUNT_PROVIDERS**: Setting to configure scopes, parameters, and credentials for each provider.
+
+## Real World Context
+
+A developer tools startup adding "Login with GitHub" saw a 35% increase in signups because developers prefer not to create new accounts. django-allauth handles the OAuth flow, user creation, and account linking, so the team shipped the feature in a day instead of building OAuth from scratch.
+
+## Deep Dive
+
 Allow users to log in with their existing accounts from Google, GitHub, Facebook, and many other providers.
 
 ## Installing django-allauth
@@ -210,6 +232,48 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
 # settings.py
 SOCIALACCOUNT_ADAPTER = 'myapp.adapters.CustomSocialAccountAdapter'
 ```
+
+## Common Pitfalls
+
+1. **Forgetting `AccountMiddleware`**: django-allauth requires `allauth.account.middleware.AccountMiddleware` in `MIDDLEWARE`. Without it, allauth views raise errors that are hard to debug.
+2. **Not handling email conflicts**: When a user signs up with email first, then tries "Login with Google" using the same email, the accounts must be linked. Without `SOCIALACCOUNT_ADAPTER` customization, users get a confusing error.
+3. **Skipping `ACCOUNT_EMAIL_VERIFICATION`**: Without email verification, an attacker can create an account with someone else's email, then use social login to take over the original account.
+
+## Best Practices
+
+1. **Set `ACCOUNT_EMAIL_REQUIRED = True` and `ACCOUNT_EMAIL_VERIFICATION = 'mandatory'`**: This ensures email addresses are verified, preventing account takeover via email spoofing.
+2. **Store credentials in environment variables**: Use `SOCIALACCOUNT_PROVIDERS` with `APP.client_id` and `APP.secret` referencing `os.environ` instead of storing secrets in the database.
+3. **Write a custom `SocialAccountAdapter`**: Override `pre_social_login()` to automatically link social accounts to existing users with the same verified email address.
+
+## Summary
+
+- django-allauth provides social login for 80+ providers with minimal configuration.
+- Install allauth, add it to `INSTALLED_APPS`, configure `AUTHENTICATION_BACKENDS`, and include URLs.
+- Configure each provider's credentials via `SOCIALACCOUNT_PROVIDERS` in settings.
+- Handle email conflicts with a custom `SocialAccountAdapter`.
+- Always verify emails and store credentials in environment variables.
+
+## Code Examples
+
+**Setting up django-allauth for social authentication with Google and GitHub**
+
+```python
+# settings.py
+INSTALLED_APPS = [
+    ...
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.github',
+]
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+```
+
 
 ## Resources
 

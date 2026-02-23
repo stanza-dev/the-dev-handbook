@@ -17,6 +17,12 @@ Validation prevents malicious data from reaching your database or being processe
 
 **Whitelisting**: Only allowing known-good values.
 
+
+
+## Real World Context
+
+Input validation failures have led to everything from XSS attacks (unexpected HTML in text fields) to denial-of-service (unbounded query parameters causing expensive database operations). Django forms are battle-tested validators that handle edge cases most custom code misses.
+
 ## Deep Dive
 
 ### Django Form Validation
@@ -71,6 +77,13 @@ try:
 except ValueError:
     page = 1
 ```
+
+
+
+## Common Pitfalls
+
+1. **Validating only on the client side** — JavaScript validation is a UX convenience, not a security control; attackers bypass it with curl or browser devtools.
+2. **Using blacklists instead of whitelists** — Blocking known-bad patterns always misses something; define what is allowed and reject everything else.
 
 ## Best Practices
 

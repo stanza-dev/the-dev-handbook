@@ -34,6 +34,8 @@ Without good serialization patterns, this becomes a tangled mess of nested loops
 
 ### Basic Serializer Class
 
+This base class uses introspection to serialize objects: it checks for a custom `get_<field>` method first, falling back to `getattr` for direct attribute access:
+
 ```python
 class Serializer:
     """Base serializer class."""
@@ -59,7 +61,11 @@ class Serializer:
         return data
 ```
 
+The `many=True` flag tells the serializer to iterate over a collection. Custom `get_<field>` methods let you transform individual fields during serialization.
+
 ### Model Serializers
+
+Extending the base serializer, this class adds computed fields like `url` and nested objects like `author` using the `get_<field>` convention:
 
 ```python
 class ArticleSerializer(Serializer):
@@ -87,7 +93,11 @@ articles = Article.objects.select_related('author').all()
 data = ArticleSerializer(articles, many=True).data
 ```
 
+Notice `select_related('author')` is called before serialization to avoid N+1 queries when `get_author()` accesses the related user.
+
 ### Handling Relationships
+
+Nested serializers let you embed related objects (comments, tags) directly in the parent's JSON output:
 
 ```python
 class CommentSerializer(Serializer):
@@ -111,7 +121,11 @@ class ArticleDetailSerializer(Serializer):
         return list(obj.tags.values_list('name', flat=True))
 ```
 
+The `get_comments()` method limits results to 10 and uses `select_related('author')` to keep the query count predictable, even with nested data.
+
 ### Sparse Fieldsets (Client-Specified Fields)
+
+This pattern lets clients specify which fields they want via a query parameter like `?fields=id,title`, reducing payload size:
 
 ```python
 class SparseSerializer(Serializer):
@@ -128,7 +142,11 @@ def article_list(request):
     return JsonResponse({'data': serializer.data})
 ```
 
+The constructor filters `self.fields` to only include requested values that exist in the base `fields` list, preventing clients from requesting arbitrary attributes.
+
 ### Optimizing with select_related and prefetch_related
+
+Always optimize your queryset before serialization. `select_related` handles foreign keys with a JOIN, while `prefetch_related` handles many-to-many and reverse relations in a separate query:
 
 ```python
 class ArticleAPIView(View):
@@ -149,6 +167,8 @@ class ArticleAPIView(View):
         articles = self.get_queryset()[:20]
         return JsonResponse({'data': ArticleSerializer(articles, many=True).data})
 ```
+
+The nested `'comments__author'` in `prefetch_related` pre-fetches comment authors in a single query, preventing N+1 problems even for deeply nested serialization.
 
 ## Common Pitfalls
 
@@ -171,6 +191,32 @@ class ArticleAPIView(View):
 ## Summary
 
 Effective serialization requires dedicated serializer classes with explicit field definitions. Handle relationships with nested serializers, add computed fields with `get_field()` methods, and always optimize queries with `select_related()` and `prefetch_related()`. A good serialization layer makes your API predictable and performant.
+
+## Code Examples
+
+**Custom serializer with nested relationships and computed fields**
+
+```python
+class ArticleSerializer(Serializer):
+    fields = ['id', 'title', 'body', 'author', 'created_at', 'url']
+
+    def get_author(self, obj):
+        return {
+            'id': obj.author.id,
+            'name': obj.author.get_full_name(),
+        }
+
+    def get_created_at(self, obj):
+        return obj.created_at.isoformat()
+
+    def get_url(self, obj):
+        return f'/api/articles/{obj.id}/'
+
+# Usage
+articles = Article.objects.select_related('author').all()
+data = ArticleSerializer(articles, many=True).data
+```
+
 
 ## Resources
 

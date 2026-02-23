@@ -18,6 +18,8 @@ Class-Based Views (CBVs) are an alternative to function-based views that use Pyt
 
 ## Basic Class-Based View
 
+A class-based view defines separate methods for each HTTP method. Django's `View` base class routes requests to the appropriate method automatically.
+
 ```python
 # polls/views.py
 from django.http import HttpResponse
@@ -33,6 +35,8 @@ class HomeView(View):
 ```
 
 ## URL Configuration
+
+Class-based views must be converted to callable functions using `.as_view()` before they can be used in URL patterns.
 
 ```python
 # polls/urls.py
@@ -155,6 +159,46 @@ urlpatterns = [
 {% endfor %}
 </ul>
 ```
+
+## Common Pitfalls
+
+- **Forgetting `.as_view()` in URL patterns**: Class-based views must be called with `.as_view()` in `urlpatterns`. Without it, Django raises a `TypeError`.
+- **Confusing `template_name` defaults**: If you don't set `template_name`, Django expects `app/model_list.html` for ListView and `app/model_detail.html` for DetailView.
+- **Not calling `super()` in overridden methods**: When overriding `get_context_data()` or `get_queryset()`, always call `super()` first to preserve the default behavior.
+
+## Best Practices
+
+- **Set `context_object_name`** for readable template variable names instead of the default `object_list`.
+- **Override `get_queryset()`** for custom filtering instead of hardcoding queries.
+- **Use `paginate_by`** on ListViews to prevent loading too many objects at once.
+
+## Summary
+
+- Class-based views use Python classes with methods for each HTTP method (`get()`, `post()`)
+- `TemplateView`, `ListView`, and `DetailView` are the most common generic display views
+- Use `.as_view()` in URL patterns to convert a class into a callable view function
+- Override `get_queryset()` for custom filtering and `get_context_data()` for extra context
+- CBVs support inheritance and mixins for code reuse across views
+
+## Code Examples
+
+**A ListView class-based view with pagination and custom ordering**
+
+```python
+from django.views.generic import ListView
+from .models import Question
+
+class QuestionListView(ListView):
+    model = Question
+    template_name = 'polls/question_list.html'
+    context_object_name = 'questions'
+    ordering = ['-pub_date']
+    paginate_by = 10
+
+# urls.py
+path('', QuestionListView.as_view(), name='index')
+```
+
 
 ## Resources
 

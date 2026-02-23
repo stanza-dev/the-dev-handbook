@@ -38,6 +38,8 @@ for book in books:
 
 ### Counting Related Objects
 
+The following example demonstrates how to use counting related objects in practice:
+
 ```python
 # Authors with article count
 Author.objects.annotate(
@@ -51,7 +53,11 @@ Category.objects.annotate(
 ).filter(product_count__gt=0)  # Only non-empty categories
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### Calculating Totals
+
+The following example demonstrates how to use calculating totals in practice:
 
 ```python
 # Orders with item totals
@@ -67,7 +73,11 @@ Customer.objects.annotate(
 ).order_by('-total_spent')
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### Average Ratings
+
+The following example demonstrates how to use average ratings in practice:
 
 ```python
 # Products with average rating
@@ -172,7 +182,24 @@ Article.objects.annotate(
 
 # Result:
 # [{'month': datetime(2024, 1, 1), 'count': 15, 'total_views': 5000}, ...]
+```\n\n## Common Pitfalls\n\n1. **Not testing edge cases** — Always test annotating querysets with empty querysets, NULL values, and boundary conditions.\n2. **Premature optimization** — Profile queries with `.explain()` before applying complex optimizations.\n3. **Ignoring database-specific behavior** — Some annotating querysets features behave differently across PostgreSQL, MySQL, and SQLite.\n\n## Best Practices\n\n1. **Keep queries readable** — Use meaningful variable names and chain methods logically.\n2. **Test with realistic data** — Create fixtures that match production data patterns for accurate performance testing.\n3. **Document complex queries** — Add comments explaining the business logic behind non-obvious query patterns.\n\n## Summary\n\n- Annotating QuerySets is a core Django ORM feature for building efficient database queries.\n- Always consider query performance and use `.explain()` to verify query plans.\n- Test edge cases including empty results, NULL values, and large datasets.\n- Refer to the Django documentation for database-specific behavior and limitations.
+
+## Code Examples
+
+**Key example from Annotating QuerySets**
+
+```python
+from django.db.models import Count, Avg, Sum
+
+# Add article count to each author
+authors = Author.objects.annotate(
+    article_count=Count('article')
+)
+
+for author in authors:
+    print(f"{author.name}: {author.article_count} articles")
 ```
+
 
 ## Resources
 

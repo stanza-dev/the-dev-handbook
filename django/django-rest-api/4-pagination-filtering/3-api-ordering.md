@@ -28,6 +28,8 @@ Every list endpoint needs sorting:
 
 ### Basic Ordering
 
+This view reads the `ordering` query parameter and validates it against a whitelist of allowed values. The `-` prefix indicates descending order:
+
 ```python
 def api_articles(request):
     # GET /api/articles/?ordering=-created_at
@@ -43,7 +45,11 @@ def api_articles(request):
     return JsonResponse({'data': list(articles.values('id', 'title')[:20])})
 ```
 
+The whitelist includes both ascending (`'created_at'`) and descending (`'-created_at'`) variants, and falls back to `-created_at` if the client sends an invalid value.
+
 ### Multi-field Ordering
+
+Clients can sort by multiple fields separated by commas. Each field is validated independently against the allowed set:
 
 ```python
 def api_articles(request):
@@ -65,7 +71,11 @@ def api_articles(request):
     return JsonResponse({'data': list(articles.values()[:20])})
 ```
 
+The `order_by(*order_fields)` unpacking passes each validated field as a separate argument, and Django applies them in order (primary sort, then secondary, etc.).
+
 ### Reusable Ordering Mixin
+
+Extract the ordering logic into a mixin so any view can support sorting by declaring `ordering_fields` and `default_ordering`:
 
 ```python
 class OrderingMixin:
@@ -95,6 +105,8 @@ class ArticleAPIView(OrderingMixin, View):
         return JsonResponse({'data': list(qs.values()[:20])})
 ```
 
+The mixin strips the `-` prefix before validating field names, so clients can sort any whitelisted field in either direction without listing both variants.
+
 ## Common Pitfalls
 
 1. **Allowing arbitrary fields**: Never use `order_by(request.GET.get('sort'))` directly. Always whitelist allowed fields.
@@ -113,6 +125,21 @@ class ArticleAPIView(OrderingMixin, View):
 ## Summary
 
 Ordering lets clients control result order. Always whitelist allowed sort fields, support both ascending and descending with `-` prefix, and ensure sorted columns are indexed for performance.
+
+## Code Examples
+
+**Safe ordering with whitelisted sort fields**
+
+```python
+def api_articles(request):
+    ordering = request.GET.get('ordering', '-created_at')
+    allowed = ['created_at', '-created_at', 'title', '-title', 'views', '-views']
+    if ordering not in allowed:
+        ordering = '-created_at'
+    articles = Article.objects.all().order_by(ordering)
+    return JsonResponse({'data': list(articles.values('id', 'title')[:20])})
+```
+
 
 ## Resources
 

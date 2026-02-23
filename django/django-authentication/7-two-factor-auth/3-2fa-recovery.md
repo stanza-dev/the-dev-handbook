@@ -15,6 +15,10 @@ Users lose access to authenticators. Provide recovery options to prevent lockout
 
 **Recovery Methods**: Alternative verification methods.
 
+## Real World Context
+
+A developer loses their phone and can no longer generate TOTP codes. Without backup codes, they are completely locked out and must contact support -- which for a solo project means resetting the database. Generating 10 single-use backup codes during 2FA setup is the standard safety net.
+
 ## Deep Dive
 
 ### Static Backup Codes
@@ -58,6 +62,12 @@ def request_recovery(request):
     # Link temporarily bypasses 2FA
     # User must re-enable 2FA after recovery
 ```
+
+## Common Pitfalls
+
+1. **Not showing backup codes only once**: If backup codes are retrievable after initial display, a compromised session can be used to steal them. Generate, display, and then never show them again.
+2. **Not invalidating used backup codes**: Each backup code must be single-use. After a code is used for recovery, delete it from the database immediately to prevent reuse.
+3. **Skipping re-enrollment after recovery**: When a user recovers via backup code, their TOTP secret may be compromised. Force them to set up a new TOTP device and generate fresh backup codes.
 
 ## Best Practices
 

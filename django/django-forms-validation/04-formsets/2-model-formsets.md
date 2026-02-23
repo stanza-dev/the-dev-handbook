@@ -3,6 +3,24 @@ source_course: "django-forms-validation"
 source_lesson: "django-forms-validation-model-formsets"
 ---
 
+## Introduction
+
+Model formsets combine formsets with the ORM, editing multiple model instances with a single save() call.
+
+## Key Concepts
+
+- **modelformset_factory()**: Creates model-backed formset.
+- **queryset**: Filters existing objects for editing.
+- **formset.save()**: Persists creates, updates, deletes.
+- **inlineformset_factory()**: For ForeignKey parent-child editing.
+- **prefix**: Namespaces field names.
+
+## Real World Context
+
+A blog admin edits all articles at once. An order system manages line items on one page. Model formsets make bulk editing straightforward.
+
+## Deep Dive
+
 # Model Formsets
 
 Model formsets work with querysets, making it easy to edit multiple model instances.
@@ -168,6 +186,26 @@ BookFormSet = modelformset_factory(
     formset=BaseBookFormSet,
 )
 ```
+
+## Common Pitfalls
+
+1. **Unfiltered queryset** -- Loads ALL objects. Always filter.
+2. **Missing save_m2m()** -- Required after commit=False.
+3. **No prefix** -- Multiple formsets corrupt each other.
+
+## Best Practices
+
+1. **Scope querysets to user** -- Prevent unauthorized editing.
+2. **Use inlineformset_factory** -- For parent-child relationships.
+3. **commit=False for extra fields** -- Set modified_by etc.
+
+## Summary
+
+- modelformset_factory creates ORM-backed formsets.
+- formset.save() handles create/update/delete.
+- Always filter querysets.
+- Use inlineformset_factory for ForeignKey editing.
+- Call save_m2m() after commit=False.
 
 ## Resources
 

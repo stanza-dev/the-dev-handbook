@@ -14,8 +14,8 @@ Write comprehensive tests for Django models
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Full Clean Method
+- ✏️ Fill in the Blank: Full Clean Method
 - 🧩 Multiple Choice: Integrity Error Test
-- 🧩 Multiple Choice: Refresh from DB
+- 🧩 Challenge: Refresh from DB
 
 → [Practice in your IDE](https://stanza.dev/courses/django-testing-qa)

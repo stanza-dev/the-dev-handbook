@@ -33,6 +33,8 @@ Without validation, a single malformed request can crash your server or corrupt 
 
 ### Using Django Forms for Validation
 
+Django's `ModelForm` provides built-in validation that works well for API input. Define a form with your model and add custom `clean_` methods for field-specific rules:
+
 ```python
 # forms.py
 from django import forms
@@ -67,7 +69,11 @@ def api_create_article(request):
     return JsonResponse({'errors': form.errors}, status=400)
 ```
 
+When `form.is_valid()` returns `False`, `form.errors` is a dictionary mapping field names to lists of error messages -- ready to return directly as JSON.
+
 ### Custom Validator Class
+
+For cases where Django forms are too heavyweight or your validation rules don't map to a model, you can build a lightweight validator class:
 
 ```python
 class ArticleValidator:
@@ -101,7 +107,11 @@ class ArticleValidator:
         }
 ```
 
+The `cleaned_data` property returns sanitized values (e.g., stripped whitespace), separating validation from data cleaning.
+
 ### Validation Decorator
+
+A decorator can handle JSON parsing and required-field checks in one reusable wrapper, keeping your view functions focused on business logic:
 
 ```python
 from functools import wraps
@@ -133,6 +143,8 @@ def api_create_article(request):
     return JsonResponse({'id': article.id}, status=201)
 ```
 
+The decorator attaches the parsed data to `request.json_data`, so the view can access it without repeating the parsing and validation logic.
+
 ## Common Pitfalls
 
 1. **Validating only on the frontend**: Client-side validation improves UX but can be bypassed. Always validate on the server.
@@ -156,6 +168,35 @@ def api_create_article(request):
 ## Summary
 
 Input validation is your first line of defense. Use Django forms for comprehensive validation, create custom validators for complex business rules, and always return helpful, field-level error messages. Remember: validate on the server, be specific about errors, and never trust client data.
+
+## Code Examples
+
+**Input validation using Django ModelForm in an API view**
+
+```python
+from django import forms
+from .models import Article
+
+class ArticleForm(forms.ModelForm):
+    class Meta:
+        model = Article
+        fields = ['title', 'body', 'category']
+
+    def clean_title(self):
+        title = self.cleaned_data['title']
+        if len(title) < 5:
+            raise forms.ValidationError('Title must be at least 5 characters')
+        return title
+
+def api_create_article(request):
+    data = json.loads(request.body)
+    form = ArticleForm(data)
+    if form.is_valid():
+        article = form.save()
+        return JsonResponse({'id': article.id}, status=201)
+    return JsonResponse({'errors': form.errors}, status=400)
+```
+
 
 ## Resources
 

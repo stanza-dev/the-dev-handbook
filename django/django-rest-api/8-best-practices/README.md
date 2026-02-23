@@ -13,10 +13,12 @@ Design patterns and conventions for professional REST APIs
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **5 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: PUT vs PATCH
 - 🧩 Multiple Choice: POST Success Status
-- 🧩 Multiple Choice: Non-Idempotent Method
+- 🧩 Multiple Choice: HATEOAS Benefit
+- 🧩 Challenge: Idempotent Methods
+- 🧩 Multiple Choice: Idempotency Key Edge Case
 
 → [Practice in your IDE](https://stanza.dev/courses/django-rest-api)

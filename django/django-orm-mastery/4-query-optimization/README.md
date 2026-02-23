@@ -8,12 +8,14 @@ Eliminate N+1 queries and optimize database access patterns
 
 1. [select_related for Foreign Keys](./1-select-related.md)
 2. [prefetch_related for Many Relations](./2-prefetch-related.md)
+3. [Database Indexes and Meta.indexes](./3-database-indexes.md)
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: select_related vs prefetch_related
 - 🧩 Multiple Choice: Prefetch Object Purpose
+- 🧩 Challenge: N+1 Query Solutions
 
 → [Practice in your IDE](https://stanza.dev/courses/django-orm-mastery)

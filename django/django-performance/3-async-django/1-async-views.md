@@ -5,7 +5,29 @@ source_lesson: "django-performance-async-views"
 
 # Async Views and Middleware
 
-Django 6.0 has full async support, allowing better handling of concurrent requests.
+## Introduction
+
+Django 6.0 provides an async-compatible interface for views, middleware, and ORM operations. Async views excel when your application needs to make multiple concurrent I/O operations — such as calling external APIs, querying multiple databases, or handling WebSocket connections. Note that while the ORM exposes async methods (prefixed with 'a'), the underlying database drivers may still execute synchronously.
+
+## Key Concepts
+
+- **Async View**: A view function defined with `async def` that Django runs in an async context.
+- **ASGI**: Asynchronous Server Gateway Interface — the async equivalent of WSGI, required for async Django.
+- **sync_to_async / async_to_sync**: Bridge functions from `asgiref` that let you call sync code from async contexts and vice versa.
+- **Async ORM**: Django ORM methods prefixed with 'a' (e.g., `aget()`, `acreate()`) that can be awaited in async views.
+
+## Real World Context
+
+Async views shine in dashboard applications that aggregate data from multiple sources. Instead of sequentially calling a user API, a notifications API, and a stats API (taking the sum of all response times), you can use `asyncio.gather()` to call all three concurrently (taking only the time of the slowest call). A dashboard that took 3 seconds with sync views can respond in 1 second with async.
+
+## Deep Dive
+
+Django 6 uses `asgiref.sync.iscoroutinefunction` (not `asyncio.iscoroutinefunction`) to detect async views and middleware. You must also call `markcoroutinefunction(self)` in `__init__` so Django recognizes your middleware as async-capable.
+
+
+## Introduction
+
+Django 6.0 provides an async-compatible interface for views, middleware, and ORM operations. Note that while the ORM exposes async methods (prefixed with 'a'), the underlying database drivers may still execute synchronously under the hood, allowing better handling of concurrent requests.
 
 ## Async Views
 
@@ -140,7 +162,7 @@ class AsyncTimingMiddleware:
         start = time.time()
         
         # Handle async or sync response
-        if asyncio.iscoroutinefunction(self.get_response):
+        if iscoroutinefunction  # from asgiref.sync, NOT asyncio(self.get_response):
             response = await self.get_response(request)
         else:
             response = self.get_response(request)
@@ -164,6 +186,59 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myproject.settings')
 
 application = get_asgi_application()
 ```
+
+## Summary
+
+- The techniques covered in this lesson are essential for production-quality applications.
+- Always measure before and after optimizing to verify improvements.
+- Start with the simplest approach and add complexity only when needed.
+
+## Common Pitfalls
+
+1. **Using `requests` library in async views** — The `requests` library is synchronous and will block the entire event loop. Use `httpx` with `AsyncClient` instead for HTTP calls in async views.
+2. **Expecting async to speed up single queries** — A single `await Article.objects.aget(pk=1)` is not faster than its sync equivalent. Async benefits come from concurrent operations, not individual ones.
+3. **Forgetting to use the ASGI server** — Async views require an ASGI server (Uvicorn, Daphne). Running them under WSGI (Gunicorn with sync workers) silently falls back to synchronous execution.
+
+## Best Practices
+
+1. **Use async only when you have concurrent I/O** — If a view makes a single database query, keep it synchronous. Async adds complexity without benefit for single operations.
+2. **Use `httpx.AsyncClient` for external API calls** — It provides the same ergonomics as `requests` but works natively in async contexts.
+3. **Test with `AsyncClient`** — Django's `AsyncClient` in tests properly handles async views and middleware.
+
+## Summary
+
+- The techniques covered in this lesson are essential for production-quality Django applications.
+- Always measure and profile before optimizing to ensure you're addressing the actual bottleneck.
+- Start with the simplest approach and add complexity only when monitoring shows it's needed.
+
+## Code Examples
+
+**Async view fetching data from multiple external APIs concurrently**
+
+```python
+from django.http import JsonResponse
+import asyncio
+import httpx
+
+
+async def async_article_list(request):
+    """Async view function."""
+    articles = []
+    async for article in Article.objects.filter(status='published'):
+        articles.append({
+            'title': article.title,
+            'slug': article.slug,
+        })
+    return JsonResponse({'articles': articles})
+
+
+async def fetch_external_data(request):
+    """Fetch data from external APIs concurrently."""
+    async with httpx.AsyncClient() as client:
+        # Fetch multiple APIs concurrently
+# ...
+```
+
 
 ## Resources
 

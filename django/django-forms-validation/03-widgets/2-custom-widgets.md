@@ -3,6 +3,23 @@ source_course: "django-forms-validation"
 source_lesson: "django-forms-validation-custom-widgets"
 ---
 
+## Introduction
+
+Custom widgets give full control over rendering, from HTML5 input types to complex multi-value inputs.
+
+## Key Concepts
+
+- **input_type**: Sets HTML type on TextInput subclasses.
+- **template_name**: Django template for widget HTML.
+- **MultiWidget**: Combines sub-widgets.
+- **decompress/compress**: Split and combine values.
+
+## Real World Context
+
+A star-rating widget renders clickable stars. An address widget splits street/city/state/ZIP into separate inputs.
+
+## Deep Dive
+
 # Custom Widgets
 
 Create custom widgets for special input types or enhanced functionality.
@@ -165,6 +182,26 @@ class AutocompleteWidget(forms.TextInput):
     {{ form.media.js }}
 </body>
 ```
+
+## Common Pitfalls
+
+1. **Missing decompress()** -- Existing values show empty.
+2. **File pointer not reset** -- Call seek(0) after reading.
+3. **Hardcoded HTML** -- Use template_name instead.
+
+## Best Practices
+
+1. **Extend closest built-in** -- Just change input_type.
+2. **Use Media class** -- Auto-include CSS/JS.
+3. **Test edge cases** -- None, empty strings.
+
+## Summary
+
+- Override input_type for HTML5 types.
+- Use template_name for complex widgets.
+- MultiWidget pairs with MultiValueField.
+- Implement decompress/compress.
+- Declare CSS/JS in Media class.
 
 ## Resources
 

@@ -154,7 +154,33 @@ class PublishedContent(Content):
         proxy = True
 
     objects = PublishedManager()  # Only returns published items
+```\n\n## Common Pitfalls\n\n1. **Not testing edge cases** — Always test model inheritance patterns with empty querysets, NULL values, and boundary conditions.\n2. **Premature optimization** — Profile queries with `.explain()` before applying complex optimizations.\n3. **Ignoring database-specific behavior** — Some model inheritance patterns features behave differently across PostgreSQL, MySQL, and SQLite.\n\n## Best Practices\n\n1. **Keep queries readable** — Use meaningful variable names and chain methods logically.\n2. **Test with realistic data** — Create fixtures that match production data patterns for accurate performance testing.\n3. **Document complex queries** — Add comments explaining the business logic behind non-obvious query patterns.\n\n## Summary\n\n- Model Inheritance Patterns is a core Django ORM feature for building efficient database queries.\n- Always consider query performance and use `.explain()` to verify query plans.\n- Test edge cases including empty results, NULL values, and large datasets.\n- Refer to the Django documentation for database-specific behavior and limitations.
+
+## Code Examples
+
+**Key example from Model Inheritance Patterns**
+
+```python
+class BaseContent(models.Model):
+    """Abstract base - no table created."""
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_published = models.BooleanField(default=False)
+
+    class Meta:
+        abstract = True
+        ordering = ['-created_at']
+
+    def publish(self):
+        self.is_published = True
+        self.save()
+
+
+class Article(Base
 ```
+
 
 ## Resources
 

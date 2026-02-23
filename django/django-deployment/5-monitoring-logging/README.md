@@ -15,8 +15,8 @@ Implement monitoring, logging, and error tracking
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Sentry Purpose
+- 🧩 Challenge: Sentry Purpose
 - 🧩 Multiple Choice: Health Check Purpose
-- 🧩 Multiple Choice: RED Metrics
+- 🔗 Matching: RED Metrics
 
 → [Practice in your IDE](https://stanza.dev/courses/django-deployment)

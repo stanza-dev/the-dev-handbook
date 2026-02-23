@@ -15,6 +15,10 @@ Sometimes validation rules depend on other field values or external conditions.
 
 **Optional Requirements**: Required only under certain conditions.
 
+## Real World Context
+
+A checkout form needs address fields only for delivery, not store pickup. Conditional validation in `clean()` enforces these context-dependent rules.
+
 ## Deep Dive
 
 ### Field-Dependent Validation
@@ -59,6 +63,16 @@ class PaymentForm(forms.Form):
         
         return cleaned_data
 ```
+
+## Common Pitfalls
+
+1. **Setting `required=True` on conditionally-required fields** -- Set `required=False` and enforce in `clean()` instead.
+2. **Not clearing irrelevant field data** -- Stale data from unused fields may persist.
+
+## Best Practices
+
+1. **Document the conditions** -- Add comments explaining which fields are required when.
+2. **Consider multiple form classes** -- For complex branching, separate classes may be cleaner.
 
 ## Summary
 

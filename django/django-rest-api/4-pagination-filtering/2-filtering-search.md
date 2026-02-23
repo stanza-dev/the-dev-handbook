@@ -5,9 +5,35 @@ source_lesson: "django-rest-api-filtering-search"
 
 # Filtering and Search
 
+## Introduction
+
+APIs that return everything and leave filtering to the client waste bandwidth and processing power. Server-side filtering and search let clients request exactly the data they need, making your API efficient and user-friendly.
+
 Allow clients to filter and search your API data efficiently.
 
+
+## Key Concepts
+
+**Filtering**: Narrowing results based on field values (e.g., `?category=tech&author=john`).
+
+**Search**: Finding records that match a text query across multiple fields.
+
+**Q Objects**: Django's tool for building complex queries with AND/OR logic.
+
+**Full-Text Search**: PostgreSQL's built-in search with ranking, stemming, and relevance scoring.
+
+
+## Real World Context
+
+Every data-driven API needs filtering:
+- **E-commerce**: Filter products by category, price range, brand, rating
+- **Job boards**: Filter by location, salary, experience level
+- **Analytics dashboards**: Filter metrics by date range, region, segment
+- **Content platforms**: Search articles by keyword, author, or tag
+
 ## Basic Filtering
+
+Filters are applied conditionally based on which query parameters are present, chaining `.filter()` calls to narrow the queryset:
 
 ```python
 def api_articles(request):
@@ -41,7 +67,11 @@ def api_articles(request):
     })
 ```
 
+Each filter is independent and optional. When no parameters are provided, the view returns all articles unfiltered.
+
 ## Search Implementation
+
+Django's `Q` objects let you combine conditions with OR logic, enabling search across multiple fields with a single query:
 
 ```python
 from django.db.models import Q
@@ -64,7 +94,11 @@ def api_articles(request):
     })
 ```
 
+The `.distinct()` call is important when searching across related fields (like tags) to prevent duplicate results from JOINs.
+
 ## Full-Text Search (PostgreSQL)
+
+PostgreSQL's built-in full-text search supports stemming, ranking by relevance, and weighted fields -- far more powerful than `icontains` for text-heavy applications:
 
 ```python
 from django.contrib.postgres.search import (
@@ -101,7 +135,11 @@ def api_search_articles(request):
     })
 ```
 
+The `weight` parameter (`'A'`, `'B'`, `'C'`) controls how much each field contributes to the relevance score. Title matches rank higher than body matches.
+
 ## Filter Class
+
+Encapsulating filter logic in a dedicated class keeps views clean and makes filters reusable across multiple endpoints:
 
 ```python
 class ArticleFilter:
@@ -170,6 +208,8 @@ def api_articles(request):
     })
 ```
 
+The view composes filtering, ordering, and pagination into a clean pipeline: build the queryset, apply filters, sort, then paginate.
+
 ## API Usage Examples
 
 ```
@@ -180,6 +220,51 @@ GET /api/articles/?search=django+tutorial
 GET /api/articles/?created_after=2024-01-01&ordering=-views
 GET /api/articles/?published=true&category=python&page=1
 ```
+
+## Common Pitfalls
+
+1. **SQL injection via filter fields**: Never pass user input directly to `filter()` kwargs. Whitelist allowed filter fields.
+
+2. **Missing indexes**: Filtering on non-indexed fields causes full table scans. Add database indexes for frequently filtered columns.
+
+3. **Case sensitivity**: `filter(title=search)` is case-sensitive in PostgreSQL. Use `icontains` or `Lower()` for case-insensitive filtering.
+
+## Best Practices
+
+1. **Whitelist filter fields**: Only allow filtering on safe, indexed fields.
+
+2. **Combine with pagination**: Always paginate filtered results.
+
+3. **Use Q objects for OR logic**: Regular `filter()` chains use AND. Use `Q()` with `|` for OR queries.
+
+4. **Consider full-text search**: For text-heavy applications, PostgreSQL's full-text search is faster and more relevant than `icontains`.
+
+## Summary
+
+Server-side filtering and search make APIs efficient by returning only relevant data. Use query parameters for filtering, Q objects for complex OR queries, and PostgreSQL's full-text search for relevance-ranked results. Always whitelist filter fields and add database indexes for performance.
+
+## Code Examples
+
+**Filtering and searching across multiple fields with Q objects**
+
+```python
+from django.db.models import Q
+from django.http import JsonResponse
+
+def api_articles(request):
+    articles = Article.objects.all()
+    category = request.GET.get('category')
+    if category:
+        articles = articles.filter(category__slug=category)
+    search = request.GET.get('search', '').strip()
+    if search:
+        articles = articles.filter(
+            Q(title__icontains=search) |
+            Q(body__icontains=search)
+        ).distinct()
+    return JsonResponse({'results': list(articles.values('id', 'title')[:50])})
+```
+
 
 ## Resources
 

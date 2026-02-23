@@ -5,9 +5,24 @@ source_lesson: "django-security-xss-protection"
 
 # XSS Protection in Django
 
-Cross-Site Scripting (XSS) attacks inject malicious scripts into web pages viewed by other users.
+## Introduction
 
-## How XSS Works
+Cross-Site Scripting (XSS) is one of the most common web vulnerabilities. Attackers inject malicious JavaScript into pages viewed by other users, stealing cookies, session tokens, or performing actions on behalf of victims. Django's template engine auto-escapes output by default, providing strong baseline protection.
+
+## Key Concepts
+
+- **XSS (Cross-Site Scripting)**: Injecting malicious scripts into web pages served to other users.
+- **Auto-Escaping**: Django templates automatically convert dangerous characters (<, >, &, quotes) into safe HTML entities.
+- **Content Security Policy (CSP)**: HTTP header that restricts which scripts, styles, and resources a page can load.
+- **nh3**: Recommended Rust-based HTML sanitizer for user-submitted rich text (bleach was deprecated in 2023).
+
+## Real World Context
+
+XSS has been exploited to hijack admin sessions on CMS platforms, inject cryptocurrency miners into high-traffic sites, and exfiltrate user data from web applications. A single unsanitized user input rendered with |safe or mark_safe() can compromise every visitor to that page.
+
+## Deep Dive
+
+### How XSS Works
 
 ```html
 <!-- User submits this as their 'name' -->
@@ -17,7 +32,7 @@ Cross-Site Scripting (XSS) attacks inject malicious scripts into web pages viewe
 Hello, <script>document.location='...'</script>!
 ```
 
-## Django's Auto-Escaping
+### Django's Auto-Escaping
 
 Django templates automatically escape dangerous characters:
 
@@ -34,7 +49,7 @@ Django templates automatically escape dangerous characters:
 <p>Welcome, &lt;script&gt;alert("XSS")&lt;/script&gt;</p>
 ```
 
-## Characters Escaped
+### Characters Escaped
 
 | Character | Escaped As |
 |-----------|------------|
@@ -44,7 +59,7 @@ Django templates automatically escape dangerous characters:
 | " | &quot; |
 | & | &amp; |
 
-## Marking Content as Safe
+### Marking Content as Safe
 
 ```python
 # views.py
@@ -74,30 +89,28 @@ def get_status_badge_safe(status):
 {% endautoescape %}
 ```
 
-## Safe HTML Rendering
+### Safe HTML Rendering
 
 ```python
 # For user-submitted HTML, use a sanitizer
-# pip install bleach
+# pip install nh3  (nh3 is the recommended HTML sanitizer; bleach was deprecated in 2023)
 
-import bleach
+import nh3
 
-ALLOWED_TAGS = [
+ALLOWED_TAGS = {
     'p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'a',
     'h1', 'h2', 'h3', 'blockquote', 'code', 'pre'
-]
+}
 
 ALLOWED_ATTRIBUTES = {
-    'a': ['href', 'title'],
-    '*': ['class'],
+    'a': {'href', 'title'},
 }
 
 def sanitize_html(html):
-    return bleach.clean(
+    return nh3.clean(
         html,
         tags=ALLOWED_TAGS,
         attributes=ALLOWED_ATTRIBUTES,
-        strip=True
     )
 
 # In model
@@ -110,29 +123,30 @@ class Article(models.Model):
         super().save(*args, **kwargs)
 ```
 
-## Content Security Policy
+### Content Security Policy
 
 ```python
-# settings.py - Using django-csp
-# pip install django-csp
+# Django 6.0+ native CSP (no third-party package needed)
+from django.utils.csp import CSP
 
 MIDDLEWARE = [
     # ...
-    'csp.middleware.CSPMiddleware',
+    'django.middleware.csp.ContentSecurityPolicyMiddleware',
 ]
 
-# Only allow scripts from your domain
-CSP_DEFAULT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'",)
-CSP_STYLE_SRC = ("'self'", "'unsafe-inline'")
-CSP_IMG_SRC = ("'self'", 'data:', 'https:')
-CSP_FONT_SRC = ("'self'", 'https://fonts.gstatic.com')
+SECURE_CSP = {
+    'default-src': [CSP.SELF],
+    'script-src': [CSP.SELF, CSP.NONCE],
+    'style-src': [CSP.SELF, CSP.UNSAFE_INLINE],
+    'img-src': [CSP.SELF, 'data:', 'https:'],
+    'font-src': [CSP.SELF, 'https://fonts.gstatic.com'],
+}
 
-# Report violations
-CSP_REPORT_URI = '/csp-report/'
+# For Django < 6.0, use the third-party django-csp package:
+# pip install django-csp
 ```
 
-## JavaScript Escape Filter
+### JavaScript Escape Filter
 
 ```html
 <!-- For JavaScript contexts, use escapejs -->
@@ -152,6 +166,49 @@ def my_view(request):
         'json_data': json.dumps(data)  # Properly escaped JSON
     })
 ```
+
+## Common Pitfalls
+
+1. **Using |safe or mark_safe() with user input** — Completely bypasses auto-escaping, rendering any injected scripts executable.
+2. **Forgetting JavaScript context escaping** — HTML escaping does not protect inside <script> tags; use |escapejs or json.dumps().
+3. **Trusting sanitized HTML from the client** — Always sanitize server-side; client-side sanitization can be bypassed.
+
+## Best Practices
+
+1. **Never use |safe with untrusted data** — Use format_html() when you need to mix HTML with user values.
+2. **Use CSP headers** — Defense-in-depth that blocks inline scripts even if escaping fails.
+3. **Sanitize with nh3 for rich text** — Allowlist-based sanitization is the only safe approach for user HTML.
+
+## Summary
+
+- Django auto-escapes template output by default, neutralizing most XSS vectors.
+- Use format_html() instead of mark_safe() when interpolating user data into HTML.
+- Add Content Security Policy headers for defense-in-depth against script injection.
+
+## Code Examples
+
+**Safe patterns for rendering user content: format_html for templates and nh3 for rich text sanitization**
+
+```python
+from django.utils.html import format_html
+import nh3
+
+# SAFE: format_html escapes interpolated values
+def user_badge(username):
+    return format_html(
+        '<span class="badge">{}</span>',
+        username  # Auto-escaped
+    )
+
+# SAFE: Sanitize user HTML with nh3
+def clean_user_html(raw_html):
+    return nh3.clean(
+        raw_html,
+        tags={'p', 'br', 'strong', 'em', 'a'},
+        attributes={'a': {'href'}},
+    )
+```
+
 
 ## Resources
 

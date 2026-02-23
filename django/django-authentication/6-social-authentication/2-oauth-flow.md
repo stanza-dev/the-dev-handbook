@@ -15,6 +15,10 @@ Understand the OAuth 2.0 authorization flow that powers social login.
 
 **Access Token**: Grants API access.
 
+## Real World Context
+
+When users click "Login with Google" on your SaaS app, the OAuth 2.0 authorization code flow runs behind the scenes. Understanding this flow is essential for debugging callback errors, handling token expiration, and correctly configuring redirect URIs across development, staging, and production environments.
+
 ## Deep Dive
 
 ### OAuth 2.0 Flow
@@ -49,6 +53,12 @@ urlpatterns = [
 # http://localhost:8000/accounts/google/login/callback/
 # https://yourdomain.com/accounts/google/login/callback/
 ```
+
+## Common Pitfalls
+
+1. **Mismatched redirect URIs**: The callback URL registered with the provider must exactly match the one your app uses -- including trailing slashes, port numbers, and protocol (http vs https). A single mismatch causes a `redirect_uri_mismatch` error.
+2. **Not validating the `state` parameter**: The state parameter prevents CSRF attacks during OAuth. If you build a custom flow and skip state validation, an attacker can trick users into linking their account to an attacker-controlled provider account.
+3. **Storing access tokens insecurely**: Access tokens should be stored server-side (in the database or cache), never in cookies or frontend localStorage. django-allauth handles this correctly by default.
 
 ## Best Practices
 

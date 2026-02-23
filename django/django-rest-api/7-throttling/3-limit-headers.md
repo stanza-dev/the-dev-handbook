@@ -19,9 +19,19 @@ Good rate limiting isn't just about blocking requests—it's about communicating
 
 **Retry-After**: Seconds to wait before retrying (on 429).
 
+## Real World Context
+
+Rate limit headers are used by:
+- **API client libraries**: Automatically backing off when limits are approached
+- **Monitoring dashboards**: Tracking API usage against quotas
+- **Developer portals**: Showing real-time usage to API consumers
+- **CI/CD pipelines**: Pausing deployments when rate limits are hit during testing
+
 ## Deep Dive
 
 ### Standard Headers
+
+These two helper functions add rate limit metadata to successful responses and format 429 error responses consistently:
 
 ```python
 def add_rate_limit_headers(response, limit, remaining, reset_time):
@@ -42,7 +52,11 @@ def rate_limited_response(retry_after):
     return response
 ```
 
+The `Retry-After` header is a standard HTTP header that tells clients exactly how many seconds to wait before their next request.
+
 ### Complete Rate Limiter
+
+This class combines counting, limit checking, and metadata into a single reusable object that can be used in both middleware and decorators:
 
 ```python
 class RateLimiter:
@@ -77,7 +91,11 @@ class RateLimiter:
         }
 ```
 
+The `check()` method returns a dict with all the information needed for headers: whether the request is allowed, the remaining quota, and the reset timestamp.
+
 ### Client-Side Handling
+
+Well-behaved API clients log rate limit headers proactively and implement automatic retry with backoff when limits are hit:
 
 ```javascript
 async function makeRequest(url) {
@@ -100,6 +118,16 @@ async function makeRequest(url) {
 }
 ```
 
+The client reads `X-RateLimit-Remaining` on every response to monitor usage, and uses `Retry-After` to determine the exact wait time when a 429 is received.
+
+## Common Pitfalls
+
+1. **Missing Retry-After on 429**: Without this header, clients don't know when to retry and may keep hammering the API.
+
+2. **Inconsistent header names**: Stick to the widely-used `X-RateLimit-*` convention across all endpoints.
+
+3. **Not including headers on successful responses**: Clients need to see remaining quota BEFORE they hit the limit.
+
 ## Best Practices
 
 1. **Always include headers**: Even on successful requests.
@@ -110,6 +138,30 @@ async function makeRequest(url) {
 ## Summary
 
 Rate limit headers help clients self-regulate. Include limit, remaining, and reset headers on all responses, and provide retry-after on 429 errors. Clear communication prevents frustration and reduces support requests.
+
+## Code Examples
+
+**Standard rate limit headers for client communication**
+
+```python
+def add_rate_limit_headers(response, limit, remaining, reset_time):
+    response['X-RateLimit-Limit'] = str(limit)
+    response['X-RateLimit-Remaining'] = str(max(0, remaining))
+    response['X-RateLimit-Reset'] = str(int(reset_time))
+    return response
+
+def rate_limited_response(retry_after):
+    response = JsonResponse({
+        'error': {
+            'code': 'RATE_LIMIT_EXCEEDED',
+            'message': 'Too many requests. Please slow down.',
+            'retry_after': retry_after
+        }
+    }, status=429)
+    response['Retry-After'] = str(int(retry_after))
+    return response
+```
+
 
 ## Resources
 

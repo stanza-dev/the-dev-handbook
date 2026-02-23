@@ -3,175 +3,118 @@ source_course: "django-authentication"
 source_lesson: "django-authentication-authentication-backends"
 ---
 
-# Custom Authentication Backends
+# Authentication Backends
 
-Authentication backends control how users are authenticated. Create custom backends for email login, LDAP, OAuth, or any custom logic.
+## Introduction
 
-## Backend Interface
+Authentication backends are the pluggable system Django uses to verify user credentials. You can customize how users authenticate by writing custom backends.
 
-A backend must implement:
+## Key Concepts
+
+**Backend**: A class with `authenticate()` and `get_user()` methods.
+
+**ModelBackend**: Django's default backend that checks username/password against the database.
+
+**Backend Order**: Django tries each backend in `AUTHENTICATION_BACKENDS` until one succeeds.
+
+## Real World Context
+
+Custom backends enable email-based login, LDAP/Active Directory integration, token authentication, and multi-tenant setups. Most production Django apps customize their authentication backend.
+
+## Deep Dive
+
+### Default ModelBackend
 
 ```python
-class MyBackend:
-    def authenticate(self, request, **credentials):
-        """Return a user if credentials are valid, else None."""
-        pass
-    
-    def get_user(self, user_id):
-        """Return user by ID, used to restore user from session."""
-        pass
+# Django's built-in backend
+from django.contrib.auth.backends import ModelBackend
+
+class ModelBackend:
+    def authenticate(self, request, username=None, password=None, **kwargs):
+        UserModel = get_user_model()
+        try:
+            user = UserModel._default_manager.get_by_natural_key(username)
+        except UserModel.DoesNotExist:
+            UserModel().set_password(password)  # Timing attack protection
+            return None
+        if user.check_password(password) and self.user_can_authenticate(user):
+            return user
+        return None
 ```
 
-## Email Authentication Backend
+### Email Authentication Backend
 
 ```python
-# backends.py
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 
-User = get_user_model()
-
-
 class EmailBackend(ModelBackend):
-    """
-    Authenticate using email address instead of username.
-    """
-    
     def authenticate(self, request, username=None, password=None, **kwargs):
-        # 'username' parameter actually contains the email
-        email = kwargs.get('email', username)
-        
-        if email is None or password is None:
-            return None
-        
+        UserModel = get_user_model()
         try:
-            user = User.objects.get(email__iexact=email)
-        except User.DoesNotExist:
-            # Run password hasher to prevent timing attacks
-            User().set_password(password)
+            # Allow login with email
+            user = UserModel.objects.get(email=username)
+        except UserModel.DoesNotExist:
             return None
-        
+
         if user.check_password(password) and self.user_can_authenticate(user):
             return user
-        
         return None
 ```
+
+### Configuration
 
 ```python
 # settings.py
 AUTHENTICATION_BACKENDS = [
     'myapp.backends.EmailBackend',
-    'django.contrib.auth.backends.ModelBackend',  # Fallback to username
+    'django.contrib.auth.backends.ModelBackend',  # Fallback
 ]
+
+# Now authenticate() checks EmailBackend first, then ModelBackend
 ```
 
-## Email OR Username Backend
+### Backend with Rate Limiting
 
 ```python
-class EmailOrUsernameBackend(ModelBackend):
-    """
-    Allow authentication with either email or username.
-    """
-    
+from django.core.cache import cache
+
+class RateLimitedBackend(ModelBackend):
+    MAX_ATTEMPTS = 5
+    LOCKOUT_DURATION = 300  # 5 minutes
+
     def authenticate(self, request, username=None, password=None, **kwargs):
-        if username is None or password is None:
-            return None
-        
-        User = get_user_model()
-        
-        # Try to find user by email first, then username
-        try:
-            if '@' in username:
-                user = User.objects.get(email__iexact=username)
-            else:
-                user = User.objects.get(username__iexact=username)
-        except User.DoesNotExist:
-            User().set_password(password)
-            return None
-        
-        if user.check_password(password) and self.user_can_authenticate(user):
-            return user
-        
-        return None
+        cache_key = f'login_attempts_{username}'
+        attempts = cache.get(cache_key, 0)
+
+        if attempts >= self.MAX_ATTEMPTS:
+            return None  # Locked out
+
+        user = super().authenticate(request, username=username, password=password, **kwargs)
+
+        if user is None:
+            cache.set(cache_key, attempts + 1, self.LOCKOUT_DURATION)
+        else:
+            cache.delete(cache_key)
+
+        return user
 ```
 
-## Case-Insensitive Username Backend
+## Common Pitfalls
 
-```python
-class CaseInsensitiveBackend(ModelBackend):
-    """
-    Case-insensitive username authentication.
-    """
-    
-    def authenticate(self, request, username=None, password=None, **kwargs):
-        if username is None:
-            return None
-        
-        User = get_user_model()
-        
-        try:
-            user = User.objects.get(username__iexact=username)
-        except User.DoesNotExist:
-            User().set_password(password)
-            return None
-        except User.MultipleObjectsReturned:
-            # Handle edge case of duplicate usernames (shouldn't happen)
-            user = User.objects.filter(username__iexact=username).first()
-        
-        if user and user.check_password(password) and self.user_can_authenticate(user):
-            return user
-        
-        return None
-```
+1. **Forgetting `get_user()`**: Custom backends must implement both `authenticate()` and optionally `get_user()`.
+2. **Not handling timing attacks**: Always run `set_password()` even when user not found.
+3. **Wrong backend order**: More specific backends should come first.
 
-## Token-Based Backend
+## Best Practices
 
-```python
-from .models import AuthToken
+1. **Extend ModelBackend**: Instead of writing from scratch, extend the default.
+2. **Keep the default as fallback**: Add `ModelBackend` as the last backend.
+3. **Use `user_can_authenticate()`**: Respects the `is_active` flag.
 
+## Summary
 
-class TokenBackend:
-    """
-    Authenticate via bearer token.
-    """
-    
-    def authenticate(self, request, token=None, **kwargs):
-        if token is None:
-            return None
-        
-        try:
-            auth_token = AuthToken.objects.select_related('user').get(
-                key=token,
-                is_active=True
-            )
-            
-            if auth_token.is_expired:
-                return None
-            
-            return auth_token.user
-        except AuthToken.DoesNotExist:
-            return None
-    
-    def get_user(self, user_id):
-        User = get_user_model()
-        try:
-            return User.objects.get(pk=user_id)
-        except User.DoesNotExist:
-            return None
-```
-
-## Multiple Backend Strategy
-
-```python
-# settings.py
-AUTHENTICATION_BACKENDS = [
-    'myapp.backends.TokenBackend',           # Try token first (API)
-    'myapp.backends.EmailOrUsernameBackend', # Then email/username
-    'django.contrib.auth.backends.ModelBackend', # Fallback
-]
-```
-
-Django tries backends in order until one returns a user or all return `None`.
+Authentication backends let you customize credential verification. Extend `ModelBackend` for common cases. Configure `AUTHENTICATION_BACKENDS` in settings. Backends are checked in order until one returns a user.
 
 ## Resources
 

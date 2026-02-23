@@ -14,8 +14,8 @@ Test multiple components working together
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Email Outbox
-- 🧩 Multiple Choice: Live Server Test
-- 🧩 Multiple Choice: Selenium Explicit Wait
+- 🧩 Challenge: Email Outbox
+- ✏️ Fill in the Blank: Live Server Test
+- 🧩 Challenge: Selenium Explicit Wait
 
 → [Practice in your IDE](https://stanza.dev/courses/django-testing-qa)

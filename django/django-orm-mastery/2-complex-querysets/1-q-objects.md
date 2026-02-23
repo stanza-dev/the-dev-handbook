@@ -45,6 +45,8 @@ Article.objects.filter(~Q(status='draft'))
 
 ### Search Implementation
 
+The following example demonstrates how to use search implementation in practice:
+
 ```python
 from django.db.models import Q
 
@@ -57,7 +59,11 @@ def search_articles(query):
     )
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### Combining with Regular Filters
+
+The following example demonstrates how to use combining with regular filters in practice:
 
 ```python
 # Q objects must come before keyword arguments
@@ -67,7 +73,11 @@ Article.objects.filter(
 )
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### Dynamic Query Building
+
+The following example demonstrates how to use dynamic query building in practice:
 
 ```python
 def filter_articles(title=None, author=None, min_views=None):
@@ -83,7 +93,11 @@ def filter_articles(title=None, author=None, min_views=None):
     return Article.objects.filter(query)
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### OR with Multiple Conditions
+
+The following example demonstrates how to use or with multiple conditions in practice:
 
 ```python
 # Articles that are either:
@@ -95,7 +109,11 @@ Article.objects.filter(
 )
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### Negation
+
+The following example demonstrates how to use negation in practice:
 
 ```python
 # All articles EXCEPT drafts
@@ -128,6 +146,8 @@ Article.objects.filter(combined_query)
 
 ### Status-based Filtering
 
+The following example demonstrates how to use status-based filtering in practice:
+
 ```python
 def get_visible_articles(user):
     """Return articles the user can see."""
@@ -140,7 +160,11 @@ def get_visible_articles(user):
     )
 ```
 
+The example above illustrates the pattern in practice. Now let's look at the next approach.
+
 ### Date Range OR
+
+The following example demonstrates how to use date range or in practice:
 
 ```python
 from datetime import date, timedelta
@@ -151,7 +175,17 @@ week_ago = date.today() - timedelta(days=7)
 Article.objects.filter(
     Q(pub_date__gte=week_ago) | Q(is_evergreen=True)
 )
+```\n\n## Common Pitfalls\n\n1. **Not testing edge cases** — Always test q objects for complex lookups with empty querysets, NULL values, and boundary conditions.\n2. **Premature optimization** — Profile queries with `.explain()` before applying complex optimizations.\n3. **Ignoring database-specific behavior** — Some q objects for complex lookups features behave differently across PostgreSQL, MySQL, and SQLite.\n\n## Best Practices\n\n1. **Keep queries readable** — Use meaningful variable names and chain methods logically.\n2. **Test with realistic data** — Create fixtures that match production data patterns for accurate performance testing.\n3. **Document complex queries** — Add comments explaining the business logic behind non-obvious query patterns.\n\n## Summary\n\n- Q Objects for Complex Lookups is a core Django ORM feature for building efficient database queries.\n- Always consider query performance and use `.explain()` to verify query plans.\n- Test edge cases including empty results, NULL values, and large datasets.\n- Refer to the Django documentation for database-specific behavior and limitations.
+
+## Code Examples
+
+**Key example from Q Objects for Complex Lookups**
+
+```python
+# This is: published=True AND author=user
+Article.objects.filter(published=True, author=user)
 ```
+
 
 ## Resources
 

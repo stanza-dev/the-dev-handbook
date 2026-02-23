@@ -5,9 +5,34 @@ source_lesson: "django-rest-api-throttling-basics"
 
 # Implementing Rate Limiting
 
+## Introduction
+
+Without rate limiting, a single client can monopolize your API, starving other users and potentially crashing your server. Rate limiting ensures fair usage and protects against abuse, bots, and denial-of-service attacks.
+
 Rate limiting protects your API from abuse and ensures fair usage across all clients.
 
+
+## Key Concepts
+
+**Rate Limiting**: Restricting the number of API requests a client can make within a time window.
+
+**Throttling**: The process of slowing down or rejecting requests that exceed the rate limit.
+
+**429 Too Many Requests**: The HTTP status code returned when a rate limit is exceeded.
+
+**Client Identification**: Identifying clients by IP address, API key, or user account for per-client limits.
+
+## Real World Context
+
+Rate limiting is essential for:
+- **Public APIs**: Preventing abuse and ensuring fair usage across all consumers
+- **Authentication endpoints**: Limiting login attempts to prevent brute-force attacks
+- **Expensive operations**: Protecting CPU-intensive endpoints like search or report generation
+- **Tiered pricing**: Offering different rate limits for free, pro, and enterprise plans
+
 ## Simple Throttling Decorator
+
+This decorator tracks request counts per client using Django's cache framework and returns 429 when the limit is exceeded:
 
 ```python
 from functools import wraps
@@ -62,7 +87,11 @@ def get_client_ip(request):
     return request.META.get('REMOTE_ADDR')
 ```
 
+The decorator adds `X-RateLimit-Limit` and `X-RateLimit-Remaining` headers to every response, letting clients monitor their quota before hitting the limit.
+
 ## Using the Decorator
+
+Apply different limits based on endpoint cost -- reads can be generous while writes should be stricter:
 
 ```python
 @rate_limit(requests_per_minute=100)
@@ -76,7 +105,11 @@ def api_create_article(request):
     # ...
 ```
 
+Write endpoints use 10 requests/minute while reads allow 100, reflecting the higher server cost of mutations.
+
 ## Token Bucket Algorithm
+
+The token bucket allows short bursts above the average rate by accumulating tokens over time. Each request consumes a token, and tokens refill at a steady rate:
 
 ```python
 import time
@@ -125,7 +158,11 @@ class TokenBucket:
         return self.max_tokens
 ```
 
+The `consume()` method first refills tokens based on elapsed time, then checks if enough tokens are available. This allows a burst of `max_tokens` requests followed by a sustained rate of `refill_rate` per second.
+
 ## User-Based Rate Limiting
+
+Different users deserve different limits. This decorator applies generous limits for authenticated users and even higher limits for premium subscribers:
 
 ```python
 from django.http import JsonResponse
@@ -162,7 +199,11 @@ def user_rate_limit(anonymous_limit=30, authenticated_limit=100):
     return decorator
 ```
 
+Anonymous users are identified by IP address, while authenticated users are tracked by user ID, ensuring accurate per-user limits regardless of network configuration.
+
 ## Middleware Approach
+
+For global rate limiting across all API endpoints, a middleware applies limits before any view code runs:
 
 ```python
 # middleware.py
@@ -208,7 +249,11 @@ class RateLimitMiddleware:
         return xff.split(',')[0].strip() if xff else request.META.get('REMOTE_ADDR')
 ```
 
+The sliding window approach stores timestamps of recent requests, removing entries older than 60 seconds. This prevents the boundary-burst problem that fixed-window counters have.
+
 ## Handling 429 Responses in Clients
+
+Clients should handle 429 responses gracefully by waiting for the `retry_after` period before retrying:
 
 ```javascript
 async function apiRequest(url, options = {}) {
@@ -227,6 +272,59 @@ async function apiRequest(url, options = {}) {
     return response;
 }
 ```
+
+The recursive retry waits for `retryAfter` seconds before sending the request again. In production, add a maximum retry count to prevent infinite loops.
+
+## Common Pitfalls
+
+1. **Rate limiting only by IP**: Behind a corporate proxy, thousands of users share one IP. Rate limit by authenticated user when possible.
+
+2. **Not communicating limits**: Clients need rate limit headers to adjust their behavior proactively.
+
+3. **Using in-memory cache across multiple servers**: Each server tracks independently, allowing N times the limit (use Redis for shared state).
+
+## Best Practices
+
+1. **Use different limits for different endpoints**: Login should be strict (5/min), reads can be generous (100/min).
+
+2. **Include rate limit headers**: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset on every response.
+
+3. **Use Redis for distributed rate limiting**: Shared state ensures correct limits across multiple servers.
+
+4. **Higher limits for authenticated users**: Encourage registration by giving authenticated users more generous limits.
+
+## Summary
+
+Rate limiting protects your API from abuse and ensures fair usage. Implement it using Django's cache framework with decorators or middleware, communicate limits via standard headers, and use different thresholds for different endpoints and user tiers.
+
+## Code Examples
+
+**Simple rate limiting decorator using Django's cache framework**
+
+```python
+from functools import wraps
+from django.core.cache import cache
+from django.http import JsonResponse
+import time
+
+def rate_limit(requests_per_minute=60):
+    def decorator(view_func):
+        @wraps(view_func)
+        def wrapper(request, *args, **kwargs):
+            ip = request.META.get('REMOTE_ADDR')
+            key = f'rate_limit:{ip}:{view_func.__name__}'
+            current = cache.get(key, {'count': 0, 'start': time.time()})
+            if time.time() - current['start'] > 60:
+                current = {'count': 0, 'start': time.time()}
+            if current['count'] >= requests_per_minute:
+                return JsonResponse({'error': 'Rate limit exceeded'}, status=429)
+            current['count'] += 1
+            cache.set(key, current, 60)
+            return view_func(request, *args, **kwargs)
+        return wrapper
+    return decorator
+```
+
 
 ## Resources
 

@@ -9,6 +9,20 @@ source_lesson: "django-admin-mastery-inline-permissions"
 
 Control who can add, edit, or delete inline objects.
 
+## Key Concepts
+
+**has_add_permission**: Controls whether new inline objects can be added.
+
+**has_delete_permission**: Controls whether inline objects can be removed.
+
+**has_change_permission**: Controls whether inline objects can be edited.
+
+**get_queryset()**: Filters which inline objects are visible.
+
+## Real World Context
+
+In a project management tool, tasks belong to projects. Managers should be able to add and remove tasks, but regular team members should only be able to view and edit existing ones. By overriding has_add_permission and has_delete_permission on the TaskInline, you enforce these rules at the admin level without any custom middleware.
+
 ## Deep Dive
 
 ### Permission Methods
@@ -53,6 +67,18 @@ class ChapterInline(admin.TabularInline):
     model = Chapter
     formset = ChapterFormSet
 ```
+
+## Common Pitfalls
+
+1. **Forgetting the obj parameter**: Inline permission methods receive the parent object as `obj`. Not using it means you cannot implement object-level rules like 'no changes to closed projects'.
+
+2. **Not calling super()**: If you override a permission method without calling super(), you bypass Django's default permission checks, potentially granting unintended access.
+
+## Best Practices
+
+1. **Combine permission methods with get_queryset()**: Hiding objects via get_queryset() is not a security boundary. Always pair it with permission methods for proper access control.
+
+2. **Use can_delete=False for audit trails**: When inline objects should never be deleted from the admin (e.g., payment records), set can_delete=False to remove the delete checkbox entirely.
 
 ## Summary
 

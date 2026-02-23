@@ -14,7 +14,7 @@ Edit related objects on the same page
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- ✏️ Fill in the Blank: Inline Extra Forms
+- 🧩 Challenge: Inline Extra Forms
 - ✏️ Fill in the Blank: TabularInline vs StackedInline
 - 🔗 Matching: Inline Types
 

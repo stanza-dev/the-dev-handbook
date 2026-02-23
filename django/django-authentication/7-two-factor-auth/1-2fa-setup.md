@@ -5,6 +5,28 @@ source_lesson: "django-authentication-2fa-setup"
 
 # Two-Factor Authentication Setup
 
+## Introduction
+
+Two-factor authentication (2FA) adds a second verification step beyond the password. Even if a password is stolen, the attacker cannot log in without the second factor -- typically a 6-digit code from an authenticator app.
+
+## Key Concepts
+
+**TOTP**: Time-based One-Time Password, the algorithm behind authenticator apps.
+
+**django-otp**: Low-level OTP framework providing device models and verification middleware.
+
+**django-two-factor-auth**: High-level package built on django-otp with setup views, QR code generation, and backup codes.
+
+**`@otp_required`**: Decorator that requires 2FA verification in addition to login.
+
+**Backup Codes**: Single-use recovery codes for when the authenticator device is unavailable.
+
+## Real World Context
+
+After a phishing attack exposed several employee passwords, a company mandates 2FA for all internal tools. Using django-two-factor-auth, the team adds TOTP-based 2FA in an afternoon, complete with QR code enrollment, backup codes, and the `@otp_required` decorator on sensitive views like payroll and HR data.
+
+## Deep Dive
+
 Add TOTP (Time-based One-Time Password) authentication for enhanced security using django-two-factor-auth.
 
 ## Installation
@@ -200,6 +222,48 @@ def verify_2fa(request):
     <button type="submit">Verify & Enable 2FA</button>
 </form>
 ```
+
+## Common Pitfalls
+
+1. **Not providing backup codes**: If a user loses their phone and there is no recovery method, they are permanently locked out. Always generate backup codes during 2FA setup.
+2. **Forgetting `OTPMiddleware`**: Without `django_otp.middleware.OTPMiddleware`, the `otp_required` decorator has no effect and all views are accessible without 2FA.
+3. **Not testing clock synchronization**: TOTP depends on the server and client clocks being within 30 seconds of each other. If your server's clock drifts, legitimate codes are rejected.
+
+## Best Practices
+
+1. **Use `OTPMiddleware` for site-wide enforcement**: Place it after `AuthenticationMiddleware` so all authenticated users must complete 2FA.
+2. **Offer TOTP over SMS**: SMS is vulnerable to SIM-swapping and interception. TOTP via authenticator apps is more secure and works offline.
+3. **Generate 10 backup codes**: Display them once during setup and instruct users to store them securely. Each code should be single-use.
+
+## Summary
+
+- Two-factor authentication adds a second verification layer beyond passwords.
+- django-two-factor-auth provides enrollment views, QR codes, and backup code management.
+- Protect sensitive views with the `@otp_required` decorator.
+- Always provide backup codes for account recovery.
+- TOTP (authenticator apps) is more secure than SMS-based 2FA.
+
+## Code Examples
+
+**TOTP setup and verification using pyotp for two-factor authentication**
+
+```python
+import pyotp
+
+# Generate secret for user
+secret = pyotp.random_base32()
+totp = pyotp.TOTP(secret)
+
+# Generate provisioning URI for QR code
+uri = totp.provisioning_uri(
+    name=user.email,
+    issuer_name='MyApp'
+)
+
+# Verify a code
+is_valid = totp.verify('123456')
+```
+
 
 ## Resources
 

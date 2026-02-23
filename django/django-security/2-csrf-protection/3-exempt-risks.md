@@ -17,6 +17,12 @@ The @csrf_exempt decorator is tempting for APIs and webhooks, but improper use c
 
 **Token Authentication**: Auth method that doesn't require CSRF protection.
 
+
+
+## Real World Context
+
+A common pattern in startups is to slap @csrf_exempt on views to "fix" 403 errors during development, then forget to remove it before production. This has led to real account takeover vulnerabilities where attackers forged requests against session-authenticated endpoints.
+
 ## Deep Dive
 
 ### When CSRF Exemption is SAFE
@@ -71,6 +77,13 @@ def verify_webhook(request, secret):
     ).hexdigest()
     return hmac.compare_digest(signature, expected)
 ```
+
+
+
+## Common Pitfalls
+
+1. **Exempting a view "temporarily" during development** — Temporary exemptions tend to ship to production; use token auth or fix the CSRF flow instead.
+2. **Not verifying webhook signatures** — @csrf_exempt alone doesn't authenticate the request; always verify the sender using HMAC signatures or provider-specific validation.
 
 ## Best Practices
 

@@ -7,7 +7,7 @@
 
 Maintained by [Stanza](https://stanza.dev) — Learn coding faster right in your IDE, Slack, emails and the web.
 
-**132 courses** · **2173+ lessons** · **17 technologies**
+**132 courses** · **2207+ lessons** · **17 technologies**
 
 ## Courses
 
@@ -91,12 +91,12 @@ Maintained by [Stanza](https://stanza.dev) — Learn coding faster right in your
 
 ### 🎸 Django
 
-- ⚙️ [Django Admin Mastery](./django/django-admin-mastery/) — 13 lessons
+- ⚙️ [Django Admin Mastery](./django/django-admin-mastery/) — 22 lessons
 - 🔐 [Django Authentication & Authorization](./django/django-authentication/) — 28 lessons
 - 🚀 [Django Deployment & Production](./django/django-deployment/) — 20 lessons
-- 📋 [Django Forms & Validation](./django/django-forms-validation/) — 24 lessons
-- 🎸 [Django Foundations](./django/django-foundations/) — 24 lessons
-- 🗃️ [Django ORM Mastery](./django/django-orm-mastery/) — 19 lessons
+- 📋 [Django Forms & Validation](./django/django-forms-validation/) — 34 lessons
+- 🎸 [Django Foundations](./django/django-foundations/) — 31 lessons
+- 🗃️ [Django ORM Mastery](./django/django-orm-mastery/) — 27 lessons
 - ⚡ [Django Performance & Optimization](./django/django-performance/) — 16 lessons
 - 🔌 [Django REST API Development](./django/django-rest-api/) — 32 lessons
 - 🔒 [Django Security Best Practices](./django/django-security/) — 24 lessons
