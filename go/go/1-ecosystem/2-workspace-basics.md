@@ -42,7 +42,7 @@ With modules, projects live anywhere on your filesystem:
 ```go
 module example.com/myproject
 
-go 1.25
+go 1.26
 
 require (
     github.com/gin-gonic/gin v1.9.1

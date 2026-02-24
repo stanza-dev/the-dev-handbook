@@ -2,7 +2,7 @@
 
 > Build production-ready REST APIs and microservices with Go.
 
-**Go 1.25** · Intermediate → Advanced
+**Go 1.26** · Intermediate → Advanced
 
 ## Sections
 
@@ -14,7 +14,7 @@
 | 🛡️ | [API Security](./4-api-security/) | 4 lessons |
 | 🔗 | [RPC & gRPC](./5-rpc-grpc/) | 4 lessons |
 
-**20 lessons** · **20 interactive challenges**
+**20 lessons** · **22 interactive challenges**
 
 ## Want the Interactive Experience?
 

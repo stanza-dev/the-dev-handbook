@@ -13,12 +13,13 @@ Polymorphism and the idiomatic way to handle errors.
 
 ## Practice Challenges
 
-This section includes **5 interactive challenges** available on Stanza:
+This section includes **6 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Interface Keyword Quiz
 - ✏️ Fill in the Blank: Error Check Idiom
 - 🧩 Multiple Choice: Error Wrap Verb
 - 🔗 Matching: Interface Concepts
+- 🧩 Challenge: Error Handling Flow
 - 🧩 Multiple Choice: errors.Is vs errors.As
 
 → [Practice in your IDE](https://stanza.dev/courses/go)

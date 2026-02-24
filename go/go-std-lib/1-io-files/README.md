@@ -13,11 +13,12 @@ Working with Reader, Writer, and the os package.
 
 ## Practice Challenges
 
-This section includes **4 interactive challenges** available on Stanza:
+This section includes **5 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: I/O Copy Memory
 - ✏️ Fill in the Blank: Reader EOF Check
 - 🧩 Multiple Choice: Bufio Flush
 - 🔗 Matching: I/O Functions
+- 🧩 Challenge: Reading a Gzipped File
 
 → [Practice in your IDE](https://stanza.dev/courses/go-std-lib)

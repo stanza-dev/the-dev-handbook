@@ -13,11 +13,12 @@ Worker pools, pipelines, and fan-out/fan-in.
 
 ## Practice Challenges
 
-This section includes **4 interactive challenges** available on Stanza:
+This section includes **5 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Pipeline Close Channel
 - ✏️ Fill in the Blank: Fan In Select
 - 🧩 Multiple Choice: Errgroup Error Return
+- 🧩 Challenge: Pipeline Construction Order
 - 🧩 Challenge: Concurrency Patterns
 
 → [Practice in your IDE](https://stanza.dev/courses/go-concurrency)

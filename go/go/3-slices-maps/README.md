@@ -13,12 +13,13 @@ Working with collections in Go.
 
 ## Practice Challenges
 
-This section includes **5 interactive challenges** available on Stanza:
+This section includes **6 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Slice Append Quiz
-- 🧩 Multiple Choice: Len vs Cap Quiz
-- ✏️ Fill in the Blank: Map Key Check
-- 🧩 Multiple Choice: Map Zero Value Panic
 - 🔗 Matching: Slice Internals
+- 🧩 Challenge: Predict Slice Capacity
+- 🧩 Multiple Choice: Map Zero Value Panic
+- ✏️ Fill in the Blank: Map Key Check
+- 🧩 Multiple Choice: Len vs Cap Quiz
 
 → [Practice in your IDE](https://stanza.dev/courses/go)

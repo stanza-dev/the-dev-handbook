@@ -17,7 +17,7 @@ This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Embedding Method Promotion
 - 🧩 Multiple Choice: Interface Pollution
-- 🧩 Multiple Choice: Consumer Defined Interface
+- 🧩 Challenge: Consumer-Defined Interface Workflow
 - 🧩 Challenge: Interface Principles
 
 → [Practice in your IDE](https://stanza.dev/courses/go-architecture)

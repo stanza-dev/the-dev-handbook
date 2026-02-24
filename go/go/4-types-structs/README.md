@@ -15,10 +15,10 @@ Object-oriented programming, Go style.
 
 This section includes **5 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Pointer Receiver Quiz
 - 🧩 Multiple Choice: Method Definition Syntax
-- 🧩 Multiple Choice: Constructor Naming
+- 🧩 Multiple Choice: Pointer Receiver Quiz
 - 🧩 Challenge: Pointer Receiver Reasons
 - 🧩 Multiple Choice: Embedding Promotion
+- 🧩 Multiple Choice: Constructor Naming
 
 → [Practice in your IDE](https://stanza.dev/courses/go)

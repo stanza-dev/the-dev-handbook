@@ -13,11 +13,12 @@ Working with Durations, Tickers, and Timers.
 
 ## Practice Challenges
 
-This section includes **4 interactive challenges** available on Stanza:
+This section includes **5 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Time Format Layout
 - ✏️ Fill in the Blank: Time Since Usage
 - 🧩 Multiple Choice: Ticker Stop Leak
 - 🔗 Matching: Time Functions
+- 🧩 Challenge: Duration in Nanoseconds
 
 → [Practice in your IDE](https://stanza.dev/courses/go-std-lib)

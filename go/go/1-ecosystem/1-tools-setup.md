@@ -48,10 +48,10 @@ This creates a `go.mod` file:
 ```go
 module github.com/username/my-project
 
-go 1.25
+go 1.26
 ```
 
-### Adding Dependencies
+\n> **Note (Go 1.26+):** When you run `go mod init`, the Go toolchain now defaults to a slightly lower Go version in the `go.mod` file (e.g., Go 1.26 creates `go 1.25.0`). This encourages compatibility with the currently supported Go releases. You can override this with `go get go@1.26.0` if you need the latest features.\n\n### Adding Dependencies
 
 When you import a package and run `go mod tidy`, Go automatically fetches and records the dependency. You can also explicitly add packages:
 
@@ -73,6 +73,10 @@ go get github.com/gin-gonic/gin@latest
 - Use `go mod tidy` in CI to catch missing or unused dependencies.
 - Pin dependency versions explicitly for production code.
 - Include both `go.mod` and `go.sum` in version control.
+
+### Go 1.26: go fix Modernizers
+
+Go 1.26 introduces `go fix` modernizers that automatically update your code to use newer language features and standard library APIs. Run `go fix ./...` to modernize your codebase.
 
 ## Summary
 

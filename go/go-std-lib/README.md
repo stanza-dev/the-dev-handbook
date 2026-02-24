@@ -2,7 +2,7 @@
 
 > Deep dive into the robust Go Standard Library, including I/O, Networking, and the new Iterators.
 
-**Go 1.25** · Intermediate → Advanced
+**Go 1.26** · Intermediate → Advanced
 
 ## Sections
 
@@ -14,7 +14,7 @@
 | 🔁 | [The New Iterators (Go 1.23)](./4-iterators/) | 4 lessons |
 | 🧪 | [Testing & Fuzzing](./5-testing/) | 4 lessons |
 
-**20 lessons** · **20 interactive challenges**
+**20 lessons** · **23 interactive challenges**
 
 ## Want the Interactive Experience?
 

@@ -13,12 +13,13 @@ Mastering variables, loops, and control structures.
 
 ## Practice Challenges
 
-This section includes **5 interactive challenges** available on Stanza:
+This section includes **6 interactive challenges** available on Stanza:
 
+- 🧩 Challenge: Go Program Structure
 - 🧩 Multiple Choice: Short Declaration Quiz
-- 🧩 Multiple Choice: Zero Value Quiz
 - 🧩 Multiple Choice: Loop Keyword Quiz
 - 🔗 Matching: Zero Values Matching
+- 🧩 Multiple Choice: Zero Value Quiz
 - 🧩 Multiple Choice: Switch Fallthrough
 
 → [Practice in your IDE](https://stanza.dev/courses/go)

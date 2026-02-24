@@ -2,7 +2,7 @@
 
 > Optimize Go applications using profiling, memory tuning, and PGO.
 
-**Go 1.25** · Expert
+**Go 1.26** · Expert
 
 ## Sections
 
@@ -10,9 +10,9 @@
 |---|---------|---------|
 | 📊 | [Profiling & Analysis](./1-profiling/) | 4 lessons |
 | 🧠 | [Memory Management](./2-memory-management/) | 4 lessons |
-| 🏎️ | [Profile-Guided Optimization](./3-pgo/) | 4 lessons |
-| 💾 | [Data Locality & Layout](./4-data-locality/) | 4 lessons |
-| ⚠️ | [Low-Level Go](./5-unsafe-cgo/) | 4 lessons |
+| 🎯 | [Profile-Guided Optimization](./3-pgo/) | 4 lessons |
+| 💾 | [Data Locality & Cache Optimization](./4-data-locality/) | 4 lessons |
+| ⚡ | [Unsafe, CGO & Assembly](./5-unsafe-cgo/) | 4 lessons |
 
 **20 lessons** · **20 interactive challenges**
 

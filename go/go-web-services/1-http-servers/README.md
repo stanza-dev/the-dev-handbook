@@ -13,11 +13,12 @@ Using net/http and middleware.
 
 ## Practice Challenges
 
-This section includes **4 interactive challenges** available on Stanza:
+This section includes **5 interactive challenges** available on Stanza:
 
-- ✏️ Fill in the Blank: HTTP Method Routing
 - 🧩 Multiple Choice: Response Writer Usage
-- 🧩 Multiple Choice: Middleware Stop
+- ✏️ Fill in the Blank: HTTP Method Routing
+- ✏️ Fill in the Blank: JSON Content-Type
+- 🧩 Challenge: Middleware Chain Order
 - 🔗 Matching: HTTP Components
 
 → [Practice in your IDE](https://stanza.dev/courses/go-web-services)

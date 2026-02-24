@@ -2,7 +2,7 @@
 
 > Learn to structure complex Go applications using idiomatic patterns, Generics, and Reflection.
 
-**Go 1.25** · Advanced → Expert
+**Go 1.26** · Advanced → Expert
 
 ## Sections
 

@@ -15,9 +15,9 @@ Using sync.Mutex, WaitGroup, and Atomic.
 
 This section includes **4 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Waitgroup Add Location
 - 🧩 Multiple Choice: Mutex Unlock Defer
-- 🧩 Multiple Choice: Atomic Race Quiz
+- 🧩 Challenge: Waitgroup Add Location
 - 🔗 Matching: Sync Primitives
+- 🧩 Challenge: Atomic Race Quiz
 
 → [Practice in your IDE](https://stanza.dev/courses/go-concurrency)

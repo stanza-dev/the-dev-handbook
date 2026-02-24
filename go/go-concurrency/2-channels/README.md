@@ -15,8 +15,8 @@ Communication and synchronization via channels.
 
 This section includes **4 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Send Closed Panic
-- 🧩 Multiple Choice: Receive Closed Value
+- ✏️ Fill in the Blank: Send Closed Panic
+- ✏️ Fill in the Blank: Receive Closed Value
 - 🧩 Multiple Choice: Range Channel Exit
 - 🧩 Challenge: Channel Operations
 

@@ -16,8 +16,8 @@ Managing request lifecycles and timeouts.
 This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Context First Arg
-- 🧩 Multiple Choice: Context Cancel Leak
 - 🧩 Multiple Choice: Context Key Type
 - 🔗 Matching: Context Errors
+- 🧩 Multiple Choice: Context Cancel Leak
 
 → [Practice in your IDE](https://stanza.dev/courses/go-concurrency)

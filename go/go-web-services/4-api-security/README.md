@@ -17,7 +17,7 @@ This section includes **4 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: JWT Header Name
 - 🧩 Multiple Choice: JWT Confidentiality
-- 🧩 Multiple Choice: CORS Preflight
+- ✏️ Fill in the Blank: CORS Preflight
 - 🧩 Challenge: API Security Practices
 
 → [Practice in your IDE](https://stanza.dev/courses/go-web-services)

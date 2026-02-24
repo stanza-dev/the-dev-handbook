@@ -2,7 +2,7 @@
 
 > Master the art of concurrent programming with Goroutines, Channels, and the Scheduler.
 
-**Go 1.25** · Advanced → Expert
+**Go 1.26** · Advanced → Expert
 
 ## Sections
 
@@ -14,7 +14,7 @@
 | ⏱️ | [Context & Cancellation](./4-context/) | 4 lessons |
 | 🏭 | [Advanced Concurrency Patterns](./5-patterns/) | 4 lessons |
 
-**20 lessons** · **20 interactive challenges**
+**20 lessons** · **21 interactive challenges**
 
 ## Want the Interactive Experience?
 

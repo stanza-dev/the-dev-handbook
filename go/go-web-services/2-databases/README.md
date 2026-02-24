@@ -17,7 +17,7 @@ This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: SQL Injection Prevention
 - 🧩 Multiple Choice: DB Connection Pool
-- 🧩 Multiple Choice: Transaction Exec Method
+- 🧩 Challenge: Transaction Lifecycle
 - 🔗 Matching: Database Functions
 
 → [Practice in your IDE](https://stanza.dev/courses/go-web-services)

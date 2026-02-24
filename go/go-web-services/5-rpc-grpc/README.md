@@ -13,11 +13,12 @@ High-performance inter-service communication.
 
 ## Practice Challenges
 
-This section includes **4 interactive challenges** available on Stanza:
+This section includes **5 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: gRPC Transport
+- ✏️ Fill in the Blank: gRPC Transport
 - 🧩 Multiple Choice: Protobuf vs JSON
-- 🧩 Multiple Choice: gRPC Streaming Types
+- 🧩 Challenge: gRPC Server Setup
+- 🧩 Challenge: gRPC Streaming Types Count
 - 🔗 Matching: gRPC Concepts
 
 → [Practice in your IDE](https://stanza.dev/courses/go-web-services)

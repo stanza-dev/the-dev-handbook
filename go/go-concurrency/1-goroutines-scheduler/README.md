@@ -15,9 +15,9 @@ Understanding how Go multiplexes execution.
 
 This section includes **4 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Goroutine Stack Size
 - 🧩 Multiple Choice: Main Exit Quiz
-- 🧩 Multiple Choice: Nil Channel Block
+- 🧩 Challenge: Goroutine Stack Size
+- ✏️ Fill in the Blank: Nil Channel Block
 - 🔗 Matching: GMP Model
 
 → [Practice in your IDE](https://stanza.dev/courses/go-concurrency)

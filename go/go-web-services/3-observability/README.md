@@ -16,8 +16,8 @@ Structured logging with slog.
 This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Slog Key Value
-- 🧩 Multiple Choice: Sigterm Meaning
-- 🧩 Multiple Choice: Shutdown Timeout
+- ✏️ Fill in the Blank: Graceful Shutdown Signal
 - 🔗 Matching: Health Probes
+- 🧩 Multiple Choice: Shutdown Timeout
 
 → [Practice in your IDE](https://stanza.dev/courses/go-web-services)

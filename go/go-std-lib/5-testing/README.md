@@ -13,11 +13,12 @@ Writing robust tests and finding bugs automatically.
 
 ## Practice Challenges
 
-This section includes **4 interactive challenges** available on Stanza:
+This section includes **5 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: Test File Suffix
 - 🧩 Multiple Choice: Fuzzing Intro
-- 🧩 Multiple Choice: Benchmark Flag
 - 🔗 Matching: Testing Functions
+- 🧩 Multiple Choice: Benchmark Flag
+- 🧩 Challenge: Test Lifecycle Steps
 
 → [Practice in your IDE](https://stanza.dev/courses/go-std-lib)

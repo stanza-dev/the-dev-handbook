@@ -2,7 +2,7 @@
 
 > Build fast, reliable applications with Go, the language built for simplicity and performance
 
-**Go 1.25** · Beginner → Intermediate
+**Go 1.26** · Beginner → Advanced
 
 ## Sections
 
@@ -14,7 +14,7 @@
 | 🏗️ | [Types, Structs & Methods](./4-types-structs/) | 4 lessons |
 | 🧩 | [Interfaces & Error Handling](./5-interfaces-errors/) | 4 lessons |
 
-**20 lessons** · **24 interactive challenges**
+**20 lessons** · **27 interactive challenges**
 
 ## Want the Interactive Experience?
 

@@ -3,47 +3,67 @@ source_course: "go-web-services"
 source_lesson: "go-web-services-grpc-web"
 ---
 
-# gRPC in Browsers
+# gRPC-Web & Connect
 
-Browsers don't support HTTP/2 for gRPC. Solutions:
+## Introduction
+Browsers cannot use native gRPC because they lack full HTTP/2 control. gRPC-Web and Connect are two solutions that bridge this gap, letting web applications communicate with gRPC services.
 
-## gRPC-Web
+## Key Concepts
+- **gRPC-Web**: A protocol that translates gRPC calls into HTTP/1.1 compatible requests, typically via an Envoy proxy.
+- **Connect (connectrpc.com)**: A modern RPC framework that natively supports gRPC, gRPC-Web, and its own Connect protocol over standard HTTP.
+- **h2c**: HTTP/2 without TLS, used in development and behind load balancers that handle TLS termination.
+- **gRPC-Gateway**: A reverse proxy that generates a REST API from your `.proto` service definitions.
 
-Use grpc-web proxy (Envoy) to translate:
+## Real World Context
+If you have a gRPC backend and need to add a web frontend, you face the browser compatibility problem. Connect is the modern solution — it lets you serve gRPC, gRPC-Web, and REST-like endpoints from the same handler, without a separate proxy.
+
+## Deep Dive
+
+gRPC-Web uses a proxy to translate between the browser and the gRPC server.
 
 ```
 Browser (HTTP/1.1) -> Envoy Proxy -> gRPC Server (HTTP/2)
 ```
 
-## Connect (buf.build/connect)
+This requires deploying and configuring an Envoy proxy, adding operational complexity.
 
-Connect is a modern alternative that supports:
-*   gRPC protocol
-*   gRPC-Web protocol
-*   Connect protocol (uses standard HTTP)
+Connect is a modern alternative that supports all three protocols from a single handler.
 
 ```go
 import "connectrpc.com/connect"
 
-// Same handler works for all protocols
 mux := http.NewServeMux()
 mux.Handle(greetv1connect.NewGreetServiceHandler(&GreetServer{}))
 
 http.ListenAndServe(":8080", h2c.NewHandler(mux, &http2.Server{}))
 ```
 
-## When to Use What
+The same handler serves gRPC clients, gRPC-Web browsers, and Connect clients — no proxy required.
 
-*   **Internal services:** Native gRPC.
+Choose the right approach based on your use case.
+
+*   **Internal services:** Native gRPC for maximum performance.
 *   **Public API with browser clients:** Connect or REST.
 *   **Mixed:** gRPC-Gateway generates REST from proto.
 
+## Common Pitfalls
+1. **Deploying Envoy just for gRPC-Web** — If you only need browser support, Connect eliminates the proxy entirely.
+2. **Assuming gRPC works in browsers** — Native gRPC requires HTTP/2 trailer support, which browsers do not provide.
+
+## Best Practices
+1. **Use Connect for new projects** — It supports all three protocols (gRPC, gRPC-Web, Connect) without infrastructure overhead.
+2. **Use native gRPC for internal service-to-service calls** — It has the best performance and widest tooling support.
+
+## Summary
+- Browsers cannot use native gRPC — use gRPC-Web (with proxy) or Connect (no proxy).
+- Connect supports gRPC, gRPC-Web, and its own protocol from a single handler.
+- Use native gRPC for internal services and Connect for browser-facing endpoints.
+
 ## Code Examples
 
-**Connect RPC Handler**
+**A Connect RPC handler that serves gRPC, gRPC-Web, and Connect protocols from a single implementation — no proxy needed**
 
 ```go
-// Connect RPC example
 type GreetServer struct{}
 
 func (s *GreetServer) Greet(
@@ -56,6 +76,11 @@ func (s *GreetServer) Greet(
 }
 ```
 
+
+## Resources
+
+- [Connect for Go — Getting Started](https://connectrpc.com/docs/go/getting-started) — Official Connect RPC documentation for Go
+- [gRPC Go Quick Start](https://grpc.io/docs/languages/go/quickstart/) — Official gRPC tutorial for comparing native gRPC with web alternatives
 
 ---
 

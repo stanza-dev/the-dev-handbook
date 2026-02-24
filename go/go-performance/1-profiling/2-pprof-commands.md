@@ -3,50 +3,89 @@ source_course: "go-performance"
 source_lesson: "go-performance-pprof-commands"
 ---
 
-# pprof Interactive Mode
+# pprof Commands & Visualization
+
+## Introduction
+Collecting a profile is only half the job. You need to know how to navigate and interpret the data. The `go tool pprof` CLI offers powerful commands for drilling into hotspots, and Go 1.26 makes flame graphs the default web visualization.
+
+## Key Concepts
+- **Flat time**: Time spent directly in a function (excluding callees).
+- **Cumulative time**: Time spent in a function *including* all its callees.
+- **Flame graph**: A visualization where wider bars mean more samples. In Go 1.26, `go tool pprof -http` defaults to the flame graph view.
+- **Call graph**: A directed graph showing function call relationships weighted by sample counts.
+
+## Real World Context
+When investigating a latency spike, you might collect a CPU profile and use `top` to find the most expensive function, then `list` to see which lines cost the most. For memory leaks, `top -cum` on a heap profile reveals which call chains allocate the most.
+
+## Deep Dive
+
+### Interactive CLI Commands
+
+After opening a profile with `go tool pprof cpu.prof`, use these commands:
+
+```
+(pprof) top 10          # Top 10 functions by flat time
+(pprof) top -cum 10     # Top 10 by cumulative time
+(pprof) list funcName   # Source-level annotation for a function
+(pprof) peek funcName   # Show callers and callees
+(pprof) web             # Open call graph in browser
+```
+
+The `top` command shows where time is actually spent. Use `top -cum` when you suspect a high-level function is slow because of something it calls.
+
+### Web-Based Visualization
+
+Launch the interactive web UI:
 
 ```bash
-go tool pprof cpu.prof
+go tool pprof -http=:8080 cpu.prof
 ```
 
-## Essential Commands
+In Go 1.26, this defaults to a **flame graph** view — the most intuitive way to understand where time is spent. You can click on any bar to zoom into that subtree.
 
-*   `top`: Show top functions by CPU/memory.
-*   `top10`: Show top 10.
-*   `top -cum`: Sort by cumulative (including callees).
-*   `list funcName`: Show source code with annotations.
-*   `web`: Open call graph in browser.
-*   `peek funcName`: Show callers and callees.
+### Comparing Profiles
 
-## Filtering
+To validate an optimization, compare before and after:
 
-*   `top -focus=regexp`: Only show matching functions.
-*   `top -ignore=regexp`: Hide matching functions.
-
-## Reading Output
-
-```
-flat  flat%   sum%  cum   cum%
-10ms  50%    50%   15ms  75%   main.heavyWork
+```bash
+go tool pprof -diff_base=before.prof after.prof
 ```
 
-*   **flat**: Time spent in function itself.
-*   **cum**: Time spent in function and all callees.
-*   **sum%**: Cumulative percentage.
+Red sections grew (got worse), green sections shrank (improved). This is invaluable for regression testing.
+
+## Common Pitfalls
+1. **Looking only at flat time** — A function with low flat time but high cumulative time might be the real bottleneck because of what it calls.
+2. **Ignoring inlined functions** — The Go compiler inlines small functions. They may not appear in profiles. Use `go build -gcflags='-m'` to check what gets inlined.
+
+## Best Practices
+1. **Start with flame graphs** — They give the best overview. Drill into specific functions with `list` after identifying hot paths.
+2. **Profile realistic workloads** — Synthetic benchmarks may not reflect production behavior. Use production profiles when possible.
+
+## Summary
+- `top` and `top -cum` show the most expensive functions by flat and cumulative time.
+- `list` provides source-level line-by-line cost annotations.
+- Go 1.26 defaults to flame graph visualization in the web UI.
+- Use `-diff_base` to compare profiles and validate optimizations.
 
 ## Code Examples
 
-**Profile Workflow**
+**Common pprof workflows — collecting profiles, launching the web UI, and comparing before/after**
 
 ```bash
-# Common workflow
-go tool pprof -http=:8080 http://localhost:6060/debug/pprof/profile
+# Collect a 30-second CPU profile from a running server
+go tool pprof http://localhost:6060/debug/pprof/profile?seconds=30
 
-# Or save and analyze later
-curl -o cpu.prof http://localhost:6060/debug/pprof/profile?seconds=30
-go tool pprof cpu.prof
+# Open interactive web UI with flame graph (default in Go 1.26)
+go tool pprof -http=:8080 cpu.prof
+
+# Compare two profiles to validate an optimization
+go tool pprof -diff_base=before.prof after.prof
 ```
 
+
+## Resources
+
+- [Diagnostics - The Go Programming Language](https://go.dev/doc/diagnostics) — Official Go documentation on diagnostics including pprof usage
 
 ---
 

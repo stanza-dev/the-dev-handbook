@@ -17,7 +17,7 @@ This section includes **4 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: Variadic Parameter
 - 🧩 Multiple Choice: Options Benefit
-- 🧩 Multiple Choice: Pattern Comparison
+- 🧩 Challenge: Builder Pattern Steps
 - 🧩 Challenge: Options Benefits
 
 → [Practice in your IDE](https://stanza.dev/courses/go-architecture)
