@@ -16,8 +16,8 @@ Master PHP variables, constants, and the type system
 This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Valid Variable Names
-- 🧩 Multiple Choice: Type Detection
+- ✏️ Fill in the Blank: Type Detection
 - 🧩 Multiple Choice: Strict Types Behavior
-- 🧩 Multiple Choice: Constants vs Variables
+- ✏️ Fill in the Blank: Defining Constants
 
 → [Practice in your IDE](https://stanza.dev/courses/php-essentials)

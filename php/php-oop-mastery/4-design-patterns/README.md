@@ -16,8 +16,8 @@ Implement common design patterns for flexible, maintainable code
 This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Factory Pattern Purpose
-- 🧩 Multiple Choice: Strategy Pattern Benefit
-- 🧩 Multiple Choice: Observer Purpose
-- 🧩 Multiple Choice: Observer Coupling
+- 🔗 Matching: Design Patterns Matching
+- 🧩 Challenge: Strategy Pattern Implementation Order
+- ✏️ Fill in the Blank: Observer Pattern Keyword
 
 → [Practice in your IDE](https://stanza.dev/courses/php-oop-mastery)

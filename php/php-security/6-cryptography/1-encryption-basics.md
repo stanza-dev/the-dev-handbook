@@ -5,9 +5,24 @@ source_lesson: "php-security-encryption-basics"
 
 # Encryption Fundamentals
 
+## Introduction
 Encryption protects data confidentiality. Understanding when and how to use it is crucial.
 
-## Hashing vs Encryption
+## Key Concepts
+- **Symmetric Encryption**: Same key for encryption and decryption (AES-256-GCM is the recommended algorithm).
+- **random_bytes()**: PHP's cryptographically secure random generator — the only safe choice for keys, IVs, and tokens.
+- **Authenticated Encryption**: AES-GCM provides both confidentiality and integrity, detecting tampering.
+- **Key Management**: Storing encryption keys separately from encrypted data, ideally in environment variables or a secrets manager.
+
+## Real World Context
+The choice between hashing and encryption depends on whether you need to retrieve the original data. Passwords should be hashed (one-way), while credit card numbers need encryption (reversible). Using the wrong approach (e.g., encrypting passwords or hashing credit cards) creates fundamental security failures.
+
+## Deep Dive
+### Intro
+
+Encryption protects data confidentiality. Understanding when and how to use it is crucial.
+
+### Hashing vs encryption
 
 | Hashing | Encryption |
 |---------|------------|
@@ -16,7 +31,7 @@ Encryption protects data confidentiality. Understanding when and how to use it i
 | For passwords, integrity | For data you need back |
 | password_hash(), hash() | openssl_encrypt() |
 
-## Symmetric Encryption (AES)
+### Symmetric encryption (aes)
 
 ```php
 <?php
@@ -55,7 +70,7 @@ function decrypt(string $encrypted, string $key): string|false {
 }
 ```
 
-## Generating Secure Keys
+### Generating secure keys
 
 ```php
 <?php
@@ -70,7 +85,7 @@ $key = $_ENV['ENCRYPTION_KEY'];
 $key = hash('sha256', $password, true);  // 32 bytes
 ```
 
-## Secure Random Generation
+### Secure random generation
 
 ```php
 <?php
@@ -85,7 +100,7 @@ uniqid();
 array_rand();
 ```
 
-## When to Use Encryption
+### When to use encryption
 
 ```php
 <?php
@@ -100,6 +115,19 @@ array_rand();
 // - File integrity
 // - Digital signatures
 ```
+
+## Common Pitfalls
+1. **Reusing initialization vectors (IVs)** — Using the same IV with the same key allows attackers to derive relationships between plaintexts. Always generate a fresh IV with `random_bytes()` for each encryption.
+2. **Using ECB mode** — ECB encrypts identical blocks to identical ciphertext, revealing patterns. Always use authenticated modes like GCM or CBC with HMAC.
+
+## Best Practices
+1. **Use AES-256-GCM for symmetric encryption** — It provides both confidentiality and integrity verification in a single operation.
+2. **Store keys outside your codebase** — Use environment variables, AWS KMS, or HashiCorp Vault. Never hardcode encryption keys in source code.
+
+## Summary
+- Use `random_bytes()` for generating cryptographically secure keys, IVs, and tokens.
+- AES-256-GCM is the recommended symmetric encryption algorithm, providing authenticated encryption.
+- Store encryption keys separately from encrypted data using environment variables or a secrets manager.
 
 ## Code Examples
 

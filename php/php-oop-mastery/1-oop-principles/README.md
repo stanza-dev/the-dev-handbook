@@ -16,9 +16,9 @@ Master the fundamental principles of object-oriented programming
 This section includes **5 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Visibility Private
-- 🧩 Multiple Choice: Composition Over Inheritance
-- 🧩 Multiple Choice: Single Responsibility Principle
+- ✏️ Fill in the Blank: Inheritance Keyword
+- 🔗 Matching: SOLID Principles Matching
 - 🧩 Multiple Choice: Value Object Equality
-- 🧩 Multiple Choice: Value Object Immutability
+- 🧩 Challenge: Encapsulation Implementation Order
 
 → [Practice in your IDE](https://stanza.dev/courses/php-oop-mastery)

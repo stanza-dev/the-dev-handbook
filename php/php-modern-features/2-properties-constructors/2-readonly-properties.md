@@ -5,9 +5,22 @@ source_lesson: "php-modern-features-readonly-properties"
 
 # Readonly Properties and Classes
 
-Readonly properties can only be initialized once, then become immutable. This is perfect for value objects and DTOs.
+## Introduction
+Readonly properties, introduced in PHP 8.1, can only be initialized once and then become immutable. PHP 8.2 extended this with readonly classes where all properties are implicitly readonly. Together, they make value objects and DTOs first-class citizens in PHP.
 
-## Readonly Properties (PHP 8.1+)
+## Key Concepts
+- **Readonly Property**: A property that can only be assigned once, after which any modification throws an `Error`.
+- **Readonly Class**: A class where all properties are implicitly readonly (PHP 8.2+).
+- **Clone with Override**: PHP 8.5 introduces `clone()` with property overrides, enabling the "wither" pattern for readonly classes.
+
+## Real World Context
+Immutability is a cornerstone of modern application design. Readonly properties guarantee that value objects, DTOs, and configuration instances cannot be accidentally modified after creation, eliminating an entire class of bugs.
+
+## Deep Dive
+
+### Readonly Properties (PHP 8.1+)
+
+A readonly property can only be assigned once:
 
 ```php
 <?php
@@ -30,24 +43,20 @@ echo $user->name;     // John
 $user->name = 'Jane'; // Error! Cannot modify readonly property
 ```
 
-## Rules for Readonly Properties
+Once set, the property is permanently locked.
 
-1. Must have a type declaration
-2. Can only be assigned once
-3. Can only be assigned from the declaring class
-4. Cannot have a default value (unless in constructor promotion)
+### Readonly Property Rules
+
+Readonly properties have specific constraints:
 
 ```php
 <?php
 class Example {
-    // Error! Readonly must have a type
-    public readonly $invalid;
-    
-    // OK with type
+    // Must have a type declaration
     public readonly string $valid;
     
-    // Error! Cannot have default value
-    public readonly string $withDefault = 'nope';
+    // Cannot have a default value outside constructor promotion
+    // public readonly string $withDefault = 'nope';  // Error!
     
     // OK in constructor promotion
     public function __construct(
@@ -56,9 +65,11 @@ class Example {
 }
 ```
 
-## Readonly Classes (PHP 8.2+)
+The property must be typed and can only be assigned from within the declaring class.
 
-All properties are implicitly readonly:
+### Readonly Classes (PHP 8.2+)
+
+Mark an entire class as readonly to make all properties immutable:
 
 ```php
 <?php
@@ -69,75 +80,64 @@ readonly class Point {
     ) {}
 }
 
-// Equivalent to:
-class Point {
-    public function __construct(
-        public readonly float $x,
-        public readonly float $y
-    ) {}
-}
-
 $point = new Point(1.0, 2.0);
 $point->x = 3.0;  // Error! Cannot modify
 ```
 
-## Readonly Class Rules
+This is equivalent to declaring every property as `public readonly`, but more concise. All properties in a readonly class must be typed, and static properties are not allowed.
+
+### Clone with Property Overrides (PHP 8.5)
+
+PHP 8.5 introduces `clone()` with property overrides, solving the biggest pain point of readonly classes — creating modified copies:
 
 ```php
 <?php
-readonly class Immutable {
-    // All properties must be typed
-    public string $name;   // OK
-    public $untyped;       // Error!
-    
-    // No static properties allowed
-    public static string $static;  // Error!
-}
-```
-
-## Cloning Readonly Objects (PHP 8.3+)
-
-```php
-<?php
-readonly class User {
+readonly class Color {
     public function __construct(
-        public string $name,
-        public string $email
+        public int $red,
+        public int $green,
+        public int $blue,
+        public int $alpha = 255
     ) {}
     
-    public function withEmail(string $email): self {
-        // PHP 8.3+: Can modify during clone
-        return clone $this with {
-            $this->email = $email
-        };
+    public function withAlpha(int $alpha): self {
+        return clone($this, ['alpha' => $alpha]);
     }
 }
 
-// Alternative: Manual clone method
-readonly class User {
-    public function __construct(
-        public string $name,
-        public string $email
-    ) {}
-    
-    public function withEmail(string $email): self {
-        return new self($this->name, $email);
-    }
-}
+$red = new Color(255, 0, 0);
+$semiTransparent = $red->withAlpha(128);
+// $semiTransparent->alpha === 128, $semiTransparent->red === 255
 ```
+
+Before PHP 8.5, creating a modified copy of a readonly object required manually passing every property to the constructor. The `clone()` function copies all properties and overrides only the ones specified via the second argument.
+
+## Common Pitfalls
+1. **Trying to modify readonly properties in subclasses** — Readonly properties cannot be modified even by child classes. Once set in the parent constructor, they are permanently locked.
+2. **Forgetting the type declaration** — `public readonly $untyped` is a compile error. Every readonly property must have a type.
+
+## Best Practices
+1. **Use readonly classes for value objects and DTOs** — If a class represents data that should not change after creation, make it `readonly`.
+2. **Use the wither pattern with clone** — In PHP 8.5, use `clone()` with property overrides to create modified copies. In earlier versions, provide `withX()` methods that call `new self(...)`.
+
+## Summary
+- Readonly properties can be assigned once and never modified.
+- Readonly classes make all properties implicitly readonly.
+- PHP 8.5's `clone()` function with property overrides enables the wither pattern for readonly objects.
+- Readonly properties must have a type declaration.
+- Use them for value objects, DTOs, and any data that should be immutable.
 
 ## Code Examples
 
-**Immutable Money value object**
+**Immutable Money value object using readonly class — every operation returns a new instance**
 
 ```php
 <?php
 declare(strict_types=1);
 
-// Value Object pattern with readonly class
 readonly class Money {
     public function __construct(
-        public int $amount,      // In cents
+        public int $amount,
         public string $currency
     ) {
         if ($amount < 0) {
@@ -161,10 +161,9 @@ readonly class Money {
     }
 }
 
-$price = new Money(1999, 'USD');    // $19.99
-$tax = $price->multiply(0.1);       // $1.99 (new object)
-$total = $price->add($tax);         // $21.98 (new object)
-
+$price = new Money(1999, 'USD');
+$tax = $price->multiply(0.1);
+$total = $price->add($tax);
 echo $total->format();  // USD 21.98
 ?>
 ```

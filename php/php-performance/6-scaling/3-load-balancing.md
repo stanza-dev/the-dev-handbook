@@ -5,13 +5,27 @@ source_lesson: "php-performance-load-balancing"
 
 # Load Balancing PHP Applications
 
+## Introduction
 Load balancing distributes incoming traffic across multiple PHP servers to improve performance and reliability.
 
-## Load Balancing Strategies
+## Key Concepts
+- **Round Robin**: Default load balancing algorithm distributing requests evenly across all servers.
+- **Least Connections**: Routes new requests to the server with the fewest active connections — better for variable-length requests.
+- **Health Checks**: Load balancers periodically verify backend servers are healthy, removing unhealthy ones from the pool.
+- **SSL Termination**: Handling HTTPS encryption at the load balancer, sending unencrypted traffic to backend servers on the private network.
+
+## Real World Context
+AWS Application Load Balancer, Nginx, and HAProxy are the most common load balancers for PHP applications. Proper health check configuration is critical — if a health check is too lenient, users get routed to broken servers. If too strict, healthy servers get removed during normal load spikes.
+
+## Deep Dive
+### Intro
+
+Load balancing distributes incoming traffic across multiple PHP servers to improve performance and reliability.
+
+### Load balancing strategies
 
 ### Round Robin
 ```nginx
-# nginx.conf
 upstream php_servers {
     server 192.168.1.1:9000;
     server 192.168.1.2:9000;
@@ -46,7 +60,7 @@ upstream php_servers {
 }
 ```
 
-## Health Checks
+### Health checks
 
 ```php
 <?php
@@ -92,7 +106,7 @@ upstream php_servers {
 }
 ```
 
-## Graceful Degradation
+### Graceful degradation
 
 ```php
 <?php
@@ -131,11 +145,10 @@ class ResilientService
 }
 ```
 
-## Zero-Downtime Deployments
+### Zero-downtime deployments
 
 ```bash
 #!/bin/bash
-# deploy.sh - Rolling deployment
 
 SERVERS="server1 server2 server3"
 
@@ -162,6 +175,21 @@ for server in $SERVERS; do
     sleep 10  # Wait before next server
 done
 ```
+
+## Common Pitfalls
+1. **Health checks hitting heavy endpoints** — Your health check endpoint should be lightweight (return 200 OK, maybe check DB connectivity). Don't use your homepage or an endpoint that queries many services.
+2. **Not testing failover** — Manually kill a backend server and verify the load balancer routes around it. Test this before your first real outage, not during it.
+
+## Best Practices
+1. **Implement a dedicated `/health` endpoint** — Return HTTP 200 with basic dependency checks (database, cache). Keep it fast (<50ms) and don't cache it.
+2. **Use least-connections for dynamic workloads** — If some requests take 50ms and others take 5 seconds, least-connections prevents slow requests from piling up on one server.
+
+## Summary
+
+> **PHP 8.5 Feature:** `curl_share_init_persistent()` creates persistent cURL share handles that avoid re-initialization of DNS, TLS sessions, and connection pools across requests, improving performance for repeated external API calls.
+- Load balancers distribute traffic across servers using algorithms like round robin or least connections.
+- Implement lightweight health check endpoints that verify critical dependencies.
+- Use SSL termination at the load balancer and least-connections for variable workloads.
 
 ## Resources
 

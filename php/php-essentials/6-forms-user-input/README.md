@@ -15,8 +15,8 @@ Handle form submissions, validate input, and manage sessions
 This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Accessing POST Data
-- 🧩 Multiple Choice: XSS Prevention
-- 🧩 Multiple Choice: Session Persistence
-- 🧩 Multiple Choice: Filter Validation
+- ✏️ Fill in the Blank: XSS Prevention
+- 🔗 Matching: Session Concepts
+- ✏️ Fill in the Blank: Filter Validation
 
 → [Practice in your IDE](https://stanza.dev/courses/php-essentials)

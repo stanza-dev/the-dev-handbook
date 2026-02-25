@@ -5,9 +5,24 @@ source_lesson: "php-performance-eager-loading"
 
 # Eager Loading & Query Optimization
 
+## Introduction
 Eager loading fetches related data in bulk, avoiding the N+1 query problem that plagues many applications.
 
-## The N+1 Problem Visualized
+## Key Concepts
+- **Eager Loading**: Fetching related data in a single query with JOIN or WHERE IN, instead of one query per related record.
+- **PDO::FETCH_UNIQUE**: Indexes fetched results by a column value for O(1) lookup instead of O(n) array scanning.
+- **Batch Fetching**: Loading related records in groups (e.g., `WHERE id IN (1,2,3,4,5)`) instead of individual queries.
+- **Lazy Loading Trap**: ORMs that transparently load related data trigger N+1 queries unless you explicitly configure eager loading.
+
+## Real World Context
+The transition from N+1 to eager loading is often the single biggest performance improvement in PHP applications. A page loading 50 users with their orders can go from 51 queries (1 for users + 50 for orders) to 2 queries (1 for users + 1 for all orders), reducing database time from 500ms to 10ms.
+
+## Deep Dive
+### Intro
+
+Eager loading fetches related data in bulk, avoiding the N+1 query problem that plagues many applications.
+
+### The n+1 problem visualized
 
 ```php
 <?php
@@ -23,7 +38,7 @@ foreach ($posts as $post) {
 // Total: 11 queries
 ```
 
-## Solution: JOIN Query
+### Solution: join query
 
 ```php
 <?php
@@ -43,7 +58,7 @@ foreach ($posts as $post) {
 // Total: 1 query
 ```
 
-## Solution: Batch Loading
+### Solution: batch loading
 
 ```php
 <?php
@@ -78,7 +93,7 @@ class PostRepository
 // Total: 2 queries (regardless of how many posts)
 ```
 
-## Lazy Loading with Data Mapper
+### Lazy loading with data mapper
 
 ```php
 <?php
@@ -112,7 +127,7 @@ class LazyPost
 }
 ```
 
-## Query Analysis with EXPLAIN
+### Query analysis with explain
 
 ```php
 <?php
@@ -152,9 +167,22 @@ function analyzeQuery(PDO $pdo, string $sql): array
 }
 ```
 
+## Common Pitfalls
+1. **Eager loading everything** — Loading all related data regardless of whether it's needed increases memory usage and query complexity. Only eager-load what the current page actually displays.
+2. **Not using indexed result sets** — After fetching related records, using `array_filter()` or loops to match them is O(n×m). Use `PDO::FETCH_UNIQUE` or `array_column()` for O(1) lookups.
+
+## Best Practices
+1. **Use `FETCH_UNIQUE` for indexed lookups** — When you need to match related records to parent records, index the results by the foreign key for instant lookups.
+2. **Monitor query counts per page** — Set up a development middleware that counts queries and alerts when the count exceeds a threshold (e.g., 20 queries per page).
+
+## Summary
+- Eager loading with JOIN or WHERE IN eliminates the N+1 query problem.
+- Use `PDO::FETCH_UNIQUE` to index result sets for O(1) lookups.
+- Monitor query counts per page to catch N+1 regressions early.
+
 ## Resources
 
-- [MySQL EXPLAIN](https://dev.mysql.com/doc/refman/8.0/en/explain.html) — Understanding MySQL query execution plans
+- [MySQL EXPLAIN](https://dev.mysql.com/doc/refman/8.4/en/explain.html) — Understanding MySQL query execution plans
 
 ---
 

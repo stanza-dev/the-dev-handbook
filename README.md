@@ -7,7 +7,7 @@
 
 Maintained by [Stanza](https://stanza.dev) — Learn coding faster right in your IDE, Slack, emails and the web.
 
-**132 courses** · **2255+ lessons** · **17 technologies**
+**132 courses** · **2293+ lessons** · **17 technologies**
 
 ## Courses
 
@@ -133,16 +133,16 @@ Maintained by [Stanza](https://stanza.dev) — Learn coding faster right in your
 
 ### 🐘 PHP
 
-- 🌐 [RESTful API Development with PHP](./php/php-api-development/) — 11 lessons
+- 🌐 [RESTful API Development with PHP](./php/php-api-development/) — 24 lessons
 - ⚡ [Asynchronous PHP](./php/php-async/) — 17 lessons
-- 🗄️ [PHP & Relational Databases](./php/php-databases/) — 12 lessons
+- 🗄️ [PHP & Relational Databases](./php/php-databases/) — 18 lessons
 - 🏛️ [Domain-Driven Design with PHP](./php/php-ddd/) — 16 lessons
 - 🐘 [PHP Essentials](./php/php-essentials/) — 23 lessons
 - 🚀 [Modern PHP 8.x: Latest Language Features](./php/php-modern-features/) — 21 lessons
-- 🏛️ [Object-Oriented PHP Mastery](./php/php-oop-mastery/) — 17 lessons
+- 🏛️ [Object-Oriented PHP Mastery](./php/php-oop-mastery/) — 20 lessons
 - ⚡ [PHP Performance Optimization](./php/php-performance/) — 18 lessons
-- 🔒 [PHP Security Engineering](./php/php-security/) — 19 lessons
-- 🧪 [PHP Testing & Quality Assurance](./php/php-testing/) — 12 lessons
+- 🔒 [PHP Security Engineering](./php/php-security/) — 21 lessons
+- 🧪 [PHP Testing & Quality Assurance](./php/php-testing/) — 26 lessons
 
 ### 🔺 Laravel
 

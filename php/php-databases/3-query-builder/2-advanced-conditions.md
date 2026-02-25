@@ -5,55 +5,70 @@ source_lesson: "php-databases-advanced-conditions"
 
 # Advanced Query Conditions
 
-Extend the query builder with complex condition support.
+## Introduction
 
-## IN and NOT IN
+Real-world queries need more than simple equality checks. IN clauses, NULL handling, OR groups, LIKE patterns, and subqueries are everyday requirements. Extending the query builder with these conditions while maintaining safety requires careful handling of edge cases.
+
+## Key Concepts
+
+- **IN Clause**: Filters rows where a column matches any value in a set.
+- **Empty Array Edge Case**: An `IN ()` with no values is invalid SQL and must be handled explicitly.
+- **Condition Groups**: Parenthesized groups of AND/OR conditions that control evaluation order.
+
+## Real World Context
+
+A product catalog filter might combine category IN (list), price range, search text, and optional availability. The query builder must compose these conditions safely without producing invalid SQL for empty filter lists.
+
+## Deep Dive
+
+The `whereIn` method must handle the empty array edge case. An empty `IN ()` is invalid SQL in every database:
 
 ```php
 <?php
-class QueryBuilder {
-    // ... previous code ...
-    
-    public function whereIn(string $column, array $values): self {
-        if (empty($values)) {
-            // No values = no results
-            return $this->whereRaw('1 = 0');
-        }
-        
-        $clone = clone $this;
-        $placeholders = [];
-        
-        foreach ($values as $i => $value) {
-            $key = ':wherein_' . count($clone->wheres) . '_' . $i;
-            $placeholders[] = $key;
-            $clone->bindings[$key] = $value;
-        }
-        
-        $clone->wheres[] = "$column IN (" . implode(', ', $placeholders) . ')';
-        return $clone;
+public function whereIn(string $column, array $values): self {
+    if (empty($values)) {
+        // Empty IN = impossible condition = no results
+        return $this->whereRaw('1 = 0');
     }
     
-    public function whereNotIn(string $column, array $values): self {
-        if (empty($values)) {
-            return $this;  // No exclusions = all results
-        }
-        
-        $clone = clone $this;
-        $placeholders = [];
-        
-        foreach ($values as $i => $value) {
-            $key = ':wherenotin_' . count($clone->wheres) . '_' . $i;
-            $placeholders[] = $key;
-            $clone->bindings[$key] = $value;
-        }
-        
-        $clone->wheres[] = "$column NOT IN (" . implode(', ', $placeholders) . ')';
-        return $clone;
+    $clone = clone $this;
+    $placeholders = [];
+    
+    foreach ($values as $i => $value) {
+        $key = ':wherein_' . count($clone->wheres) . '_' . $i;
+        $placeholders[] = $key;
+        $clone->bindings[$key] = $value;
     }
+    
+    $clone->wheres[] = "$column IN (" . implode(', ', $placeholders) . ')';
+    return $clone;
 }
 ```
 
-## NULL Checks
+The `whereRaw('1 = 0')` trick ensures the query returns zero rows instead of crashing with a syntax error.
+
+Similarly, `whereNotIn` with an empty array should return all rows (no exclusions):
+
+```php
+<?php
+public function whereNotIn(string $column, array $values): self {
+    if (empty($values)) {
+        return $this; // Nothing to exclude
+    }
+    
+    $clone = clone $this;
+    $placeholders = [];
+    foreach ($values as $i => $value) {
+        $key = ':wherenotin_' . count($clone->wheres) . '_' . $i;
+        $placeholders[] = $key;
+        $clone->bindings[$key] = $value;
+    }
+    $clone->wheres[] = "$column NOT IN (" . implode(', ', $placeholders) . ')';
+    return $clone;
+}
+```
+
+NULL handling requires special SQL syntax since `= NULL` is always false:
 
 ```php
 <?php
@@ -70,42 +85,34 @@ public function whereNotNull(string $column): self {
 }
 ```
 
-## OR Conditions
+Grouped conditions allow complex OR logic:
 
 ```php
 <?php
-public function orWhere(string $column, mixed $value, string $operator = '='): self {
-    $clone = clone $this;
-    $placeholder = ':orwhere_' . count($clone->wheres);
-    
-    if (empty($clone->wheres)) {
-        $clone->wheres[] = "$column $operator $placeholder";
-    } else {
-        // Replace last AND with OR group
-        $lastWhere = array_pop($clone->wheres);
-        $clone->wheres[] = "($lastWhere OR $column $operator $placeholder)";
-    }
-    
-    $clone->bindings[$placeholder] = $value;
-    return $clone;
-}
-
-// Better: Grouped conditions
 public function whereGroup(callable $callback): self {
     $clone = clone $this;
-    $group = new QueryBuilder($this->pdo);
+    $group = new self($this->pdo);
     $callback($group);
     
     if ($group->wheres) {
         $clone->wheres[] = '(' . implode(' AND ', $group->wheres) . ')';
         $clone->bindings = array_merge($clone->bindings, $group->bindings);
     }
-    
     return $clone;
 }
+
+// Usage
+$results = $qb->table('users')
+    ->where('status', 'active')
+    ->whereGroup(function($q) {
+        $q->where('role', 'admin');
+        $q->orWhere('role', 'moderator');
+    })
+    ->get();
+// WHERE status = :w0 AND (role = :w1 OR role = :w2)
 ```
 
-## LIKE Queries
+LIKE queries for text search:
 
 ```php
 <?php
@@ -117,22 +124,36 @@ public function whereLike(string $column, string $pattern): self {
     return $clone;
 }
 
-// Usage
-$users = $qb
-    ->table('users')
+$users = $qb->table('users')
     ->whereLike('email', '%@gmail.com')
     ->get();
 ```
 
+## Common Pitfalls
+
+1. **Not handling empty arrays in IN clauses** — Passing an empty array to `WHERE id IN ()` produces a SQL syntax error. Always check for empty and short-circuit.
+2. **Using `= NULL` instead of `IS NULL`** — In SQL, `NULL = NULL` evaluates to NULL (falsy), not true. You must use `IS NULL` and `IS NOT NULL`.
+
+## Best Practices
+
+1. **Short-circuit empty IN clauses explicitly** — Use `1 = 0` for empty `IN` (no results) and skip the clause entirely for empty `NOT IN` (all results).
+2. **Validate LIKE patterns** — If the pattern comes from user input, escape `%` and `_` characters unless you intentionally want wildcard behavior.
+
+## Summary
+
+- Handle the empty array edge case in IN clauses to prevent SQL syntax errors.
+- Use `IS NULL` / `IS NOT NULL` instead of equality checks for NULL values.
+- Grouped conditions with callbacks enable complex OR logic with correct parenthesization.
+- Always escape or validate user-provided LIKE patterns.
+
 ## Code Examples
 
-**Complete query builder implementation**
+**Query builder with safe IN clause handling**
 
 ```php
 <?php
 declare(strict_types=1);
 
-// Complete query builder with all features
 class QueryBuilder {
     private string $table = '';
     private array $columns = ['*'];
@@ -151,45 +172,10 @@ class QueryBuilder {
         return $clone;
     }
     
-    public function select(string ...$columns): self {
-        $clone = clone $this;
-        $clone->columns = $columns ?: ['*'];
-        return $clone;
-    }
-    
-    public function join(string $table, string $first, string $operator, string $second): self {
-        $clone = clone $this;
-        $clone->joins[] = "JOIN $table ON $first $operator $second";
-        return $clone;
-    }
-    
-    public function leftJoin(string $table, string $first, string $operator, string $second): self {
-        $clone = clone $this;
-        $clone->joins[] = "LEFT JOIN $table ON $first $operator $second";
-        return $clone;
-    }
-    
-    public function where(string $column, mixed $value, string $operator = '='): self {
-        $clone = clone $this;
-        $key = ':w' . count($clone->bindings);
-        $clone->wheres[] = ['type' => 'AND', 'clause' => "$column $operator $key"];
-        $clone->bindings[$key] = $value;
-        return $clone;
-    }
-    
-    public function orWhere(string $column, mixed $value, string $operator = '='): self {
-        $clone = clone $this;
-        $key = ':w' . count($clone->bindings);
-        $clone->wheres[] = ['type' => 'OR', 'clause' => "$column $operator $key"];
-        $clone->bindings[$key] = $value;
-        return $clone;
-    }
-    
     public function whereIn(string $column, array $values): self {
         if (empty($values)) {
             return $this->whereRaw('1 = 0');
         }
-        
         $clone = clone $this;
         $keys = [];
         foreach ($values as $i => $value) {
@@ -197,96 +183,23 @@ class QueryBuilder {
             $keys[] = $key;
             $clone->bindings[$key] = $value;
         }
-        $clone->wheres[] = ['type' => 'AND', 'clause' => "$column IN (" . implode(', ', $keys) . ')'];
+        $clone->wheres[] = "$column IN (" . implode(', ', $keys) . ')';
         return $clone;
     }
     
     public function whereRaw(string $sql): self {
         $clone = clone $this;
-        $clone->wheres[] = ['type' => 'AND', 'clause' => $sql];
+        $clone->wheres[] = $sql;
         return $clone;
-    }
-    
-    public function orderBy(string $column, string $direction = 'ASC'): self {
-        $clone = clone $this;
-        $clone->orderBy[] = $column . ' ' . (strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC');
-        return $clone;
-    }
-    
-    public function limit(int $limit): self {
-        $clone = clone $this;
-        $clone->limit = $limit;
-        return $clone;
-    }
-    
-    public function offset(int $offset): self {
-        $clone = clone $this;
-        $clone->offset = $offset;
-        return $clone;
-    }
-    
-    public function toSql(): string {
-        $sql = 'SELECT ' . implode(', ', $this->columns) . ' FROM ' . $this->table;
-        
-        if ($this->joins) {
-            $sql .= ' ' . implode(' ', $this->joins);
-        }
-        
-        if ($this->wheres) {
-            $sql .= ' WHERE ' . $this->buildWhereClause();
-        }
-        
-        if ($this->orderBy) {
-            $sql .= ' ORDER BY ' . implode(', ', $this->orderBy);
-        }
-        
-        if ($this->limit !== null) {
-            $sql .= ' LIMIT ' . $this->limit;
-        }
-        
-        if ($this->offset !== null) {
-            $sql .= ' OFFSET ' . $this->offset;
-        }
-        
-        return $sql;
-    }
-    
-    private function buildWhereClause(): string {
-        $parts = [];
-        foreach ($this->wheres as $i => $where) {
-            if ($i === 0) {
-                $parts[] = $where['clause'];
-            } else {
-                $parts[] = $where['type'] . ' ' . $where['clause'];
-            }
-        }
-        return implode(' ', $parts);
-    }
-    
-    public function get(): array {
-        $stmt = $this->pdo->prepare($this->toSql());
-        $stmt->execute($this->bindings);
-        return $stmt->fetchAll();
-    }
-    
-    public function first(): ?array {
-        return $this->limit(1)->get()[0] ?? null;
-    }
-    
-    public function count(): int {
-        $clone = clone $this;
-        $clone->columns = ['COUNT(*) as count'];
-        $clone->orderBy = [];
-        $clone->limit = null;
-        $clone->offset = null;
-        
-        $result = $clone->first();
-        return (int) ($result['count'] ?? 0);
     }
 }
 ?>
 ```
 
+
+## Resources
+
+- [SQL IN Operator](https://www.w3schools.com/sql/sql_in.asp) — SQL IN operator reference
 
 ---
 

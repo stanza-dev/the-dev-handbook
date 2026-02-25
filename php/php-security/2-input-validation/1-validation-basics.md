@@ -5,9 +5,24 @@ source_lesson: "php-security-validation-basics"
 
 # Input Validation Fundamentals
 
+## Introduction
 **Never trust user input.** This is the golden rule of web security. Every piece of data from users must be validated.
 
-## Validation vs Sanitization
+## Key Concepts
+- **filter_var()**: PHP's built-in validation and sanitization function with type-specific filters.
+- **Whitelist Validation**: Explicitly defining allowed values and rejecting everything else.
+- **Input Boundaries**: Enforcing length, range, and format constraints on all user input.
+- **Multi-layer Validation**: Validating on both client-side (UX) and server-side (security).
+
+## Real World Context
+Input validation failures are behind most injection attacks. The 2017 Equifax breach exploited an unvalidated input field in Apache Struts. Every form field, URL parameter, HTTP header, and file upload in your PHP application is a potential attack vector.
+
+## Deep Dive
+### Intro
+
+**Never trust user input.** This is the golden rule of web security. Every piece of data from users must be validated.
+
+### Validation vs sanitization
 
 - **Validation**: Check if data meets requirements (reject if invalid)
 - **Sanitization**: Clean/modify data to make it safe
@@ -24,7 +39,7 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
 ```
 
-## Filter Functions
+### Filter functions
 
 ### Validation Filters
 
@@ -62,7 +77,7 @@ filter_var($input, FILTER_SANITIZE_NUMBER_INT);
 filter_var($input, FILTER_SANITIZE_FULL_SPECIAL_CHARS);  // HTML encode
 ```
 
-## Whitelist Validation
+### Whitelist validation
 
 Always prefer whitelist over blacklist:
 
@@ -88,7 +103,7 @@ if (!preg_match('/^[a-zA-Z0-9_]{3,20}$/', $username)) {
 }
 ```
 
-## Type Coercion Dangers
+### Type coercion dangers
 
 ```php
 <?php
@@ -104,6 +119,19 @@ if ($password === $storedPassword) { /* safe */ }
 // Better: Use password_verify()
 if (password_verify($password, $hash)) { /* best */ }
 ```
+
+## Common Pitfalls
+1. **Relying on client-side validation alone** — JavaScript validation is for UX only. Attackers bypass it trivially with curl or browser dev tools.
+2. **Using blacklist validation** — Trying to block known bad patterns always misses new attack vectors. Whitelist validation is fundamentally more secure.
+
+## Best Practices
+1. **Validate at system boundaries** — Validate all input at the point it enters your application (controllers, API handlers) before it reaches business logic.
+2. **Use PHP's filter extension** — `filter_var()` with `FILTER_VALIDATE_*` constants provides battle-tested validation for emails, URLs, IPs, and more.
+
+## Summary
+- Always validate and sanitize all input using whitelist (allowlist) validation.
+- Use `filter_var()` with appropriate `FILTER_VALIDATE_*` filters for type-specific validation.
+- Never trust client-side validation alone — always validate server-side.
 
 ## Code Examples
 

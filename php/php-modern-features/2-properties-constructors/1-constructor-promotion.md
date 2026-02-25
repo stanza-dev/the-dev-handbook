@@ -3,15 +3,26 @@ source_course: "php-modern-features"
 source_lesson: "php-modern-features-constructor-promotion"
 ---
 
-# Constructor Property Promotion (PHP 8.0+)
+# Constructor Property Promotion
 
-Constructor promotion is a shorthand syntax that declares and initializes properties directly in the constructor signature.
+## Introduction
+Constructor property promotion, introduced in PHP 8.0, is a shorthand that declares and initializes class properties directly in the constructor signature. It eliminates one of PHP's most common sources of boilerplate code.
 
-## The Old Way
+## Key Concepts
+- **Promoted Property**: A constructor parameter prefixed with a visibility keyword (`public`, `protected`, `private`) that automatically becomes a class property.
+- **Mixed Parameters**: You can combine promoted and regular (non-promoted) parameters in the same constructor.
+
+## Real World Context
+Before PHP 8.0, every class property required three steps: declare the property, add a constructor parameter, assign the parameter to the property. For a class with five properties, that meant fifteen lines of repetitive code. Promotion reduces this to five lines, making PHP competitive with languages like Kotlin and TypeScript for concise data classes.
+
+## Deep Dive
+
+### The Old Way
+
+Before promotion, declaring properties required significant repetition:
 
 ```php
 <?php
-// Before PHP 8.0
 class User {
     private string $name;
     private string $email;
@@ -29,11 +40,14 @@ class User {
 }
 ```
 
-## The New Way
+Every property appears three times: declaration, parameter, and assignment.
+
+### The New Way
+
+With promotion, a visibility keyword before the parameter does all three at once:
 
 ```php
 <?php
-// PHP 8.0+ with promotion
 class User {
     public function __construct(
         private string $name,
@@ -41,11 +55,13 @@ class User {
         private int $age
     ) {}
 }
-
-// That's it! Properties are declared and assigned automatically
 ```
 
-## Mixed Promotion and Regular Parameters
+The properties are declared, typed, and assigned automatically. The empty constructor body `{}` is all that is needed.
+
+### Mixed Promotion and Regular Parameters
+
+You can combine promoted properties with regular parameters:
 
 ```php
 <?php
@@ -56,13 +72,16 @@ class Post {
         private Author $author,     // Promoted
         string $tempData = ''       // NOT promoted (no visibility)
     ) {
-        // $tempData is available here but not as a property
         $this->processTemp($tempData);
     }
 }
 ```
 
-## With Default Values
+Only parameters with a visibility keyword become properties. Regular parameters are available in the constructor body but not stored as properties.
+
+### With Default Values
+
+Promoted properties support default values:
 
 ```php
 <?php
@@ -80,7 +99,11 @@ echo $config->environment;  // 'production'
 echo $config->debug;        // true
 ```
 
-## Combining with Readonly (PHP 8.1+)
+This pairs perfectly with named arguments to create expressive, self-documenting constructors.
+
+### Combining with Readonly (PHP 8.1+)
+
+Promotion and readonly work together:
 
 ```php
 <?php
@@ -97,22 +120,31 @@ echo $user->name;  // John
 $user->name = 'Jane';  // Error! Cannot modify readonly property
 ```
 
-## Benefits
+This pattern creates immutable value objects with minimal code.
 
-1. **Less boilerplate**: No property declarations, no assignments
-2. **Cleaner code**: Everything in one place
-3. **Easier maintenance**: Change once, not three times
-4. **Works with named arguments**: `new User(email: 'test@test.com', name: 'Test')`
+## Common Pitfalls
+1. **Assuming all parameters are promoted** — Only parameters with a visibility keyword become properties. Forgetting the keyword means the value is not stored.
+2. **Using promotion in non-constructor methods** — Promotion only works in `__construct()`, not in regular methods.
+
+## Best Practices
+1. **Use promotion for DTOs and value objects** — Data-heavy classes benefit the most from reduced boilerplate. Combine with `readonly` for immutable data carriers.
+2. **Combine with named arguments** — `new User(name: 'Alice', email: 'alice@test.com')` is clearer than positional arguments, especially when the class has optional parameters.
+
+## Summary
+- Constructor promotion declares, types, and assigns properties in one step.
+- Add a visibility keyword to a constructor parameter to promote it.
+- Non-promoted parameters remain regular constructor arguments.
+- Combine with `readonly` for concise immutable classes.
+- Works perfectly with named arguments for clear, flexible instantiation.
 
 ## Code Examples
 
-**Data Transfer Object with constructor promotion**
+**Data Transfer Object combining constructor promotion, readonly, defaults, and a named-argument factory method**
 
 ```php
 <?php
 declare(strict_types=1);
 
-// Modern DTO with constructor promotion
 class CreateUserDTO {
     public function __construct(
         public readonly string $name,
@@ -134,7 +166,6 @@ class CreateUserDTO {
     }
 }
 
-// Usage
 $dto = CreateUserDTO::fromRequest($_POST);
 echo $dto->name;
 ?>

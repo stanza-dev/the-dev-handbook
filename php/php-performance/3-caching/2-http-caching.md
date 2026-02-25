@@ -5,9 +5,24 @@ source_lesson: "php-performance-http-caching"
 
 # HTTP Caching
 
+## Introduction
 HTTP caching reduces server load by letting browsers and CDNs cache responses.
 
-## Cache-Control Header
+## Key Concepts
+- **ETag**: A fingerprint of the response content used to check if a cached version is still valid (conditional requests).
+- **Cache-Control**: HTTP header controlling how browsers and CDNs cache responses (`max-age`, `no-cache`, `private`, `public`).
+- **304 Not Modified**: Server response indicating the cached version is still valid — no body sent, saving bandwidth.
+- **CDN Caching**: Content Delivery Networks cache responses at edge locations worldwide, reducing latency and origin server load.
+
+## Real World Context
+HTTP caching can reduce your server load by 80% or more for static and semi-static content. Wikipedia uses aggressive HTTP caching with Varnish to serve 50,000+ requests/second. Proper Cache-Control headers and ETags ensure browsers and CDNs serve cached content without unnecessary round-trips to your origin server.
+
+## Deep Dive
+### Intro
+
+HTTP caching reduces server load by letting browsers and CDNs cache responses.
+
+### Cache-control header
 
 ```php
 <?php
@@ -24,7 +39,7 @@ header('Cache-Control: no-cache, no-store, must-revalidate');
 header('Cache-Control: public, max-age=3600, stale-while-revalidate=60');
 ```
 
-## ETag Validation
+### Etag validation
 
 ```php
 <?php
@@ -49,7 +64,7 @@ class ETagMiddleware
 }
 ```
 
-## Last-Modified Validation
+### Last-modified validation
 
 ```php
 <?php
@@ -72,7 +87,7 @@ function serveWithLastModified(string $filePath): void
 }
 ```
 
-## Full Page Caching
+### Full page caching
 
 ```php
 <?php
@@ -138,6 +153,19 @@ $content = ob_get_clean();
 $pageCache->set($url, $content);
 echo $content;
 ```
+
+## Common Pitfalls
+1. **Setting `Cache-Control: no-cache` thinking it prevents all caching** — `no-cache` means the browser must revalidate with the server before using cached content. Use `no-store` to truly prevent caching.
+2. **Not varying cache by authentication state** — Caching an authenticated user's response and serving it to anonymous users leaks private data. Use `Cache-Control: private` for user-specific content.
+
+## Best Practices
+1. **Use ETags for conditional requests** — Generate ETags from content hashes so the server can respond with 304 when content hasn't changed.
+2. **Set appropriate Cache-Control for each response type** — Static assets: `public, max-age=31536000, immutable`. API responses: `private, max-age=0, must-revalidate`.
+
+## Summary
+- HTTP caching with Cache-Control headers and ETags reduces server load and improves response times.
+- Use 304 Not Modified responses to save bandwidth for unchanged content.
+- Configure CDN caching for static assets and set `private` for user-specific content.
 
 ## Code Examples
 
@@ -234,6 +262,10 @@ if (!$user) {
 ?>
 ```
 
+
+## Resources
+
+- [HTTP Caching](https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching) — MDN HTTP caching documentation
 
 ---
 

@@ -2,21 +2,21 @@
 
 > Build attack-resistant PHP applications. Master input validation, SQL injection prevention, XSS protection, authentication, and cryptography.
 
-**PHP 8.4** · Intermediate → Advanced
+**PHP 8.5** · Intermediate → Advanced
 
 ## Sections
 
 | | Section | Lessons |
 |---|---------|---------|
 | 🎯 | [Security Mindset](./1-security-fundamentals/) | 3 lessons |
-| 🛡️ | [Input Validation & Sanitization](./2-input-validation/) | 2 lessons |
+| 🛡️ | [Input Validation & Sanitization](./2-input-validation/) | 3 lessons |
 | 💉 | [SQL Injection Prevention](./3-sql-injection/) | 3 lessons |
 | 🕸️ | [XSS & CSRF Protection](./4-xss-csrf/) | 3 lessons |
 | 🔐 | [Authentication & Sessions](./5-authentication/) | 3 lessons |
-| 🔑 | [Cryptography in PHP](./6-cryptography/) | 2 lessons |
+| 🔑 | [Cryptography in PHP](./6-cryptography/) | 3 lessons |
 | 🔍 | [Security Testing & Auditing](./7-security-testing/) | 3 lessons |
 
-**19 lessons** · **26 interactive challenges**
+**21 lessons** · **27 interactive challenges**
 
 ## Want the Interactive Experience?
 

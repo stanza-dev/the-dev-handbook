@@ -14,9 +14,9 @@ Create reusable code with functions, closures, and arrow functions
 
 This section includes **4 interactive challenges** available on Stanza:
 
-- ✏️ Fill in the Blank: String Interpolation
+- ✏️ Fill in the Blank: Function Return Type Syntax
 - 🧩 Multiple Choice: Static Variable Behavior
-- 🧩 Multiple Choice: Arrow Function Capture
+- ✏️ Fill in the Blank: Arrow Function Capture
 - 🧩 Multiple Choice: Variadic Function
 
 → [Practice in your IDE](https://stanza.dev/courses/php-essentials)

@@ -5,9 +5,24 @@ source_lesson: "php-security-csrf-attacks"
 
 # Cross-Site Request Forgery (CSRF)
 
+## Introduction
 CSRF tricks users into performing actions they didn't intend, using their authenticated session.
 
-## How CSRF Works
+## Key Concepts
+- **CSRF Tokens**: Unique, unpredictable values embedded in forms and verified server-side on submission.
+- **SameSite Cookies**: The `SameSite=Lax` (or `Strict`) cookie attribute prevents cross-origin cookie sending.
+- **Double Submit Cookie**: An alternative CSRF defense where a token is sent in both a cookie and a request header.
+- **Origin/Referer Validation**: Checking the `Origin` or `Referer` header as an additional CSRF defense layer.
+
+## Real World Context
+CSRF attacks have been used to transfer money (banking sites), change email addresses (account takeover), and modify DNS settings (router attacks). A CSRF vulnerability in a banking application allowed attackers to initiate wire transfers just by having the victim visit a malicious page while logged in.
+
+## Deep Dive
+### Intro
+
+CSRF tricks users into performing actions they didn't intend, using their authenticated session.
+
+### How csrf works
 
 ```html
 <!-- Evil website contains: -->
@@ -23,7 +38,7 @@ CSRF tricks users into performing actions they didn't intend, using their authen
 
 If the user is logged into bank.com, the request includes their session cookie automatically!
 
-## Protection: CSRF Tokens
+### Protection: csrf tokens
 
 ```php
 <?php
@@ -43,7 +58,7 @@ function validateCsrfToken(string $token): bool {
 }
 ```
 
-## Using CSRF Tokens in Forms
+### Using csrf tokens in forms
 
 ```php
 <?php
@@ -69,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ```
 
-## Double Submit Cookie Pattern
+### Double submit cookie pattern
 
 ```php
 <?php
@@ -88,7 +103,7 @@ function validateDoubleSubmit(string $formToken): bool {
 }
 ```
 
-## SameSite Cookies
+### Samesite cookies
 
 ```php
 <?php
@@ -104,6 +119,19 @@ setcookie('session_id', $sessionId, [
 // Or in session config
 ini_set('session.cookie_samesite', 'Strict');
 ```
+
+## Common Pitfalls
+1. **Only protecting POST requests** — While GET should be idempotent, ensure state-changing actions ALWAYS use POST/PUT/DELETE with CSRF tokens.
+2. **Using predictable tokens** — CSRF tokens must be generated with `random_bytes()`, not `md5(time())` or session IDs.
+
+## Best Practices
+1. **Use the Synchronizer Token pattern** — Generate a per-session CSRF token with `bin2hex(random_bytes(32))`, embed it in forms, and validate on every state-changing request.
+2. **Set `SameSite=Lax` on all cookies** — This is the default in modern browsers but should be explicitly set for compatibility and defense-in-depth.
+
+## Summary
+- CSRF tokens must be unique, unpredictable, and verified on every state-changing request.
+- Combine CSRF tokens with `SameSite=Lax` cookies for defense-in-depth.
+- Never rely solely on `Referer` or `Origin` headers for CSRF protection.
 
 ## Code Examples
 
@@ -180,6 +208,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 ```
 
+
+## Resources
+
+- [CSRF Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html) — OWASP CSRF prevention cheat sheet
 
 ---
 

@@ -15,9 +15,9 @@ Connect to databases, perform CRUD operations, and write secure queries
 
 This section includes **4 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Pdo Connect
-- 🧩 Multiple Choice: SQL Injection Prevention
-- 🧩 Multiple Choice: Fetch Mode
-- 🧩 Multiple Choice: Transaction Rollback
+- 🧩 Multiple Choice: PDO Connection Options
+- ✏️ Fill in the Blank: SQL Injection Prevention
+- 🔗 Matching: PDO Fetch Modes
+- 🧩 Challenge: Transaction Lifecycle
 
 → [Practice in your IDE](https://stanza.dev/courses/php-essentials)

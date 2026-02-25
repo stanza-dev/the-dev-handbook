@@ -5,13 +5,24 @@ source_lesson: "php-oop-mastery-interface-segregation"
 
 # Interface Segregation in Practice
 
-The Interface Segregation Principle (ISP) states that clients should not be forced to depend on interfaces they don't use.
+## Introduction
+The Interface Segregation Principle (ISP) states that clients should not be forced to depend on interfaces they do not use. This lesson explores practical techniques for breaking down fat interfaces into focused, composable contracts.
 
-## The Problem: Fat Interfaces
+## Key Concepts
+- **Fat Interface**: An interface with too many methods forcing implementors to provide unused functionality.
+- **Segregated Interface**: A small, focused interface describing a single capability.
+- **Interface Composition**: Combining small interfaces via multiple implementation or inheritance.
+- **Role Interface**: An interface named after the role it plays for its clients.
+
+## Real World Context
+You are building a CMS with a `CrudRepository` interface having find, create, update, delete, search, paginate, and export methods. When you need a read-only report repository, it is forced to implement write methods with exceptions. This is a clear sign the interface is too fat.
+
+## Deep Dive
+
+### The Problem: Fat Interfaces
 
 ```php
 <?php
-// BAD: Fat interface forces unnecessary implementations
 interface CrudRepository
 {
     public function find(int $id): ?object;
@@ -20,28 +31,25 @@ interface CrudRepository
     public function update(int $id, array $data): object;
     public function delete(int $id): void;
     public function search(string $query): array;
-    public function paginate(int $page, int $perPage): array;
     public function export(): string;
-    public function import(string $data): void;
 }
 
-// ReadOnlyRepository forced to implement write methods!
 class ReadOnlyRepository implements CrudRepository
 {
     public function create(array $data): object
     {
-        throw new BadMethodCallException('Read-only!');  // Ugly!
+        throw new BadMethodCallException('Read-only!');
     }
-    
-    // ... more unused methods
+    // ... more unused methods throwing exceptions
 }
 ```
 
-## The Solution: Segregated Interfaces
+This violates ISP because `ReadOnlyRepository` is forced to depend on methods it does not use.
+
+### The Solution: Segregated Interfaces
 
 ```php
 <?php
-// GOOD: Small, focused interfaces
 interface Readable
 {
     public function find(int $id): ?object;
@@ -60,22 +68,11 @@ interface Searchable
     public function search(string $query): array;
 }
 
-interface Paginatable
-{
-    public function paginate(int $page, int $perPage): array;
-}
-
 interface Exportable
 {
     public function export(): string;
 }
 
-interface Importable
-{
-    public function import(string $data): void;
-}
-
-// Compose only what you need
 class UserRepository implements Readable, Writable, Searchable
 {
     // Only implements what it needs
@@ -85,87 +82,99 @@ class ReportRepository implements Readable, Exportable
 {
     // Read and export only
 }
-
-class CacheRepository implements Readable
-{
-    // Read-only makes sense
-}
 ```
 
-## Real-World Example: Notification System
+Each class implements only the interfaces matching its actual capabilities.
+
+### Notification System Example
 
 ```php
 <?php
-// Segregated notification interfaces
-interface Notifiable
-{
-    public function getNotificationId(): string;
-}
-
-interface EmailNotifiable extends Notifiable
-{
+interface EmailNotifiable {
     public function getEmail(): string;
-    public function getEmailName(): string;
 }
 
-interface SmsNotifiable extends Notifiable
-{
+interface SmsNotifiable {
     public function getPhoneNumber(): string;
 }
 
-interface PushNotifiable extends Notifiable
+class User implements EmailNotifiable, SmsNotifiable
 {
-    public function getDeviceTokens(): array;
-}
-
-// User implements all notification methods
-class User implements EmailNotifiable, SmsNotifiable, PushNotifiable
-{
-    public function getNotificationId(): string
-    {
-        return (string) $this->id;
-    }
-    
     public function getEmail(): string { return $this->email; }
-    public function getEmailName(): string { return $this->name; }
     public function getPhoneNumber(): string { return $this->phone; }
-    public function getDeviceTokens(): array { return $this->devices; }
 }
 
-// System account only needs email
 class SystemAccount implements EmailNotifiable
 {
-    public function getNotificationId(): string { return 'system'; }
     public function getEmail(): string { return 'admin@example.com'; }
-    public function getEmailName(): string { return 'System'; }
 }
 
-// Type-hint exactly what you need
 class EmailSender
 {
-    public function send(EmailNotifiable $recipient, string $message): void
+    public function send(EmailNotifiable $recipient, string $msg): void
     {
-        // Only uses email methods
-        mail($recipient->getEmail(), 'Notification', $message);
-    }
-}
-
-class SmsSender
-{
-    public function send(SmsNotifiable $recipient, string $message): void
-    {
-        // Only uses phone methods
-        $this->twilioClient->send($recipient->getPhoneNumber(), $message);
+        mail($recipient->getEmail(), 'Notification', $msg);
     }
 }
 ```
 
-## Benefits
+`EmailSender` only depends on `EmailNotifiable`, not SMS methods.
 
-1. **Reduced coupling**: Classes only depend on methods they use
-2. **Easier testing**: Smaller interfaces = simpler mocks
-3. **Better organization**: Clear purpose for each interface
-4. **Flexibility**: Compose interfaces as needed
+## Common Pitfalls
+1. **Going too granular** — An interface per method creates type explosion. Group closely related methods.
+2. **Ignoring ISP early** — Starting fat and planning to refactor later usually means it never happens.
+
+## Best Practices
+1. **Start small** — It is easier to combine small interfaces than to split large ones.
+2. **Use intersection types** — PHP 8.1+ supports `Readable&Searchable` in parameter declarations.
+
+## Summary
+- Fat interfaces force implementors to provide methods they do not use.
+- Segregated interfaces are small, focused, and composable.
+- Each class should implement only the interfaces matching its capabilities.
+- Small interfaces reduce coupling and simplify testing.
+
+## Code Examples
+
+**Segregated interfaces with intersection types**
+
+```php
+<?php
+declare(strict_types=1);
+
+interface Readable {
+    public function find(int $id): ?object;
+    public function findAll(): array;
+}
+
+interface Writable {
+    public function create(array $data): object;
+    public function delete(int $id): void;
+}
+
+interface Searchable {
+    public function search(string $query): array;
+}
+
+class UserRepository implements Readable, Writable, Searchable {
+    public function find(int $id): ?object { return null; }
+    public function findAll(): array { return []; }
+    public function create(array $data): object { return new stdClass(); }
+    public function delete(int $id): void {}
+    public function search(string $query): array { return []; }
+}
+
+class CacheRepository implements Readable {
+    public function find(int $id): ?object { return null; }
+    public function findAll(): array { return []; }
+}
+
+function loadAndSearch(Readable&Searchable $repo): array {
+    return $repo->search('test');
+}
+?>
+```
+
 
 ## Resources
 

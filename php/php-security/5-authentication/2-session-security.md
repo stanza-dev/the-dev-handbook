@@ -5,9 +5,24 @@ source_lesson: "php-security-session-security"
 
 # Secure Session Management
 
+## Introduction
 Sessions maintain user state across requests. Poor session management leads to account hijacking.
 
-## Secure Session Configuration
+## Key Concepts
+- **Session Fixation**: Attack where the attacker sets a known session ID before the victim logs in.
+- **Session Hijacking**: Stealing an active session ID via XSS, network sniffing, or log exposure.
+- **session_regenerate_id(true)**: Replaces the session ID and deletes the old session file, preventing fixation.
+- **Secure Cookie Flags**: `httponly`, `secure`, `samesite` attributes protect session cookies from theft.
+
+## Real World Context
+Session attacks are among the most common web vulnerabilities. The Firesheep tool (2010) demonstrated how trivially session IDs could be stolen on public WiFi, forcing the industry to adopt HTTPS everywhere. Always regenerate session IDs after authentication state changes.
+
+## Deep Dive
+### Intro
+
+Sessions maintain user state across requests. Poor session management leads to account hijacking.
+
+### Secure session configuration
 
 ```php
 <?php
@@ -21,7 +36,7 @@ ini_set('session.use_only_cookies', '1');    // No URL sessions
 session_start();
 ```
 
-## Session Fixation Prevention
+### Session fixation prevention
 
 ```php
 <?php
@@ -37,7 +52,7 @@ function login(User $user): void {
 }
 ```
 
-## Session Validation
+### Session validation
 
 ```php
 <?php
@@ -69,7 +84,7 @@ function validateSession(): bool {
 }
 ```
 
-## Secure Logout
+### Secure logout
 
 ```php
 <?php
@@ -96,7 +111,7 @@ function logout(): void {
 }
 ```
 
-## Remember Me Tokens
+### Remember me tokens
 
 ```php
 <?php
@@ -121,6 +136,19 @@ function createRememberToken(int $userId): string {
     return $selector . ':' . $validator;
 }
 ```
+
+## Common Pitfalls
+1. **Forgetting to regenerate session ID after login** — Without `session_regenerate_id(true)`, an attacker who set the session ID before login can hijack the authenticated session.
+2. **Storing sensitive data in sessions without encryption** — Session files on shared hosting can be readable by other users. Encrypt sensitive session data or use a private session handler.
+
+## Best Practices
+1. **Call `session_regenerate_id(true)` after every privilege change** — Login, logout, password change, and role elevation should all trigger session ID regeneration.
+2. **Configure strict session settings** — Set `session.cookie_httponly=1`, `session.cookie_secure=1`, `session.use_strict_mode=1`, and `session.cookie_samesite=Lax`.
+
+## Summary
+- Prevent session fixation by calling `session_regenerate_id(true)` after every authentication state change.
+- Configure session cookies with `httponly`, `secure`, and `samesite` flags.
+- Use strict session mode and set appropriate session lifetime limits.
 
 ## Resources
 

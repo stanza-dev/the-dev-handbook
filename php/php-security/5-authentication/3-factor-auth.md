@@ -5,9 +5,24 @@ source_lesson: "php-security-multi-factor-auth"
 
 # Implementing Multi-Factor Authentication
 
+## Introduction
 MFA adds an additional layer of security beyond passwords. TOTP (Time-based One-Time Password) is the most common approach.
 
-## TOTP Implementation
+## Key Concepts
+- **TOTP (Time-based One-Time Password)**: RFC 6238 standard using shared secret + time to generate 6-digit codes every 30 seconds.
+- **Backup Codes**: Pre-generated one-time recovery codes, hashed with `password_hash()` and stored in the database.
+- **Recovery Flow**: Secure process for users who lose their MFA device, typically using backup codes or identity verification.
+- **HOTP vs TOTP**: HOTP is counter-based (RFC 4226), TOTP is time-based and more commonly used.
+
+## Real World Context
+Google reported that enabling 2FA blocks 100% of automated bot attacks, 96% of bulk phishing attacks, and 76% of targeted attacks. Major breaches at companies like Twilio and Uber involved compromised credentials that MFA would have prevented.
+
+## Deep Dive
+### Intro
+
+MFA adds an additional layer of security beyond passwords. TOTP (Time-based One-Time Password) is the most common approach.
+
+### Totp implementation
 
 ```php
 <?php
@@ -76,7 +91,7 @@ class TotpAuthenticator
 }
 ```
 
-## Backup Codes
+### Backup codes
 
 ```php
 <?php
@@ -137,7 +152,7 @@ class BackupCodes
 }
 ```
 
-## Complete MFA Flow
+### Complete mfa flow
 
 ```php
 <?php
@@ -198,6 +213,19 @@ class AuthController
     }
 }
 ```
+
+## Common Pitfalls
+1. **Storing MFA secrets in plain text** — The TOTP shared secret must be encrypted at rest. If the database is compromised, plain text secrets allow attackers to generate valid codes.
+2. **Not providing backup codes** — Users who lose their MFA device get locked out permanently if no recovery mechanism exists. Always generate and display backup codes during MFA setup.
+
+## Best Practices
+1. **Hash backup codes with `password_hash()`** — Treat backup codes like passwords. Hash them individually so a database breach doesn't expose them.
+2. **Implement rate limiting on MFA verification** — Limit failed MFA attempts to prevent brute-force attacks on 6-digit codes (only 1 million possibilities per 30-second window).
+
+## Summary
+- TOTP is the standard MFA protocol, generating 6-digit codes every 30 seconds based on a shared secret.
+- Hash backup codes with `password_hash()` and encrypt TOTP secrets at rest.
+- Rate-limit MFA verification attempts to prevent brute-force attacks.
 
 ## Resources
 

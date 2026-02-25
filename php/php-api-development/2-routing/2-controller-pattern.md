@@ -3,266 +3,249 @@ source_course: "php-api-development"
 source_lesson: "php-api-development-controller-pattern"
 ---
 
-# Controller Pattern
+# The Controller Pattern
 
-Controllers organize related route handlers into classes for better structure.
+## Introduction
+As your API grows, stuffing all handler logic into anonymous functions becomes unmanageable. The controller pattern solves this by organising related handlers into classes where each method corresponds to one API action. This lesson shows how to separate routing from business logic using controllers.
 
-## Base Controller
+## Key Concepts
+- **Controller**: A class that groups the handler methods for a single resource (e.g., `UserController` handles all `/users` operations).
+- **Action method**: A public method on a controller that handles one specific request (e.g., `index`, `show`, `store`, `update`, `destroy`).
+- **Separation of concerns**: Routing decides *which* controller to call; the controller decides *what* to do with the request.
 
-```php
-<?php
-abstract class Controller {
-    protected function json(mixed $data, int $status = 200): never {
-        http_response_code($status);
-        header('Content-Type: application/json');
-        echo json_encode($data, JSON_THROW_ON_ERROR);
-        exit;
-    }
-    
-    protected function input(): array {
-        return json_decode(file_get_contents('php://input'), true) ?? [];
-    }
-    
-    protected function notFound(string $message = 'Not Found'): never {
-        $this->json(['error' => $message], 404);
-    }
-    
-    protected function badRequest(string $message, ?array $errors = null): never {
-        $response = ['error' => $message];
-        if ($errors) {
-            $response['details'] = $errors;
-        }
-        $this->json($response, 400);
-    }
-}
-```
+## Real World Context
+Every major PHP framework uses the controller pattern. Laravel's resource controllers map seven standard methods to routes automatically. Even in micro-frameworks like Slim, grouping handlers into controller classes keeps your codebase navigable as it grows from ten endpoints to a hundred.
 
-## Resource Controller
+## Deep Dive
 
-```php
-<?php
-class UserController extends Controller {
-    public function __construct(
-        private UserRepository $users
-    ) {}
-    
-    // GET /users
-    public function index(): never {
-        $users = $this->users->findAll();
-        $this->json(['data' => $users]);
-    }
-    
-    // GET /users/{id}
-    public function show(string $id): never {
-        $user = $this->users->find((int) $id);
-        
-        if (!$user) {
-            $this->notFound('User not found');
-        }
-        
-        $this->json(['data' => $user->toArray()]);
-    }
-    
-    // POST /users
-    public function store(): never {
-        $data = $this->input();
-        
-        $errors = $this->validate($data, [
-            'name' => 'required',
-            'email' => 'required|email',
-        ]);
-        
-        if ($errors) {
-            $this->badRequest('Validation failed', $errors);
-        }
-        
-        $user = $this->users->create($data);
-        $this->json(['data' => $user->toArray()], 201);
-    }
-    
-    // PUT /users/{id}
-    public function update(string $id): never {
-        $user = $this->users->find((int) $id);
-        
-        if (!$user) {
-            $this->notFound('User not found');
-        }
-        
-        $data = $this->input();
-        $user->fill($data);
-        $this->users->save($user);
-        
-        $this->json(['data' => $user->toArray()]);
-    }
-    
-    // DELETE /users/{id}
-    public function destroy(string $id): never {
-        $user = $this->users->find((int) $id);
-        
-        if ($user) {
-            $this->users->delete($user);
-        }
-        
-        http_response_code(204);
-        exit;
-    }
-    
-    private function validate(array $data, array $rules): array {
-        // Validation logic
-        return [];
-    }
-}
-```
-
-## Router with Controllers
-
-```php
-<?php
-class Router {
-    // ... previous code ...
-    
-    public function controller(string $prefix, string $controllerClass): void {
-        $this->get("$prefix", [$controllerClass, 'index']);
-        $this->get("$prefix/{id}", [$controllerClass, 'show']);
-        $this->post("$prefix", [$controllerClass, 'store']);
-        $this->put("$prefix/{id}", [$controllerClass, 'update']);
-        $this->patch("$prefix/{id}", [$controllerClass, 'update']);
-        $this->delete("$prefix/{id}", [$controllerClass, 'destroy']);
-    }
-}
-
-// Usage
-$router = new Router();
-$router->controller('/users', UserController::class);
-$router->controller('/products', ProductController::class);
-```
-
-## Code Examples
-
-**Complete router with groups and middleware**
+### Base Controller
+Start with an abstract base that provides common helpers every controller needs:
 
 ```php
 <?php
 declare(strict_types=1);
 
-// Complete API application structure
+abstract class Controller {
+    /**
+     * Send a JSON response and terminate the script.
+     */
+    protected function json(mixed $data, int $status = 200): never {
+        http_response_code($status);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($data, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
 
-// Router with middleware support
-class Router {
-    private array $routes = [];
-    private array $middleware = [];
-    private ?string $prefix = null;
-    
-    public function group(string $prefix, callable $callback): void {
-        $previousPrefix = $this->prefix;
-        $this->prefix = ($this->prefix ?? '') . $prefix;
-        $callback($this);
-        $this->prefix = $previousPrefix;
+    /**
+     * Read and decode the JSON request body.
+     */
+    protected function input(): array {
+        $raw = file_get_contents('php://input');
+        if ($raw === '' || $raw === false) {
+            return [];
+        }
+        return json_decode($raw, associative: true, flags: JSON_THROW_ON_ERROR);
     }
-    
-    public function middleware(string $middleware): self {
-        $this->middleware[] = $middleware;
-        return $this;
+
+    /**
+     * Return a 404 Not Found response.
+     */
+    protected function notFound(string $message = 'Resource not found'): never {
+        $this->json(['error' => ['message' => $message]], 404);
     }
-    
-    public function get(string $path, array|callable $handler): void {
-        $this->addRoute('GET', $path, $handler);
+}
+```
+
+The `never` return type signals that these methods terminate execution. This helps static analysers flag any code that accidentally follows a response call.
+
+### Resource Controller
+Now create a concrete controller for the `users` resource. Each public method maps to one HTTP endpoint:
+
+```php
+<?php
+declare(strict_types=1);
+
+class UserController extends Controller {
+    // In a real app this would be injected via constructor
+    private array $users = [
+        1 => ['id' => 1, 'name' => 'Alice', 'email' => 'alice@example.com'],
+        2 => ['id' => 2, 'name' => 'Bob',   'email' => 'bob@example.com'],
+    ];
+
+    /** GET /users */
+    public function index(array $params): never {
+        $this->json(['data' => array_values($this->users)]);
     }
-    
-    public function post(string $path, array|callable $handler): void {
-        $this->addRoute('POST', $path, $handler);
+
+    /** GET /users/{id} */
+    public function show(array $params): never {
+        $id   = (int) $params['id'];
+        $user = $this->users[$id] ?? null;
+
+        if ($user === null) {
+            $this->notFound('User not found');
+        }
+
+        $this->json(['data' => $user]);
     }
-    
-    public function put(string $path, array|callable $handler): void {
-        $this->addRoute('PUT', $path, $handler);
-    }
-    
-    public function delete(string $path, array|callable $handler): void {
-        $this->addRoute('DELETE', $path, $handler);
-    }
-    
-    private function addRoute(string $method, string $path, array|callable $handler): void {
-        $fullPath = ($this->prefix ?? '') . $path;
-        $this->routes[] = [
-            'method' => $method,
-            'path' => $fullPath,
-            'handler' => $handler,
-            'middleware' => $this->middleware,
+
+    /** POST /users */
+    public function store(array $params): never {
+        $body = $this->input();
+        $newId = max(array_keys($this->users)) + 1;
+
+        $user = [
+            'id'    => $newId,
+            'name'  => $body['name'] ?? '',
+            'email' => $body['email'] ?? '',
         ];
-        $this->middleware = [];  // Reset for next route
+
+        $this->json(['data' => $user], 201);
     }
-    
-    public function dispatch(): void {
-        $method = $_SERVER['REQUEST_METHOD'];
-        $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        
-        // Remove base path if needed
-        $basePath = '/api';
-        if (str_starts_with($uri, $basePath)) {
-            $uri = substr($uri, strlen($basePath));
-        }
-        
-        foreach ($this->routes as $route) {
-            if ($route['method'] !== $method) continue;
-            
-            $params = $this->match($route['path'], $uri);
-            if ($params === false) continue;
-            
-            // Run middleware
-            foreach ($route['middleware'] as $middlewareClass) {
-                $middleware = new $middlewareClass();
-                $middleware->handle();
-            }
-            
-            // Call handler
-            $handler = $route['handler'];
-            if (is_array($handler)) {
-                [$class, $method] = $handler;
-                $controller = new $class();
-                $controller->$method(...array_values($params));
-            } else {
-                $handler(...array_values($params));
-            }
-            return;
-        }
-        
-        http_response_code(404);
-        echo json_encode(['error' => 'Route not found']);
+
+    /** DELETE /users/{id} */
+    public function destroy(array $params): never {
+        http_response_code(204);
+        exit;
     }
-    
-    private function match(string $routePath, string $uri): array|false {
-        $pattern = preg_replace('/\{([a-z]+)\}/', '(?P<$1>[^/]+)', $routePath);
-        if (preg_match('#^' . $pattern . '$#', $uri, $matches)) {
-            return array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
-        }
-        return false;
+}
+```
+
+Each method has a single, clear responsibility. The controller knows nothing about URL matching — that is the router's job.
+
+### Wiring Controllers to the Router
+Connect the router to controller methods using class-method pairs:
+
+```php
+<?php
+declare(strict_types=1);
+
+$router = new Router();
+
+$router->get('/users',       function (array $p): void { (new UserController())->index($p); });
+$router->get('/users/{id}',  function (array $p): void { (new UserController())->show($p); });
+$router->post('/users',      function (array $p): void { (new UserController())->store($p); });
+$router->delete('/users/{id}', function (array $p): void { (new UserController())->destroy($p); });
+
+header('Content-Type: application/json');
+$router->dispatch(
+    $_SERVER['REQUEST_METHOD'],
+    parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)
+);
+```
+
+The thin closure wrapping keeps the router decoupled from the controller instantiation. In a real application you would use a dependency injection container to create controllers.
+
+### Naming Conventions
+The standard CRUD action names make your codebase predictable:
+
+| Method | URL | Action | Purpose |
+|---|---|---|---|
+| GET | /users | `index` | List all |
+| GET | /users/{id} | `show` | Show one |
+| POST | /users | `store` | Create |
+| PUT/PATCH | /users/{id} | `update` | Update |
+| DELETE | /users/{id} | `destroy` | Delete |
+
+Using these names consistently means any developer joining the project knows exactly where to look.
+
+## Common Pitfalls
+1. **Fat controllers** — Putting database queries, validation, email sending, and logging all inside a single controller method. Controllers should delegate to services. Keep action methods under 20 lines of orchestration code.
+2. **Instantiating dependencies manually** — Writing `new UserRepository()` inside every method duplicates setup code and makes testing hard. Pass dependencies through the constructor so they can be mocked in tests.
+
+## Best Practices
+1. **One controller per resource** — `UserController` handles `/users`, `ProductController` handles `/products`. Do not create a single `ApiController` that handles everything.
+2. **Keep controllers thin** — The controller's job is to read the request, call a service, and return a response. Business logic belongs in service classes, not controllers.
+
+## Summary
+- Controllers group related request handlers into classes with standard action methods (`index`, `show`, `store`, `update`, `destroy`).
+- An abstract base controller provides shared helpers like `json()`, `input()`, and `notFound()`.
+- The router delegates to controllers but does not depend on their internal logic.
+- Use consistent naming conventions so developers can navigate the codebase by convention.
+- Keep controllers thin: they orchestrate, services compute.
+
+## Code Examples
+
+**Base controller with json/input/notFound helpers and a ProductController implementing standard CRUD actions**
+
+```php
+<?php
+declare(strict_types=1);
+
+// A base controller and a resource controller working together.
+
+abstract class Controller {
+    protected function json(mixed $data, int $status = 200): never {
+        http_response_code($status);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($data, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    protected function input(): array {
+        $raw = file_get_contents('php://input');
+        return ($raw !== '' && $raw !== false)
+            ? json_decode($raw, true, 512, JSON_THROW_ON_ERROR)
+            : [];
+    }
+
+    protected function notFound(string $msg = 'Not found'): never {
+        $this->json(['error' => ['message' => $msg]], 404);
     }
 }
 
-// Setup routes
-$router = new Router();
+class ProductController extends Controller {
+    private array $products = [
+        1 => ['id' => 1, 'name' => 'Mechanical Keyboard', 'price' => 129.99],
+        2 => ['id' => 2, 'name' => '4K Monitor',          'price' => 449.00],
+    ];
 
-$router->group('/v1', function(Router $r) {
-    $r->group('/users', function(Router $r) {
-        $r->get('', [UserController::class, 'index']);
-        $r->post('', [UserController::class, 'store']);
-        $r->get('/{id}', [UserController::class, 'show']);
-        $r->put('/{id}', [UserController::class, 'update']);
-        $r->delete('/{id}', [UserController::class, 'destroy']);
-        
-        // Nested resource
-        $r->get('/{id}/orders', [UserController::class, 'orders']);
-    });
-    
-    $r->middleware(AuthMiddleware::class)->group('/admin', function(Router $r) {
-        $r->get('/stats', [AdminController::class, 'stats']);
-    });
-});
+    /** GET /products — list all */
+    public function index(array $params): never {
+        $this->json(['data' => array_values($this->products)]);
+    }
 
-$router->dispatch();
+    /** GET /products/{id} — show one */
+    public function show(array $params): never {
+        $id = (int) $params['id'];
+        $product = $this->products[$id] ?? null;
+
+        if ($product === null) {
+            $this->notFound('Product not found');
+        }
+
+        $this->json(['data' => $product]);
+    }
+
+    /** POST /products — create */
+    public function store(array $params): never {
+        $body    = $this->input();
+        $newId   = max(array_keys($this->products)) + 1;
+        $product = [
+            'id'    => $newId,
+            'name'  => $body['name']  ?? '',
+            'price' => (float) ($body['price'] ?? 0),
+        ];
+
+        // 201 Created with Location header
+        header("Location: /products/{$newId}");
+        $this->json(['data' => $product], 201);
+    }
+
+    /** DELETE /products/{id} — remove */
+    public function destroy(array $params): never {
+        // 204 No Content — empty response
+        http_response_code(204);
+        exit;
+    }
+}
 ?>
 ```
 
+
+## Resources
+
+- [call_user_func — PHP Manual](https://www.php.net/manual/en/function.call-user-func.php) — PHP reference for dynamically invoking functions and methods, used by routers to call controller actions
 
 ---
 

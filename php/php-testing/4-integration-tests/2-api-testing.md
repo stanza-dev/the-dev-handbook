@@ -3,255 +3,239 @@ source_course: "php-testing"
 source_lesson: "php-testing-api-testing"
 ---
 
-# HTTP API Testing
+# Testing HTTP Endpoints
 
-Test your API endpoints to verify request handling and responses.
+## Introduction
+HTTP endpoint tests verify that your application responds correctly to real HTTP requests — returning the right status codes, headers, and response bodies. These tests sit one layer above unit tests, exercising the full request/response cycle including routing, middleware, validation, and serialization.
 
-## Simple API Test
+## Key Concepts
+- **HTTP Test Client**: A component that sends HTTP requests to your application in-process without needing a running web server.
+- **Status Code Assertions**: Verifying that the response has the expected HTTP status (200, 201, 404, 422, etc.).
+- **JSON Assertions**: Checking the structure and values of JSON response bodies.
+- **Request Factories**: Helper methods that construct HTTP requests with specific headers, query parameters, and body payloads.
 
-```php
-<?php
-class ApiTestCase extends TestCase
-{
-    protected function request(
-        string $method,
-        string $uri,
-        array $data = [],
-        array $headers = []
-    ): array {
-        // Simulate request environment
-        $_SERVER['REQUEST_METHOD'] = $method;
-        $_SERVER['REQUEST_URI'] = $uri;
-        $_SERVER['CONTENT_TYPE'] = 'application/json';
-        
-        foreach ($headers as $name => $value) {
-            $key = 'HTTP_' . strtoupper(str_replace('-', '_', $name));
-            $_SERVER[$key] = $value;
-        }
-        
-        // Simulate JSON body
-        $GLOBALS['test_input'] = json_encode($data);
-        
-        // Capture output
-        ob_start();
-        
-        try {
-            require 'public/index.php';
-        } catch (SystemExit $e) {
-            // Caught exit() call
-        }
-        
-        $output = ob_get_clean();
-        
-        return [
-            'status' => http_response_code(),
-            'body' => json_decode($output, true),
-            'raw' => $output,
-        ];
-    }
-    
-    protected function get(string $uri, array $headers = []): array {
-        return $this->request('GET', $uri, [], $headers);
-    }
-    
-    protected function post(string $uri, array $data, array $headers = []): array {
-        return $this->request('POST', $uri, $data, $headers);
-    }
-}
-```
+## Real World Context
+Unit testing a controller with mocked request/response objects only tests the controller logic. It misses routing configuration, middleware execution order, content negotiation, and serialization bugs. HTTP endpoint tests catch all of these because they exercise the full stack up to the framework's HTTP kernel.
 
-## Testing API Endpoints
+## Deep Dive
+PHP frameworks like Symfony and Laravel provide built-in HTTP testing clients. For framework-agnostic code or custom applications, you can build a lightweight test client using PHP's built-in server or by directly invoking your application's request handler.
 
-```php
-<?php
-class UserApiTest extends ApiTestCase
-{
-    public function testListUsers(): void
-    {
-        $response = $this->get('/api/users');
-        
-        $this->assertEquals(200, $response['status']);
-        $this->assertArrayHasKey('data', $response['body']);
-        $this->assertIsArray($response['body']['data']);
-    }
-    
-    public function testCreateUser(): void
-    {
-        $response = $this->post('/api/users', [
-            'name' => 'John Doe',
-            'email' => 'john@example.com',
-        ]);
-        
-        $this->assertEquals(201, $response['status']);
-        $this->assertEquals('John Doe', $response['body']['data']['name']);
-    }
-    
-    public function testValidationError(): void
-    {
-        $response = $this->post('/api/users', [
-            'name' => 'John',
-            // Missing email
-        ]);
-        
-        $this->assertEquals(422, $response['status']);
-        $this->assertArrayHasKey('error', $response['body']);
-        $this->assertArrayHasKey('details', $response['body']['error']);
-        $this->assertArrayHasKey('email', $response['body']['error']['details']);
-    }
-    
-    public function testAuthenticationRequired(): void
-    {
-        $response = $this->get('/api/profile');
-        
-        $this->assertEquals(401, $response['status']);
-    }
-    
-    public function testAuthenticatedRequest(): void
-    {
-        $token = $this->getTestToken();
-        
-        $response = $this->get('/api/profile', [
-            'Authorization' => "Bearer $token",
-        ]);
-        
-        $this->assertEquals(200, $response['status']);
-    }
-}
-```
-
-## Code Examples
-
-**Complete integration test for order workflow**
+Here is a pattern for testing a JSON API endpoint using a test client abstraction:
 
 ```php
 <?php
 declare(strict_types=1);
 
-// Complete integration test suite
-class OrderWorkflowTest extends TestCase
+use PHPUnit\Framework\TestCase;
+
+class UserApiTest extends TestCase
 {
-    private PDO $pdo;
-    private OrderService $orderService;
-    private PaymentService $paymentService;
-    private InventoryService $inventoryService;
-    
+    private TestHttpClient $client;
+
     protected function setUp(): void
     {
-        // Real database connection
-        $this->pdo = new PDO('sqlite::memory:');
-        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        
-        $this->createSchema();
-        $this->seedData();
-        
-        // Real services with real dependencies
-        $productRepo = new ProductRepository($this->pdo);
-        $orderRepo = new OrderRepository($this->pdo);
-        
-        // Only mock external services
-        $paymentGateway = $this->createMock(PaymentGateway::class);
-        $paymentGateway->method('charge')->willReturn('txn_123');
-        
-        $this->inventoryService = new InventoryService($this->pdo);
-        $this->paymentService = new PaymentService($paymentGateway);
-        $this->orderService = new OrderService(
-            $orderRepo,
-            $productRepo,
-            $this->inventoryService,
-            $this->paymentService
-        );
+        parent::setUp();
+        $this->client = new TestHttpClient(createApp());
     }
-    
-    private function createSchema(): void
+
+    public function testListUsersReturns200(): void
     {
-        $this->pdo->exec('
-            CREATE TABLE products (
-                id INTEGER PRIMARY KEY,
-                name TEXT,
-                price REAL,
-                stock INTEGER
-            );
-            CREATE TABLE orders (
-                id INTEGER PRIMARY KEY,
-                status TEXT,
-                total REAL
-            );
-            CREATE TABLE order_items (
-                id INTEGER PRIMARY KEY,
-                order_id INTEGER,
-                product_id INTEGER,
-                quantity INTEGER,
-                price REAL
-            );
-        ');
+        $response = $this->client->get('/api/users');
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('application/json', $response->getHeaderLine('Content-Type'));
     }
-    
-    private function seedData(): void
+
+    public function testListUsersReturnsJsonArray(): void
     {
-        $this->pdo->exec("
-            INSERT INTO products (id, name, price, stock) VALUES
-            (1, 'Widget', 10.00, 100),
-            (2, 'Gadget', 25.00, 50),
-            (3, 'Thing', 5.00, 0)
-        ");
+        $response = $this->client->get('/api/users');
+        $body = json_decode($response->getBody(), true);
+
+        $this->assertIsArray($body);
+        $this->assertArrayHasKey('data', $body);
     }
-    
-    public function testCompleteOrderWorkflow(): void
+}
+```
+
+The test client wraps the application and exposes HTTP methods (`get()`, `post()`, etc.) that return response objects. No real server is running — requests are handled in-process.
+
+Testing POST endpoints with JSON payloads follows the same pattern:
+
+```php
+<?php
+public function testCreateUserReturns201(): void
+{
+    $response = $this->client->post('/api/users', [
+        'json' => [
+            'email' => 'newuser@example.com',
+            'name' => 'New User',
+        ],
+    ]);
+
+    $this->assertSame(201, $response->getStatusCode());
+
+    $body = json_decode($response->getBody(), true);
+    $this->assertSame('newuser@example.com', $body['data']['email']);
+    $this->assertArrayHasKey('id', $body['data']);
+}
+
+public function testCreateUserWithInvalidEmailReturns422(): void
+{
+    $response = $this->client->post('/api/users', [
+        'json' => [
+            'email' => 'not-an-email',
+            'name' => 'Bad User',
+        ],
+    ]);
+
+    $this->assertSame(422, $response->getStatusCode());
+
+    $body = json_decode($response->getBody(), true);
+    $this->assertArrayHasKey('errors', $body);
+    $this->assertArrayHasKey('email', $body['errors']);
+}
+```
+
+Note how the validation test verifies both the status code (422 Unprocessable Entity) and the error response structure. This ensures the API communicates validation failures properly to clients.
+
+For endpoints that require authentication, pass headers with the request:
+
+```php
+<?php
+public function testProtectedEndpointRequiresAuth(): void
+{
+    // No auth header — should be rejected
+    $response = $this->client->get('/api/admin/dashboard');
+    $this->assertSame(401, $response->getStatusCode());
+}
+
+public function testProtectedEndpointWithValidToken(): void
+{
+    $token = $this->createTestToken(userId: 1, role: 'admin');
+
+    $response = $this->client->get('/api/admin/dashboard', [
+        'headers' => [
+            'Authorization' => 'Bearer ' . $token,
+        ],
+    ]);
+
+    $this->assertSame(200, $response->getStatusCode());
+}
+```
+
+These tests verify that your authentication middleware correctly rejects unauthenticated requests and accepts valid tokens.
+
+A helper method for asserting JSON response structure keeps tests readable:
+
+```php
+<?php
+private function assertJsonResponse(
+    object $response,
+    int $expectedStatus,
+    array $expectedKeys = []
+): array {
+    $this->assertSame($expectedStatus, $response->getStatusCode());
+
+    $body = json_decode($response->getBody(), true);
+    $this->assertIsArray($body, 'Response body is not valid JSON');
+
+    foreach ($expectedKeys as $key) {
+        $this->assertArrayHasKey($key, $body, "Missing key: $key");
+    }
+
+    return $body;
+}
+```
+
+This utility reduces repetition across your API tests and produces clear failure messages when assertions fail.
+
+## Common Pitfalls
+1. **Testing only the happy path** — API tests must cover error cases: invalid input (422), missing resources (404), unauthorized access (401/403), and server errors. Clients depend on correct error responses for their own error handling.
+2. **Hardcoding IDs in URLs** — Tests that use `/api/users/1` assume a specific auto-increment value. Instead, create the resource first and extract its ID from the response to build subsequent request URLs.
+
+## Best Practices
+1. **Assert both status code and body** — A 200 status alone does not prove correctness. Always verify the response body structure and key values to ensure the endpoint returns the expected data.
+2. **Organize tests by endpoint** — Group test methods by the API endpoint they exercise (e.g., `testCreateUser*`, `testGetUser*`, `testDeleteUser*`). This makes it easy to find and maintain tests as the API evolves.
+
+## Summary
+- HTTP endpoint tests exercise the full request/response cycle including routing, middleware, and serialization.
+- Use a test HTTP client to send requests in-process without starting a real server.
+- Assert status codes, response headers, and JSON body structure for every endpoint.
+- Cover error cases (422, 404, 401) in addition to happy-path success responses.
+- Extract helper methods for common assertion patterns to keep tests readable.
+
+## Code Examples
+
+**API endpoint tests covering create, retrieve, not-found, and validation error scenarios with JSON assertions**
+
+```php
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+class ProductApiTest extends TestCase
+{
+    private TestHttpClient $client;
+
+    protected function setUp(): void
     {
-        // Create order
-        $order = $this->orderService->createOrder([
-            ['product_id' => 1, 'quantity' => 2],  // 2 Widgets = $20
-            ['product_id' => 2, 'quantity' => 1],  // 1 Gadget = $25
+        $this->client = new TestHttpClient(createApp());
+    }
+
+    public function testGetProductReturns200WithCorrectStructure(): void
+    {
+        // First create a product so we have a known ID
+        $createResponse = $this->client->post('/api/products', [
+            'json' => [
+                'name' => 'Wireless Mouse',
+                'price' => 29.99,
+                'category' => 'electronics',
+            ],
         ]);
-        
-        $this->assertEquals('pending', $order->status);
-        $this->assertEquals(45.00, $order->total);
-        
-        // Check inventory was reserved
-        $widget = $this->getProduct(1);
-        $this->assertEquals(98, $widget['stock']);  // 100 - 2
-        
-        // Process payment
-        $this->orderService->processPayment($order->id);
-        
-        $order = $this->orderService->find($order->id);
-        $this->assertEquals('paid', $order->status);
+        $productId = json_decode($createResponse->getBody(), true)['data']['id'];
+
+        // Now fetch the product by its ID
+        $response = $this->client->get("/api/products/{$productId}");
+
+        $this->assertSame(200, $response->getStatusCode());
+
+        $body = json_decode($response->getBody(), true);
+        $this->assertSame('Wireless Mouse', $body['data']['name']);
+        $this->assertSame(29.99, $body['data']['price']);
+        $this->assertSame('electronics', $body['data']['category']);
     }
-    
-    public function testCannotOrderOutOfStockProduct(): void
+
+    public function testGetNonExistentProductReturns404(): void
     {
-        $this->expectException(OutOfStockException::class);
-        
-        $this->orderService->createOrder([
-            ['product_id' => 3, 'quantity' => 1],  // Thing has 0 stock
+        $response = $this->client->get('/api/products/999999');
+
+        $this->assertSame(404, $response->getStatusCode());
+
+        $body = json_decode($response->getBody(), true);
+        $this->assertSame('Product not found', $body['error']['message']);
+    }
+
+    public function testCreateProductWithMissingFieldsReturns422(): void
+    {
+        $response = $this->client->post('/api/products', [
+            'json' => ['name' => 'Incomplete Product'],
         ]);
-    }
-    
-    public function testOrderCancellationRestoresStock(): void
-    {
-        $order = $this->orderService->createOrder([
-            ['product_id' => 1, 'quantity' => 5],
-        ]);
-        
-        $stockBefore = $this->getProduct(1)['stock'];  // 95
-        
-        $this->orderService->cancel($order->id);
-        
-        $stockAfter = $this->getProduct(1)['stock'];  // 100
-        
-        $this->assertEquals($stockBefore + 5, $stockAfter);
-    }
-    
-    private function getProduct(int $id): array
-    {
-        $stmt = $this->pdo->prepare('SELECT * FROM products WHERE id = ?');
-        $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $this->assertSame(422, $response->getStatusCode());
+
+        $errors = json_decode($response->getBody(), true)['errors'];
+        $this->assertArrayHasKey('price', $errors);
     }
 }
 ?>
 ```
 
+
+## Resources
+
+- [PHPUnit Documentation](https://docs.phpunit.de/en/12.0/writing-tests-for-phpunit.html) — Official PHPUnit 12 documentation on writing tests
+- [PSR-7 HTTP Message Interfaces](https://www.php-fig.org/psr/psr-7/) — The PSR-7 standard for HTTP message interfaces used in PHP HTTP testing
 
 ---
 

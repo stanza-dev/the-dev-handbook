@@ -14,9 +14,9 @@ Scale your application for high traffic
 
 This section includes **4 interactive challenges** available on Stanza:
 
+- 🧩 Challenge: Queue-Worthy Tasks
+- 🧩 Challenge: Healthy Endpoint Status
 - 🧩 Multiple Choice: Shared Nothing Architecture
-- 🧩 Multiple Choice: Message Queue Benefit
-- 🧩 Multiple Choice: Sticky Sessions
-- 🧩 Multiple Choice: Health Check Response
+- ✏️ Fill in the Blank: Sticky Sessions
 
 → [Practice in your IDE](https://stanza.dev/courses/php-performance)

@@ -5,9 +5,24 @@ source_lesson: "php-performance-preloading-advanced"
 
 # Advanced Preloading Strategies
 
+## Introduction
 Preloading (PHP 7.4+) loads PHP files into OPcache at server startup, making them permanently available without recompilation.
 
-## How Preloading Works
+## Key Concepts
+- **Good candidates:**: A core concept covered in this lesson.
+- **Avoid preloading:**: A core concept covered in this lesson.
+- **Server restart required**: A core concept covered in this lesson.
+- **No hot reload**: A core concept covered in this lesson.
+
+## Real World Context
+Preloading eliminates autoloading overhead for frequently used classes. Symfony and Laravel both support preloading configurations that can reduce response times by 10-20% on class-heavy applications. The key is selecting the right files — preloading rarely-used classes wastes shared memory.
+
+## Deep Dive
+### Intro
+
+Preloading (PHP 7.4+) loads PHP files into OPcache at server startup, making them permanently available without recompilation.
+
+### How preloading works
 
 ```
 Server Start → Execute preload.php → Classes in shared memory
@@ -15,7 +30,7 @@ Server Start → Execute preload.php → Classes in shared memory
               All requests share preloaded classes (zero cost)
 ```
 
-## Basic Preload Script
+### Basic preload script
 
 ```php
 <?php
@@ -34,7 +49,7 @@ foreach ($files as $file) {
 }
 ```
 
-## Automated Class Discovery
+### Automated class discovery
 
 ```php
 <?php
@@ -117,7 +132,7 @@ $count = $preloader->load();
 error_log("Preloaded $count files");
 ```
 
-## Configuration
+### Configuration
 
 ```ini
 ; php.ini
@@ -129,7 +144,7 @@ opcache.enable=1
 opcache.enable_cli=0
 ```
 
-## What to Preload
+### What to preload
 
 **Good candidates:**
 - Framework core classes
@@ -143,7 +158,7 @@ opcache.enable_cli=0
 - Rarely used exception classes
 - Development tools
 
-## Measuring Impact
+### Measuring impact
 
 ```php
 <?php
@@ -156,12 +171,25 @@ echo "Preloaded classes: " . ($preloadStats['classes'] ?? 0) . "\n";
 echo "Memory used: " . ($preloadStats['memory_consumption'] ?? 0) . " bytes\n";
 ```
 
-## Caveats
+### Caveats
 
 1. **Server restart required** - Changes need FPM/server restart
 2. **No hot reload** - Development may need preloading disabled
 3. **Dependency order** - Files load in order; dependencies must load first
 4. **Memory consumption** - Preloaded classes use memory even if unused
+
+## Common Pitfalls
+1. **Preloading too many files** — Every preloaded class consumes shared memory permanently. Only preload classes that are used on most requests (entities, core services).
+2. **Forgetting dependency order** — Preloaded files must load in dependency order. If class B extends class A, A must be preloaded first or you'll get fatal errors on startup.
+
+## Best Practices
+1. **Start with framework-recommended preload lists** — Symfony provides `config/preload.php` automatically. Use it as a starting point and add your most-used application classes.
+2. **Monitor preload memory usage** — Check `opcache_get_status()['preload_statistics']` to verify preloaded class count and memory consumption.
+
+## Summary
+- Preloading loads PHP files into shared memory at server startup, eliminating per-request autoloading.
+- Only preload frequently used classes to avoid wasting shared memory.
+- Server restart is required after preload script changes — no hot reload.
 
 ## Resources
 

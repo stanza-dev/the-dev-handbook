@@ -14,9 +14,9 @@ Leverage PHP's built-in performance features
 
 This section includes **4 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: OPcache in Production
-- 🧩 Multiple Choice: JIT Best Use Case
-- 🧩 Multiple Choice: Preload Changes
+- 🔗 Matching: OPcache Settings
 - 🧩 Multiple Choice: Clearing OPcache
+- ✏️ Fill in the Blank: OPcache in Production
+- 🧩 Challenge: JIT Best Use Case
 
 → [Practice in your IDE](https://stanza.dev/courses/php-performance)

@@ -5,9 +5,24 @@ source_lesson: "php-performance-cache-stampede"
 
 # Preventing Cache Stampede
 
+## Introduction
 A cache stampede (thundering herd) occurs when many requests simultaneously find an expired cache entry and all try to regenerate it.
 
-## The Problem
+## Key Concepts
+- **Cache Stampede**: When a popular cache entry expires, many concurrent requests simultaneously query the database to rebuild it.
+- **Locking (Mutex)**: Only one process rebuilds the cache while others wait or serve stale data.
+- **Probabilistic Early Expiration**: Randomly refreshing cache entries before they expire to prevent synchronized expiration.
+- **Stale-While-Revalidate**: Serving the stale cached value while asynchronously refreshing in the background.
+
+## Real World Context
+Cache stampedes have caused major outages at companies like Facebook (the Thundering Herd problem). When a frequently accessed cache key expires and 10,000 requests simultaneously try to rebuild it, the database can be overwhelmed. This is especially dangerous for expensive queries (aggregations, joins) that take seconds to compute.
+
+## Deep Dive
+### Intro
+
+A cache stampede (thundering herd) occurs when many requests simultaneously find an expired cache entry and all try to regenerate it.
+
+### The problem
 
 ```php
 <?php
@@ -29,7 +44,7 @@ function getProduct(int $id): array
 }
 ```
 
-## Solution 1: Locking
+### Solution 1: locking
 
 ```php
 <?php
@@ -90,7 +105,7 @@ class StampedeProtectedCache
 }
 ```
 
-## Solution 2: Probabilistic Early Expiration
+### Solution 2: probabilistic early expiration
 
 ```php
 <?php
@@ -141,7 +156,7 @@ class XFetchCache
 }
 ```
 
-## Solution 3: Background Refresh
+### Solution 3: background refresh
 
 ```php
 <?php
@@ -184,6 +199,19 @@ class BackgroundRefreshCache
     }
 }
 ```
+
+## Common Pitfalls
+1. **No protection against thundering herd** — Without locking or early expiration, every popular cache entry is a potential stampede waiting to happen.
+2. **Using fixed TTL for all entries** — All entries with the same TTL expire at the same time, causing mass stampedes. Add random jitter to TTL values.
+
+## Best Practices
+1. **Implement cache locking** — Use Redis `SET key value NX EX 30` as a distributed mutex so only one process rebuilds the cache.
+2. **Add TTL jitter** — Instead of `TTL = 3600`, use `TTL = 3600 + random(0, 300)` to spread expiration times and prevent synchronized stampedes.
+
+## Summary
+- Cache stampedes occur when a popular cache entry expires and many requests simultaneously try to rebuild it.
+- Use cache locking (mutex), probabilistic early expiration, or stale-while-revalidate to prevent stampedes.
+- Add random jitter to TTL values to prevent mass synchronized expiration.
 
 ## Resources
 

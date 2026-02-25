@@ -5,9 +5,24 @@ source_lesson: "php-performance-identifying-bottlenecks"
 
 # Identifying Performance Bottlenecks
 
+## Introduction
 Most performance issues fall into predictable categories. Learn to recognize them.
 
-## Common Bottlenecks
+## Key Concepts
+- **N+1 Query Problem**: Executing one query per item instead of a single batch query — the most common PHP performance killer.
+- **I/O vs CPU Bottlenecks**: I/O-bound code (database, network, disk) is usually the primary bottleneck; CPU-bound code (computation) is less common.
+- **Sequential vs Parallel I/O**: Sequential API calls or file reads that could be parallelized with promises or multi-curl.
+- **Memory Bloat**: Loading entire datasets into memory instead of using generators or streaming.
+
+## Real World Context
+Most PHP performance issues are I/O bound — waiting for database queries, external APIs, or file reads. The N+1 problem alone can turn a 50ms page into a 5-second page when loading related records. Fixing N+1 queries often yields 10-100x improvements with minimal code changes.
+
+## Deep Dive
+### Intro
+
+Most performance issues fall into predictable categories. Learn to recognize them.
+
+### Common bottlenecks
 
 ### 1. Database Queries
 
@@ -92,7 +107,7 @@ $responses = $guzzle->request([
 // Total: ~300ms (slowest request)
 ```
 
-## Performance Checklist
+### Performance checklist
 
 ```php
 <?php
@@ -123,6 +138,19 @@ class PerformanceChecker
     }
 }
 ```
+
+## Common Pitfalls
+1. **Ignoring the N+1 query problem** — ORMs like Doctrine and Eloquent make N+1 easy to introduce accidentally. Use eager loading (`JOIN` or `WHERE IN`) for related data.
+2. **Making sequential API calls** — If you need data from 5 external APIs, send all requests concurrently with `curl_multi_*` or Guzzle promises instead of waiting for each one.
+
+## Best Practices
+1. **Enable database query logging in development** — Monitor query counts per page load. A sudden jump from 5 to 50 queries signals an N+1 problem.
+2. **Use batch operations** — Replace loops of individual INSERT/UPDATE statements with bulk operations (e.g., `INSERT INTO ... VALUES (...), (...), (...)`).
+
+## Summary
+- N+1 queries are the most common PHP bottleneck — fix with eager loading and batch queries.
+- Most PHP performance issues are I/O bound, not CPU bound.
+- Parallelize independent I/O operations with promises or multi-curl.
 
 ## Code Examples
 
@@ -213,6 +241,10 @@ $perf->after();
 ?>
 ```
 
+
+## Resources
+
+- [Xdebug Profiler](https://xdebug.org/docs/profiler) — Xdebug profiling documentation
 
 ---
 

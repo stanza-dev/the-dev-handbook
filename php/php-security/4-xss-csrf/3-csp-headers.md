@@ -5,9 +5,24 @@ source_lesson: "php-security-csp-headers"
 
 # Content Security Policy (CSP)
 
+## Introduction
 CSP is a powerful defense against XSS that tells browsers which resources are allowed to load and execute.
 
-## Basic CSP Header
+## Key Concepts
+- **Content Security Policy (CSP)**: HTTP header that controls which resources the browser is allowed to load.
+- **CSP Nonce**: A unique per-request token (`nonce-<random>`) that allows specific inline scripts while blocking injected ones.
+- **Report-Only Mode**: `Content-Security-Policy-Report-Only` logs violations without blocking, useful for gradual CSP rollout.
+- **CSP Directives**: `script-src`, `style-src`, `img-src`, `connect-src`, `default-src` — each controls a resource type.
+
+## Real World Context
+GitHub, Google, and Stripe all use strict CSP policies to mitigate XSS even when code-level defenses fail. Google reported that CSP prevented exploitation of several XSS bugs that were discovered after deployment. Start with Report-Only mode to avoid breaking your site during rollout.
+
+## Deep Dive
+### Intro
+
+CSP is a powerful defense against XSS that tells browsers which resources are allowed to load and execute.
+
+### Basic csp header
 
 ```php
 <?php
@@ -21,7 +36,7 @@ header("Content-Security-Policy: default-src 'self'");
 // - eval() and similar functions
 ```
 
-## Granular CSP Directives
+### Granular csp directives
 
 ```php
 <?php
@@ -63,7 +78,7 @@ function setCSP(): void
 }
 ```
 
-## Using Nonces for Inline Scripts
+### Using nonces for inline scripts
 
 ```php
 <?php
@@ -88,7 +103,7 @@ $_REQUEST['csp_nonce'] = $nonce;
 </script>
 ```
 
-## CSP for APIs
+### Csp for apis
 
 ```php
 <?php
@@ -100,7 +115,7 @@ function setApiCSP(): void
 }
 ```
 
-## Report-Only Mode (Testing)
+### Report-only mode (testing)
 
 ```php
 <?php
@@ -128,7 +143,7 @@ if (isset($report['csp-report'])) {
 }
 ```
 
-## Common CSP Mistakes
+### Common csp mistakes
 
 ```php
 <?php
@@ -144,6 +159,19 @@ header("Content-Security-Policy: script-src *.example.com");
 // GOOD: Specific sources with nonces
 header("Content-Security-Policy: script-src 'self' 'nonce-abc123'");
 ```
+
+## Common Pitfalls
+1. **Using `unsafe-inline` in `script-src`** — This completely defeats CSP's XSS protection. Use nonce-based or hash-based policies instead.
+2. **Deploying CSP without Report-Only testing** — A strict CSP can break third-party scripts, analytics, and CDN resources. Always test in Report-Only mode first.
+
+## Best Practices
+1. **Start with a strict nonce-based policy** — `script-src 'nonce-{random}' 'strict-dynamic'` provides strong XSS protection while allowing trusted scripts to load dependencies.
+2. **Set up CSP violation reporting** — Use the `report-uri` or `report-to` directive to collect violation reports and identify blocked resources.
+
+## Summary
+- CSP is a critical defense-in-depth layer that prevents XSS exploitation even when code-level defenses fail.
+- Use nonce-based policies instead of `unsafe-inline` to allow legitimate inline scripts.
+- Always deploy new CSP policies in Report-Only mode first to catch breaking changes.
 
 ## Resources
 

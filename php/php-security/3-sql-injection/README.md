@@ -15,8 +15,8 @@ Protect your database from SQL injection attacks
 This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: SQL Injection Prevention
-- 🧩 Multiple Choice: SQL Parameterize Limit
-- 🧩 Multiple Choice: Emulated Prepares
-- 🧩 Multiple Choice: Second-Order SQL Injection
+- ✏️ Fill in the Blank: SQL Parameterize Limit
+- 🧩 Challenge: Real Prepared Statement Flow
+- ✏️ Fill in the Blank: Second-Order SQL Injection
 
 → [Practice in your IDE](https://stanza.dev/courses/php-security)

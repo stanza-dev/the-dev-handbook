@@ -5,17 +5,37 @@ source_lesson: "php-essentials-transactions"
 
 # Database Transactions
 
-Transactions ensure that multiple database operations either all succeed or all fail together, maintaining data integrity.
+## Introduction
 
-## What is a Transaction?
+When a database operation involves multiple queries that must all succeed or all fail together, you need transactions. Without them, a failure halfway through could leave your data in an inconsistent state — money deducted from one account but never credited to another, an order created but inventory never updated. This lesson covers the ACID properties, PDO transaction methods, and practical patterns for safe multi-step operations.
 
-A transaction groups operations so they're treated as a single unit:
-- **Atomicity**: All or nothing
-- **Consistency**: Data remains valid
-- **Isolation**: Operations don't interfere
-- **Durability**: Changes persist after commit
+## Key Concepts
 
-## Basic Transaction
+- **Transaction**: A group of database operations treated as a single atomic unit.
+- **ACID properties**: Atomicity (all or nothing), Consistency (data remains valid), Isolation (operations don't interfere), Durability (committed changes persist).
+- **`beginTransaction()`**: Starts a new transaction. Subsequent queries are not committed until explicitly requested.
+- **`commit()`**: Saves all changes made during the transaction.
+- **`rollBack()`**: Undoes all changes made during the transaction.
+- **`inTransaction()`**: Returns `true` if a transaction is currently active.
+
+## Real World Context
+
+Transactions are essential in any application that handles money, inventory, or coordinated multi-table updates. Think of a bank transfer: deducting from Account A and crediting Account B must happen together — if the credit fails after the deduction, the money disappears. E-commerce order processing, user registration with profile creation, and batch data imports all require transactions to maintain data integrity.
+
+## Deep Dive
+
+### What is a Transaction?
+
+A transaction groups operations so they are treated as a single unit. The ACID properties guarantee:
+
+- **Atomicity**: All operations succeed, or none of them do.
+- **Consistency**: The database moves from one valid state to another.
+- **Isolation**: Concurrent transactions do not interfere with each other.
+- **Durability**: Once committed, changes survive even a server crash.
+
+### Basic Transaction
+
+The standard pattern is try-commit-catch-rollback:
 
 ```php
 <?php
@@ -36,7 +56,11 @@ try {
 }
 ```
 
-## Practical Example: Order Processing
+If any query fails and throws an exception, `rollBack()` undoes all changes made since `beginTransaction()`. Re-throwing the exception ensures the error is not silently swallowed.
+
+### Practical Example: Order Processing
+
+This real-world example creates an order, adds line items, and updates inventory atomically:
 
 ```php
 <?php
@@ -93,7 +117,11 @@ function createOrder(PDO $pdo, int $userId, array $items): int {
 }
 ```
 
-## Transaction Methods
+Notice how `rowCount() === 0` detects insufficient stock. If any product is out of stock, the exception triggers a rollback, undoing the order creation and any prior stock changes.
+
+### Transaction Methods
+
+PDO provides four transaction-related methods:
 
 ```php
 <?php
@@ -103,7 +131,11 @@ $pdo->rollBack();          // Undo all changes
 $pdo->inTransaction();     // Check if in transaction (bool)
 ```
 
-## Nested Transaction Pattern
+Use `inTransaction()` to avoid calling `beginTransaction()` when one is already active, which would throw an exception.
+
+### Nested Transaction Pattern
+
+PDO does not support true nested transactions, but you can simulate them with a depth counter:
 
 ```php
 <?php
@@ -132,6 +164,90 @@ class TransactionManager {
     }
 }
 ```
+
+This pattern is useful in larger applications where service methods may each want transactional behavior but can also be composed together.
+
+## Common Pitfalls
+
+1. **Forgetting to rollback on exception** — Always wrap transactions in try-catch with `rollBack()` in the catch block. An uncommitted transaction left open can lock database rows.
+2. **Calling `beginTransaction()` when one is already active** — PDO throws an exception if you start a second transaction. Check with `inTransaction()` first, or use the nested transaction pattern.
+3. **Performing non-transactional operations inside a transaction** — Sending emails or calling external APIs inside a transaction block means those side effects cannot be rolled back. Move them after the `commit()`.
+
+## Best Practices
+
+1. **Keep transactions short** — Hold transactions open for as little time as possible to minimize lock contention. Do all preparation before `beginTransaction()` and all side effects after `commit()`.
+2. **Always re-throw after rollback** — Catching an exception, rolling back, and then silently continuing hides errors. Always re-throw or log the exception.
+3. **Use transactions for any multi-query operation** — If two or more queries must succeed together, wrap them in a transaction, even if failure seems unlikely.
+
+## Summary
+
+- Transactions group multiple queries into an atomic unit: all succeed or all fail.
+- Use `beginTransaction()`, `commit()`, and `rollBack()` with a try-catch pattern.
+- The ACID properties (Atomicity, Consistency, Isolation, Durability) guarantee data integrity.
+- Always rollback on exception and re-throw the error.
+- Keep transactions short and move side effects (emails, API calls) outside the transaction block.
+
+## Code Examples
+
+**Bank transfer function demonstrating transactions with balance checking, FOR UPDATE locking, and transfer logging — all rolled back if any step fails**
+
+```php
+<?php
+// Bank transfer with transaction safety
+function transferFunds(
+    PDO $pdo,
+    int $fromAccountId,
+    int $toAccountId,
+    float $amount
+): void {
+    if ($amount <= 0) {
+        throw new InvalidArgumentException('Transfer amount must be positive');
+    }
+    
+    $pdo->beginTransaction();
+    
+    try {
+        // 1. Check sender has sufficient balance
+        $stmt = $pdo->prepare(
+            'SELECT balance FROM accounts WHERE id = :id FOR UPDATE'
+        );
+        $stmt->execute([':id' => $fromAccountId]);
+        $sender = $stmt->fetch();
+        
+        if (!$sender || $sender['balance'] < $amount) {
+            throw new RuntimeException('Insufficient funds');
+        }
+        
+        // 2. Deduct from sender
+        $pdo->prepare(
+            'UPDATE accounts SET balance = balance - :amount WHERE id = :id'
+        )->execute([':amount' => $amount, ':id' => $fromAccountId]);
+        
+        // 3. Credit to receiver
+        $pdo->prepare(
+            'UPDATE accounts SET balance = balance + :amount WHERE id = :id'
+        )->execute([':amount' => $amount, ':id' => $toAccountId]);
+        
+        // 4. Log the transfer
+        $pdo->prepare(
+            'INSERT INTO transfers (from_id, to_id, amount, created_at)
+             VALUES (:from, :to, :amount, NOW())'
+        )->execute([
+            ':from' => $fromAccountId,
+            ':to' => $toAccountId,
+            ':amount' => $amount
+        ]);
+        
+        $pdo->commit();
+        
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
+}
+?>
+```
+
 
 ## Resources
 

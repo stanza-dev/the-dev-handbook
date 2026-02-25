@@ -12,11 +12,12 @@ Understand PHP 8.1's Fiber API for cooperative concurrency
 
 ## Practice Challenges
 
-This section includes **4 interactive challenges** available on Stanza:
+This section includes **5 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Fiber Suspend
-- 🧩 Multiple Choice: Resuming a Fiber
-- 🧩 Multiple Choice: Fiber Use Case
+- ✏️ Fill in the Blank: Resuming a Fiber
+- 🧩 Challenge: Fiber Use Case
 - 🧩 Multiple Choice: Fiber Exception Handling
+- 🧩 Challenge: Fiber Lifecycle
 
 → [Practice in your IDE](https://stanza.dev/courses/php-modern-features)

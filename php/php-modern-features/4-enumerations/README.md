@@ -15,7 +15,7 @@ Define fixed sets of values with PHP 8.1's native enum support
 This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Backed Enum Value
-- 🧩 Multiple Choice: Creating Enum from Value
+- ✏️ Fill in the Blank: Creating Enum from Value
 - 🧩 Multiple Choice: Enum Static Methods
 - 🧩 Challenge: Backed Enum Methods
 

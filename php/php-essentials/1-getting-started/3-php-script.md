@@ -5,9 +5,21 @@ source_lesson: "php-essentials-first-php-script"
 
 # Writing Your First PHP Script
 
-Let's write your first PHP program! PHP code is embedded within special tags that tell the server to process the code.
+## Introduction
+Now that your environment is ready, it is time to write your first PHP program. This lesson covers PHP tags, the `echo` statement, embedding PHP in HTML, and comment styles — everything you need to start producing output.
 
-## PHP Tags
+## Key Concepts
+- **PHP Tags (`<?php ... ?>`)**: Delimiters that tell the server where PHP code begins and ends.
+- **`echo` Statement**: The primary way to output text and HTML from PHP.
+- **Short Echo Syntax (`<?= ... ?>`)**: A shorthand for `<?php echo ... ?>`, commonly used inside HTML templates.
+- **Case Sensitivity**: PHP keywords are case-insensitive, but variable names are case-sensitive.
+
+## Real World Context
+Every PHP application begins with these fundamentals. Whether you are rendering a dynamic web page, generating a JSON API response, or processing a form submission, you will use `echo`, PHP tags, and comments daily. Understanding how PHP mixes with HTML is essential for templating and for working with frameworks like Laravel's Blade.
+
+## Deep Dive
+
+### PHP Tags
 
 PHP code must be enclosed in opening and closing tags:
 
@@ -17,11 +29,11 @@ PHP code must be enclosed in opening and closing tags:
 ?>
 ```
 
-**Important**: The closing `?>` tag is optional (and often omitted) in files containing only PHP code. This prevents accidental whitespace issues.
+The closing `?>` tag is optional (and often omitted) in files containing only PHP code. This prevents accidental whitespace issues that can cause "headers already sent" errors.
 
-## The Echo Statement
+### The Echo Statement
 
-The `echo` statement outputs text to the browser:
+Use `echo` to output text to the browser:
 
 ```php
 <?php
@@ -29,9 +41,11 @@ echo "Hello, World!";
 ?>
 ```
 
-## Embedding PHP in HTML
+This sends the string "Hello, World!" as part of the HTML response.
 
-PHP shines when mixed with HTML:
+### Embedding PHP in HTML
+
+PHP shines when mixed with HTML to create dynamic pages:
 
 ```php
 <!DOCTYPE html>
@@ -46,7 +60,9 @@ PHP shines when mixed with HTML:
 </html>
 ```
 
-## Short Echo Syntax
+The PHP interpreter processes only the code between `<?php` and `?>` tags. Everything else is sent to the browser as plain HTML.
+
+### Short Echo Syntax
 
 For simple output within HTML, use the shorthand `<?=`:
 
@@ -55,7 +71,9 @@ For simple output within HTML, use the shorthand `<?=`:
 <!-- Equivalent to: <?php echo date("H:i:s"); ?> -->
 ```
 
-## Comments in PHP
+This is cleaner and is the preferred style in modern PHP templates.
+
+### Comments in PHP
 
 PHP supports three comment styles:
 
@@ -72,33 +90,56 @@ PHP supports three comment styles:
 
 /**
  * DocBlock comment
- * Used for documentation
+ * Used for documentation and IDE tooling
  * @param string $name The user's name
  */
 ```
 
-## Case Sensitivity
+### Case Sensitivity
 
-- **Keywords** (`if`, `else`, `echo`, `class`): Case-**insensitive**
-- **Variable names**: Case-**sensitive** (`$name` ≠ `$Name`)
+A subtle but important rule: keywords are case-insensitive, but variable names are not.
 
 ```php
 <?php
 ECHO "This works!";  // Keywords are case-insensitive
 $name = "Alice";
-echo $Name;  // Error! Variables ARE case-sensitive
+// echo $Name;  // Error! Variables ARE case-sensitive
 ```
+
+Always use consistent casing to avoid confusion.
+
+## Common Pitfalls
+1. **Forgetting the semicolon** — Every PHP statement must end with a semicolon (`;`). Missing it causes a parse error.
+2. **Leaving the closing `?>` tag in pure PHP files** — If there is whitespace or a newline after `?>`, PHP will output it. This can break headers, cookies, and JSON responses. Omit `?>` in files that contain only PHP.
+3. **Mixing up `$name` and `$Name`** — PHP variables are case-sensitive. These are two completely different variables.
+
+## Best Practices
+1. **Omit the closing `?>` tag** — In files that contain only PHP code, always leave off the closing tag to prevent accidental whitespace output.
+2. **Use `<?= ?>` for output in templates** — It is shorter, cleaner, and universally supported since PHP 5.4.
+3. **Use DocBlock comments for functions and classes** — They power IDE autocompletion and generate documentation automatically.
+
+## Summary
+- PHP code lives inside `<?php ... ?>` tags; the closing tag is optional in pure PHP files.
+- `echo` outputs text and HTML to the browser.
+- Use `<?= ?>` as shorthand for simple echo statements in HTML.
+- PHP keywords are case-insensitive, but variable names are case-sensitive.
+- Always end statements with a semicolon.
 
 ## Code Examples
 
-**A simple PHP script that outputs text and the current date**
+**A simple PHP script that outputs text and the current date — notice the dot operator for string concatenation**
 
 ```php
 <?php
 // hello.php - Your first PHP script
+// This outputs text and the current date to the browser
+
 echo "Hello, World!";
 echo "<br>";
 echo "The current date is: " . date("Y-m-d");
+
+// The dot (.) operator concatenates strings in PHP
+// date() is a built-in function that formats the current date
 ?>
 ```
 

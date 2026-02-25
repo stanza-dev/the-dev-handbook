@@ -1,8 +1,8 @@
 # 🚀 Modern PHP 8.x: Latest Language Features
 
-> Master PHP 8.0-8.4 features including union types, enums, attributes, property hooks, fibers, and modern syntax improvements.
+> Master PHP 8.0-8.5 features including union types, enums, attributes, property hooks, fibers, the pipe operator, and modern syntax improvements.
 
-**PHP 8.4** · Intermediate → Advanced
+**PHP 8.5** · Intermediate → Advanced
 
 ## Sections
 
@@ -15,7 +15,7 @@
 | ✨ | [Modern Syntax & Expressions](./5-modern-syntax/) | 4 lessons |
 | 🧵 | [Fibers & Async Foundations](./6-fibers/) | 3 lessons |
 
-**21 lessons** · **23 interactive challenges**
+**21 lessons** · **27 interactive challenges**
 
 ## Want the Interactive Experience?
 

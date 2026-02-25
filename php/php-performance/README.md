@@ -2,7 +2,7 @@
 
 > Optimize PHP applications for speed and scale. Master profiling, caching, OPcache, database optimization, and scaling strategies.
 
-**PHP 8.4** · Intermediate → Advanced
+**PHP 8.5** · Intermediate → Advanced
 
 ## Sections
 

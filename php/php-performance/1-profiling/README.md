@@ -15,8 +15,8 @@ Measure performance to find bottlenecks
 This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Microtime True
-- 🧩 Multiple Choice: N+1 Query Problem
-- 🧩 Multiple Choice: Peak Memory Usage
-- 🧩 Multiple Choice: Production Profiling
+- 🧩 Challenge: Peak Memory Usage
+- 🧩 Challenge: Fixing an N+1 Query Problem
+- ✏️ Fill in the Blank: Production Profiling
 
 → [Practice in your IDE](https://stanza.dev/courses/php-performance)

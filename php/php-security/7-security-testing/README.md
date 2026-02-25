@@ -14,9 +14,9 @@ Test your application for vulnerabilities and maintain security
 
 This section includes **4 interactive challenges** available on Stanza:
 
+- 🧩 Challenge: Rate Limit HTTP Code
+- ✏️ Fill in the Blank: Composer Audit
 - 🧩 Multiple Choice: Security Header
-- 🧩 Multiple Choice: Rate Limit HTTP Code
-- 🧩 Multiple Choice: Composer Audit
-- 🧩 Multiple Choice: Taint Analysis
+- 🧩 Challenge: Taint Analysis Detection
 
 → [Practice in your IDE](https://stanza.dev/courses/php-security)

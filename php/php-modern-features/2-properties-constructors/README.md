@@ -13,11 +13,12 @@ Constructor property promotion, readonly properties, and PHP 8.4 property hooks
 
 ## Practice Challenges
 
-This section includes **4 interactive challenges** available on Stanza:
+This section includes **5 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Constructor Promotion Syntax
-- 🧩 Multiple Choice: Readonly Property Behavior
-- ✏️ Fill in the Blank: Property Hooks
+- ✏️ Fill in the Blank: Readonly Property Behavior
+- 🧩 Multiple Choice: Property Hooks
 - 🧩 Multiple Choice: Lazy Ghost Initialization
+- 🧩 Challenge: Property Feature Timeline
 
 → [Practice in your IDE](https://stanza.dev/courses/php-modern-features)

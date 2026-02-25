@@ -5,9 +5,24 @@ source_lesson: "php-security-sql-injection-advanced"
 
 # Advanced SQL Injection Prevention
 
+## Introduction
 Beyond basic prepared statements, learn techniques for complex queries and edge cases.
 
-## Dynamic Column Selection
+## Key Concepts
+- **Second-Order SQL Injection**: Malicious data stored safely, then later used unsafely in a different query.
+- **Parameterized Identifiers**: Table/column names cannot be parameterized — use strict whitelist validation.
+- **Emulated vs Native Prepares**: `ATTR_EMULATE_PREPARES = false` ensures the database truly separates query structure from data.
+- **Stored Procedure Injection**: Even stored procedures can be vulnerable if they use dynamic SQL internally.
+
+## Real World Context
+Second-order SQL injection bypasses input sanitization because the malicious payload enters the database through a safe path (e.g., user registration) and triggers later (e.g., password reset). This is harder to detect with automated scanners and requires careful code review of all database queries.
+
+## Deep Dive
+### Intro
+
+Beyond basic prepared statements, learn techniques for complex queries and edge cases.
+
+### Dynamic column selection
 
 ```php
 <?php
@@ -56,7 +71,7 @@ class SafeQueryBuilder
 }
 ```
 
-## Safe IN Clause
+### Safe in clause
 
 ```php
 <?php
@@ -98,7 +113,7 @@ function findByIdsNamed(PDO $pdo, array $ids): array
 }
 ```
 
-## Safe LIKE Queries
+### Safe like queries
 
 ```php
 <?php
@@ -116,7 +131,7 @@ function searchUsers(PDO $pdo, string $term): array
 }
 ```
 
-## Preventing Second-Order SQL Injection
+### Preventing second-order sql injection
 
 ```php
 <?php
@@ -132,7 +147,7 @@ $stmt = $pdo->prepare('SELECT * FROM orders WHERE user_name = ?');
 $stmt->execute([$user['name']]);
 ```
 
-## PDO Security Settings
+### Pdo security settings
 
 ```php
 <?php
@@ -153,7 +168,7 @@ $pdo = new PDO($dsn, $user, $pass, [
 // Real prepared statements are safer and can be reused
 ```
 
-## Stored Procedures (Additional Layer)
+### Stored procedures (additional layer)
 
 ```sql
 -- MySQL stored procedure
@@ -172,6 +187,19 @@ $stmt = $pdo->prepare('CALL GetUserByEmail(:email)');
 $stmt->execute(['email' => $email]);
 $user = $stmt->fetch();
 ```
+
+## Common Pitfalls
+1. **Trusting data from your own database** — Data retrieved from the database may have been injected by a previous request. Always use prepared statements for ALL queries.
+2. **Dynamic table/column names from user input** — Since identifiers can't be parameterized, unvalidated table names lead to SQL injection. Always whitelist allowed identifiers.
+
+## Best Practices
+1. **Disable emulated prepares** — Set `PDO::ATTR_EMULATE_PREPARES` to `false` so the database engine handles parameter binding natively.
+2. **Use an ORM for dynamic queries** — ORMs like Doctrine or Eloquent handle parameterization and identifier escaping, reducing manual SQL injection risks.
+
+## Summary
+- Second-order SQL injection exploits data that was stored safely but used unsafely later.
+- Always use native prepared statements with `ATTR_EMULATE_PREPARES = false`.
+- Whitelist-validate all dynamic identifiers since they cannot be parameterized.
 
 ## Resources
 

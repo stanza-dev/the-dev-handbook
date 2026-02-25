@@ -5,9 +5,24 @@ source_lesson: "php-security-secure-configuration"
 
 # Secure PHP Configuration
 
+## Introduction
 Proper PHP configuration is your first line of defense. Many attacks exploit misconfigured servers.
 
-## Critical php.ini Settings
+## Key Concepts
+- **display_errors**: Must be `Off` in production to prevent leaking file paths and database details.
+- **expose_php**: Should be `Off` to hide PHP version from HTTP headers.
+- **open_basedir**: Restricts file operations to specified directories, limiting damage from directory traversal.
+- **disable_functions**: Blocks dangerous functions like `exec()`, `system()`, and `passthru()`.
+
+## Real World Context
+Misconfigured PHP installations are one of the most common attack vectors. A single `display_errors = On` in production can reveal database credentials, file system paths, and internal logic to attackers performing reconnaissance.
+
+## Deep Dive
+### Intro
+
+Proper PHP configuration is your first line of defense. Many attacks exploit misconfigured servers.
+
+### Critical php.ini settings
 
 ```ini
 ; Disable dangerous functions
@@ -45,7 +60,7 @@ memory_limit = 128M
 post_max_size = 10M
 ```
 
-## Runtime Configuration
+### Runtime configuration
 
 ```php
 <?php
@@ -59,7 +74,7 @@ if (ini_get('display_errors')) {
 }
 ```
 
-## Environment-Based Configuration
+### Environment-based configuration
 
 ```php
 <?php
@@ -78,7 +93,7 @@ return match($_ENV['APP_ENV'] ?? 'production') {
 };
 ```
 
-## Security Headers
+### Security headers
 
 ```php
 <?php
@@ -102,6 +117,19 @@ function setSecurityHeaders(): void {
     header('Referrer-Policy: strict-origin-when-cross-origin');
 }
 ```
+
+## Common Pitfalls
+1. **Copying development php.ini to production** — Development settings like `display_errors=On` and `error_reporting=E_ALL` are dangerous in production.
+2. **Forgetting session configuration** — Insecure session settings (`session.cookie_httponly=0`) allow session hijacking via XSS.
+
+## Best Practices
+1. **Maintain separate php.ini files** — Use environment-specific configurations for development, staging, and production.
+2. **Audit php.ini regularly** — Use `php --ini` and `phpinfo()` (temporarily, never in production) to verify all security-relevant directives.
+
+## Summary
+- Secure PHP configuration starts with disabling `display_errors`, `expose_php`, and dangerous functions.
+- Use `open_basedir` and `disable_functions` to limit the attack surface.
+- Always maintain separate configurations for each environment.
 
 ## Code Examples
 

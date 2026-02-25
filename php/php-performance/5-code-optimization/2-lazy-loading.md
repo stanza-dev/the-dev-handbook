@@ -5,9 +5,24 @@ source_lesson: "php-performance-lazy-loading"
 
 # Lazy Loading & Deferred Execution
 
+## Introduction
 Don't do work until you need the results.
 
-## Lazy Object Initialization
+## Key Concepts
+- **Lazy Loading**: Deferring expensive initialization until the resource is actually needed.
+- **Lazy Objects (PHP 8.4+)**: `ReflectionClass::newLazyProxy()` creates objects whose initialization is deferred until first property access.
+- **Service Container Lazy Loading**: DI containers like Symfony's create service proxies that only instantiate the real service when a method is called.
+- **Autoloading**: PSR-4 autoloading ensures PHP only loads class files when they're first referenced, not at startup.
+
+## Real World Context
+Symfony's dependency injection container uses lazy loading extensively — services that aren't used during a request are never instantiated. This can save 50-100ms per request in large applications with hundreds of services. PHP 8.4's native lazy objects make this pattern available without framework-specific proxies.
+
+## Deep Dive
+### Intro
+
+Don't do work until you need the results.
+
+### Lazy object initialization
 
 ```php
 <?php
@@ -43,7 +58,7 @@ $container->register('logger', fn() => new Logger(...));
 $mailer = $container->get('mailer');
 ```
 
-## Generators for Lazy Iteration
+### Generators for lazy iteration
 
 ```php
 <?php
@@ -66,7 +81,7 @@ foreach (getAllUsers() as $user) {
 }
 ```
 
-## Lazy Collections
+### Lazy collections
 
 ```php
 <?php
@@ -131,7 +146,7 @@ foreach ($result as $item) {
 }
 ```
 
-## Deferred Calculations
+### Deferred calculations
 
 ```php
 <?php
@@ -156,6 +171,19 @@ class Report
     }
 }
 ```
+
+## Common Pitfalls
+1. **Over-using lazy loading** — For lightweight objects used on every request, lazy loading adds overhead without benefit. Only apply it to expensive initializations (database connections, API clients).
+2. **Not considering initialization timing** — A lazy-loaded service that fails during initialization will throw an exception at an unexpected point in your code. Handle initialization errors gracefully.
+
+## Best Practices
+1. **Use lazy loading for heavy services** — Database connections, HTTP clients, file system wrappers, and cache clients are ideal candidates for lazy initialization.
+2. **Leverage PHP 8.4+ lazy objects** — Use `ReflectionClass::newLazyProxy()` for framework-independent lazy loading without external dependencies.
+
+## Summary
+- Lazy loading defers expensive object initialization until the resource is actually needed.
+- PHP 8.4+ provides native lazy objects via `ReflectionClass::newLazyProxy()`.
+- Apply lazy loading to heavy services (DB connections, API clients) but not to lightweight objects used on every request.
 
 ## Code Examples
 
@@ -280,6 +308,10 @@ echo "Total sales: $total";
 ?>
 ```
 
+
+## Resources
+
+- [Generators](https://www.php.net/manual/en/language.generators.php) — PHP generators for memory-efficient iteration
 
 ---
 

@@ -5,9 +5,24 @@ source_lesson: "php-performance-opcache-config"
 
 # Configuring OPcache
 
+## Introduction
 OPcache stores precompiled bytecode in memory, eliminating the need to parse PHP files on every request.
 
-## How OPcache Works
+## Key Concepts
+- **OPcache**: Stores precompiled PHP bytecode in shared memory, eliminating parsing and compilation on each request.
+- **opcache.validate_timestamps**: When set to 0, OPcache never checks if source files changed — maximum performance but requires restart on deploy.
+- **opcache.memory_consumption**: The shared memory size for cached bytecodes (default 128MB, increase for large applications).
+- **opcache_reset()**: Function to clear all cached bytecode, typically called during deployment.
+
+## Real World Context
+OPcache is the single biggest performance improvement for any PHP application — enabling it can reduce response times by 50-70% with zero code changes. Every production PHP server should have OPcache enabled and properly configured. Without it, PHP parses and compiles every .php file on every request.
+
+## Deep Dive
+### Intro
+
+OPcache stores precompiled bytecode in memory, eliminating the need to parse PHP files on every request.
+
+### How opcache works
 
 ```
 Without OPcache:
@@ -21,7 +36,7 @@ With OPcache:
             (Compiled once)
 ```
 
-## Enable OPcache
+### Enable opcache
 
 ```ini
 ; php.ini
@@ -30,7 +45,7 @@ opcache.enable=1
 opcache.enable_cli=0  ; Enable for CLI scripts if needed
 ```
 
-## Production Configuration
+### Production configuration
 
 ```ini
 ; Memory allocation
@@ -51,7 +66,7 @@ opcache.enable_file_override=1          ; Faster file operations
 opcache.restrict_api=''             ; Restrict API to specific paths
 ```
 
-## Development Configuration
+### Development configuration
 
 ```ini
 ; Check file changes for immediate updates
@@ -59,7 +74,7 @@ opcache.validate_timestamps=1
 opcache.revalidate_freq=2  ; Check every 2 seconds
 ```
 
-## Preloading (PHP 7.4+)
+### Preloading (php 7.4+)
 
 ```php
 <?php
@@ -82,7 +97,7 @@ opcache.preload=/var/www/app/preload.php
 opcache.preload_user=www-data
 ```
 
-## Monitoring OPcache
+### Monitoring opcache
 
 ```php
 <?php
@@ -105,7 +120,7 @@ function opcacheStats(): array
 }
 ```
 
-## Clearing OPcache
+### Clearing opcache
 
 ```php
 <?php
@@ -121,6 +136,19 @@ if (opcache_get_status()) {
     echo "OPcache cleared\n";
 }
 ```
+
+## Common Pitfalls
+1. **Leaving `validate_timestamps=1` in production** — Checking file modification times on every request adds unnecessary stat() calls. Set to 0 and clear the cache on deploy.
+2. **Insufficient memory allocation** — If the cache fills up, OPcache starts evicting entries, causing recompilation. Monitor with `opcache_get_status()` and increase `memory_consumption` if needed.
+
+## Best Practices
+1. **Set `validate_timestamps=0` in production** — Disable filesystem checks and use `opcache_reset()` in your deployment script to reload code.
+2. **Monitor cache hit rates** — Use `opcache_get_status()` to track cache hits, misses, and memory usage. Hit rate should be >99%.
+
+## Summary
+- OPcache stores compiled bytecode in shared memory, eliminating per-request parsing overhead.
+- Set `validate_timestamps=0` in production for maximum performance.
+- Monitor cache hit rates and memory usage to ensure optimal configuration.
 
 ## Resources
 

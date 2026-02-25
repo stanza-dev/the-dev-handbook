@@ -5,9 +5,24 @@ source_lesson: "php-performance-blackfire-profiling"
 
 # Advanced Profiling with Blackfire
 
+## Introduction
 Blackfire is a production-grade profiler that provides detailed insights into PHP application performance without significant overhead.
 
-## Why Use Blackfire Over Xdebug?
+## Key Concepts
+- **Blackfire Profiler**: A production-safe profiling tool that samples code execution with minimal overhead.
+- **Call Graph**: Visual representation of function calls, execution time, and memory allocation per function.
+- **Assertions**: Blackfire tests that define performance budgets (e.g., "this endpoint must execute fewer than 10 SQL queries").
+- **Continuous Profiling**: Periodic sampling in production to detect performance regressions over time.
+
+## Real World Context
+Blackfire is used by companies like Symfony, Platform.sh, and many enterprise PHP applications to profile in production without impacting users. Unlike Xdebug, it uses instrumentation that adds negligible overhead, making it safe for always-on production monitoring.
+
+## Deep Dive
+### Intro
+
+Blackfire is a production-grade profiler that provides detailed insights into PHP application performance without significant overhead.
+
+### Why use blackfire over xdebug?
 
 | Feature | Xdebug | Blackfire |
 |---------|--------|----------|
@@ -17,30 +32,26 @@ Blackfire is a production-grade profiler that provides detailed insights into PH
 | CI Integration | Limited | Full CI/CD integration |
 | Memory Profiling | Basic | Detailed heap analysis |
 
-## Installing Blackfire
+### Installing blackfire
 
 ```bash
-# Install the probe (PHP extension)
 curl -sSL https://packages.blackfire.io/gpg.key | sudo apt-key add -
 echo "deb http://packages.blackfire.io/debian any main" | sudo tee /etc/apt/sources.list.d/blackfire.list
 sudo apt-get update
 sudo apt-get install blackfire-php
 
-# Configure credentials
 blackfire config --client-id=xxx --client-token=xxx
 ```
 
-## Profiling a Script
+### Profiling a script
 
 ```bash
-# Profile a CLI script
 blackfire run php my-script.php
 
-# Profile with specific scenario
 blackfire --samples=10 run php heavy-computation.php
 ```
 
-## Profiling HTTP Requests
+### Profiling http requests
 
 ```php
 <?php
@@ -65,7 +76,7 @@ $profile = $blackfire->endProbe($probe);
 echo "Profile URL: " . $profile->getUrl();
 ```
 
-## Analyzing Results
+### Analyzing results
 
 Blackfire provides:
 
@@ -84,10 +95,9 @@ $metrics = [
 ];
 ```
 
-## Assertions for CI/CD
+### Assertions for ci/cd
 
 ```yaml
-# .blackfire.yaml
 scenarios:
   Homepage:
     - path: /
@@ -103,20 +113,27 @@ scenarios:
         - metrics.http.requests.count == 0
 ```
 
-## Comparison Profiling
+### Comparison profiling
 
 ```bash
-# Create a reference profile
 blackfire --reference run php benchmark.php
 
-# Compare against reference
 blackfire --reference=1 run php benchmark.php
 
-# Output shows:
-# - Wall Time: +15% (regression)
-# - Memory: -5% (improvement)
-# - SQL Queries: same
 ```
+
+## Common Pitfalls
+1. **Only profiling on-demand** — Some performance issues only appear under load or with specific data patterns. Use continuous profiling to catch regressions early.
+2. **Ignoring memory profiles** — CPU time gets all the attention, but memory allocation can be the real bottleneck, especially in queue workers and batch processes.
+
+## Best Practices
+1. **Set up performance assertions in CI** — Define budgets like "max 15 queries per page" and "response under 200ms" that fail the build if violated.
+2. **Profile queue workers and CLI commands** — Web requests get profiled naturally, but long-running workers often have memory leaks and inefficient loops that go unnoticed.
+
+## Summary
+- Blackfire provides production-safe profiling with minimal overhead.
+- Use performance assertions in CI/CD to catch regressions before deployment.
+- Profile both web requests and background workers for complete coverage.
 
 ## Resources
 

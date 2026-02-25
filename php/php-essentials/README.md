@@ -1,8 +1,8 @@
 # 🐘 PHP Essentials
 
-> Master PHP from the ground up. Learn syntax, functions, OOP basics, forms handling, and database operations with PDO to build dynamic web applications.
+> Master PHP from the ground up. Learn syntax, functions, forms handling, and database operations with PDO to build dynamic web applications.
 
-**PHP 8.4** · Beginner → Intermediate
+**PHP 8.5** · Beginner → Intermediate
 
 ## Sections
 

@@ -5,9 +5,24 @@ source_lesson: "php-performance-async-processing"
 
 # Asynchronous Processing
 
+## Introduction
 Move slow operations out of the request cycle.
 
-## Message Queues
+## Key Concepts
+- **Message Queues**: Decouple time-consuming work from the request cycle (e.g., RabbitMQ, Redis queues, Amazon SQS).
+- **Background Workers**: Long-running PHP processes (Symfony Messenger, Laravel Queue) that consume and process queued jobs.
+- **Event-Driven Architecture**: Publishing events (e.g., `UserRegistered`) that trigger asynchronous handlers for emails, analytics, etc.
+- **Fire and Forget**: Queueing work and returning an immediate response to the user, processing the work asynchronously.
+
+## Real World Context
+Every major PHP application uses async processing. When a user places an order, you immediately return a confirmation while background workers handle payment processing, inventory updates, email notifications, and analytics tracking. This keeps response times under 200ms regardless of how much work the order triggers.
+
+## Deep Dive
+### Intro
+
+Move slow operations out of the request cycle.
+
+### Message queues
 
 ```php
 <?php
@@ -52,7 +67,7 @@ $queue->push('emails', [
 return new JsonResponse(['order_id' => $order->id]);
 ```
 
-## Worker Process
+### Worker process
 
 ```php
 <?php
@@ -117,7 +132,7 @@ $worker = new Worker($queue, [
 $worker->run('default');
 ```
 
-## Supervisor Configuration
+### Supervisor configuration
 
 ```ini
 ; /etc/supervisor/conf.d/worker.conf
@@ -130,6 +145,19 @@ autorestart=true
 user=www-data
 stdout_logfile=/var/log/worker.log
 ```
+
+## Common Pitfalls
+1. **Processing everything synchronously** — Sending emails, generating PDFs, and calling external APIs during the HTTP request blocks the user. Queue everything that doesn't need an immediate response.
+2. **Not handling worker failures** — Queue workers can crash or be killed by OOM. Implement retry logic, dead letter queues, and idempotent job handlers to handle failures gracefully.
+
+## Best Practices
+1. **Queue anything that takes more than 100ms** — Email sending, image processing, report generation, and third-party API calls should all be processed asynchronously.
+2. **Make queue jobs idempotent** — Jobs should produce the same result if executed twice. This allows safe retry on failure without creating duplicate side effects.
+
+## Summary
+- Message queues decouple slow operations from the HTTP request cycle, keeping response times fast.
+- Use background workers for email, PDF generation, API calls, and any task taking more than 100ms.
+- Design idempotent jobs with retry logic and dead letter queues for reliability.
 
 ## Code Examples
 
@@ -291,6 +319,10 @@ $worker->run();
 ?>
 ```
 
+
+## Resources
+
+- [PCNTL Process Control](https://www.php.net/manual/en/book.pcntl.php) — PHP process control functions for workers
 
 ---
 

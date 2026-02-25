@@ -2,20 +2,20 @@
 
 > Master database design, advanced PDO patterns, query optimization, transactions, and data modeling with PHP and MySQL/PostgreSQL.
 
-**PHP 8.4** · Intermediate → Advanced
+**PHP 8.5** · Intermediate → Advanced
 
 ## Sections
 
 | | Section | Lessons |
 |---|---------|---------|
-| 🔌 | [Advanced PDO Patterns](./1-pdo-advanced/) | 2 lessons |
-| 🔄 | [Transactions & Data Integrity](./2-transactions/) | 2 lessons |
-| 🔨 | [Query Builder Patterns](./3-query-builder/) | 2 lessons |
-| 📐 | [Database Design Principles](./4-database-design/) | 2 lessons |
-| ⚡ | [Query Optimization](./5-query-optimization/) | 2 lessons |
-| 📝 | [Active Record Pattern](./6-active-record/) | 2 lessons |
+| 🔌 | [Advanced PDO Patterns](./1-pdo-advanced/) | 3 lessons |
+| 🔄 | [Transactions & Data Integrity](./2-transactions/) | 3 lessons |
+| 🔨 | [Query Builder Patterns](./3-query-builder/) | 3 lessons |
+| 📐 | [Database Design Principles](./4-database-design/) | 3 lessons |
+| ⚡ | [Query Optimization](./5-query-optimization/) | 3 lessons |
+| 📝 | [Active Record Pattern](./6-active-record/) | 3 lessons |
 
-**12 lessons** · **11 interactive challenges**
+**18 lessons** · **18 interactive challenges**
 
 ## Want the Interactive Experience?
 

@@ -5,9 +5,23 @@ source_lesson: "php-databases-n-plus-one"
 
 # Solving N+1 Query Problems
 
-The N+1 problem occurs when you execute one query for a list, then N additional queries for related data.
+## Introduction
 
-## The Problem
+The N+1 problem is the most common performance mistake in database-driven applications. It occurs when code executes one query to fetch a list, then N individual queries to fetch related data for each item. The fix is always to batch the related data loading.
+
+## Key Concepts
+
+- **N+1 Problem**: Executing 1 query for a list plus N queries for related data, resulting in N+1 total queries.
+- **Eager Loading**: Fetching all related data upfront in one or two queries instead of lazily loading it per item.
+- **Batch Loading with IN**: Using `WHERE foreign_key IN (id1, id2, ...)` to load all related rows in a single query.
+
+## Real World Context
+
+A page showing 50 users with their latest orders could execute 51 queries (1 for users + 50 for orders). With eager loading, it executes exactly 2 queries regardless of how many users you display. At scale, this difference is the difference between 50ms and 5000ms page loads.
+
+## Deep Dive
+
+The N+1 problem in action:
 
 ```php
 <?php
@@ -15,16 +29,15 @@ The N+1 problem occurs when you execute one query for a list, then N additional 
 $users = $pdo->query('SELECT * FROM users LIMIT 100')->fetchAll();
 
 foreach ($users as $user) {
-    // N queries (100!) to get orders
+    // 100 more queries!
     $stmt = $pdo->prepare('SELECT * FROM orders WHERE user_id = ?');
     $stmt->execute([$user['id']]);
     $orders = $stmt->fetchAll();
 }
-
 // Total: 101 queries!
 ```
 
-## Solution 1: JOIN
+Solution 1 — JOIN (single query):
 
 ```php
 <?php
@@ -55,11 +68,10 @@ foreach ($results as $row) {
         ];
     }
 }
-
 // Total: 1 query!
 ```
 
-## Solution 2: Eager Loading with IN
+Solution 2 — Eager loading with IN (two queries):
 
 ```php
 <?php
@@ -69,7 +81,9 @@ $userIds = array_column($users, 'id');
 
 // Query 2: Get all orders for those users
 $placeholders = implode(',', array_fill(0, count($userIds), '?'));
-$stmt = $pdo->prepare("SELECT * FROM orders WHERE user_id IN ($placeholders)");
+$stmt = $pdo->prepare(
+    "SELECT * FROM orders WHERE user_id IN ($placeholders)"
+);
 $stmt->execute($userIds);
 $allOrders = $stmt->fetchAll();
 
@@ -83,11 +97,10 @@ foreach ($allOrders as $order) {
 foreach ($users as &$user) {
     $user['orders'] = $ordersByUser[$user['id']] ?? [];
 }
-
 // Total: 2 queries (regardless of user count)
 ```
 
-## Eager Loading Helper
+A reusable eager loader:
 
 ```php
 <?php
@@ -102,7 +115,6 @@ class EagerLoader {
         string $localKey = 'id'
     ): void {
         $ids = array_unique(array_column($items, $localKey));
-        
         if (empty($ids)) {
             return;
         }
@@ -111,7 +123,7 @@ class EagerLoader {
         $stmt = $this->pdo->prepare(
             "SELECT * FROM $table WHERE $foreignKey IN ($placeholders)"
         );
-        $stmt->execute($ids);
+        $stmt->execute(array_values($ids));
         $related = $stmt->fetchAll();
         
         $grouped = [];
@@ -124,108 +136,54 @@ class EagerLoader {
         }
     }
 }
-
-// Usage
-$loader = new EagerLoader($pdo);
-$users = $pdo->query('SELECT * FROM users')->fetchAll();
-$loader->loadRelation($users, 'orders', 'orders', 'user_id');
-$loader->loadRelation($users, 'posts', 'posts', 'author_id');
 ```
+
+Choose JOINs when you need a single query and the data relationship is simple. Choose IN-based eager loading when you need to load multiple independent relationships or when the JOIN would produce too many duplicate rows.
+
+## Common Pitfalls
+
+1. **Not noticing N+1 queries** — They hide inside loops and look innocent. Use a query logger or debug toolbar to count queries per request.
+2. **Using JOINs for everything** — JOINing many tables with one-to-many relationships multiplies rows, sending redundant data. IN-based loading is often more efficient for multiple relationships.
+
+## Best Practices
+
+1. **Count queries per request during development** — Anything over ~10 queries per page deserves investigation.
+2. **Use eager loading for any relationship accessed in a loop** — If you touch related data inside a foreach, you have an N+1 problem.
+
+## Summary
+
+- The N+1 problem turns O(1) queries into O(N) queries by loading related data one item at a time.
+- JOINs solve it with a single query; IN-based eager loading solves it with two queries.
+- A reusable EagerLoader class can batch-load any relationship.
+- Always count queries per request during development to catch N+1 issues early.
 
 ## Code Examples
 
-**Repository with eager loading support**
+**Eager loading multiple relationships efficiently**
 
 ```php
 <?php
 declare(strict_types=1);
 
-// Complete eager loading repository
-class UserRepository {
-    public function __construct(private PDO $pdo) {}
-    
-    /**
-     * @param array<string> $with Relations to eager load
-     * @return array<User>
-     */
-    public function findAllWithRelations(array $with = []): array {
-        $users = $this->pdo
-            ->query('SELECT * FROM users ORDER BY name')
-            ->fetchAll();
-        
-        if (empty($users)) {
-            return [];
-        }
-        
-        $userIds = array_column($users, 'id');
-        
-        if (in_array('orders', $with, true)) {
-            $this->loadOrders($users, $userIds);
-        }
-        
-        if (in_array('profile', $with, true)) {
-            $this->loadProfiles($users, $userIds);
-        }
-        
-        return $users;
-    }
-    
-    private function loadOrders(array &$users, array $userIds): void {
-        $placeholders = implode(',', array_fill(0, count($userIds), '?'));
-        
-        $stmt = $this->pdo->prepare("
-            SELECT o.*, 
-                   GROUP_CONCAT(oi.product_name) as products
-            FROM orders o
-            LEFT JOIN order_items oi ON o.id = oi.order_id
-            WHERE o.user_id IN ($placeholders)
-            GROUP BY o.id
-            ORDER BY o.created_at DESC
-        ");
-        $stmt->execute($userIds);
-        $orders = $stmt->fetchAll();
-        
-        $grouped = [];
-        foreach ($orders as $order) {
-            $order['products'] = $order['products'] ? explode(',', $order['products']) : [];
-            $grouped[$order['user_id']][] = $order;
-        }
-        
-        foreach ($users as &$user) {
-            $user['orders'] = $grouped[$user['id']] ?? [];
-            $user['order_count'] = count($user['orders']);
-            $user['total_spent'] = array_sum(array_column($user['orders'], 'total'));
-        }
-    }
-    
-    private function loadProfiles(array &$users, array $userIds): void {
-        $placeholders = implode(',', array_fill(0, count($userIds), '?'));
-        
-        $stmt = $this->pdo->prepare("
-            SELECT * FROM user_profiles WHERE user_id IN ($placeholders)
-        ");
-        $stmt->execute($userIds);
-        $profiles = $stmt->fetchAll();
-        
-        $indexed = array_column($profiles, null, 'user_id');
-        
-        foreach ($users as &$user) {
-            $user['profile'] = $indexed[$user['id']] ?? null;
-        }
-    }
-}
+$loader = new EagerLoader($pdo);
+$users = $pdo->query('SELECT * FROM users LIMIT 50')->fetchAll();
 
-// Usage: Only 3 queries total (users + orders + profiles)
-$repo = new UserRepository($pdo);
-$users = $repo->findAllWithRelations(['orders', 'profile']);
+// Load multiple relationships: 3 queries total
+$loader->loadRelation($users, 'orders', 'orders', 'user_id');
+$loader->loadRelation($users, 'posts', 'posts', 'author_id');
 
 foreach ($users as $user) {
-    echo "{$user['name']} has {$user['order_count']} orders\n";
-    echo "Total spent: \${$user['total_spent']}\n";
+    $orderCount = count($user['orders']);
+    $postCount = count($user['posts']);
+    echo "{$user['name']}: {$orderCount} orders, {$postCount} posts\n";
 }
 ?>
 ```
 
+
+## Resources
+
+- [N+1 Query Problem Explained](https://stackoverflow.com/questions/97197/what-is-the-n1-selects-problem-in-orm) — Classic explanation of the N+1 problem
 
 ---
 

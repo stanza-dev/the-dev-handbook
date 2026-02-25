@@ -14,9 +14,9 @@ Write efficient PHP code
 
 This section includes **4 interactive challenges** available on Stanza:
 
+- ✏️ Fill in the Blank: Efficient String Check
 - 🧩 Multiple Choice: Generator Benefit
-- 🧩 Multiple Choice: array_flip() for Lookup
-- 🧩 Multiple Choice: Efficient String Check
+- 🔗 Matching: Array Performance Techniques
 - 🧩 Multiple Choice: WeakMap Purpose
 
 → [Practice in your IDE](https://stanza.dev/courses/php-performance)

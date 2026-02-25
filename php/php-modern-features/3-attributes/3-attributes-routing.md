@@ -5,15 +5,27 @@ source_lesson: "php-modern-features-attributes-routing"
 
 # Building an Attribute-Based Router
 
-Attributes enable declarative routing similar to frameworks like Symfony or Laravel. Let's build a complete routing system.
+## Introduction
+Attributes enable declarative routing similar to Symfony, Laravel, and other modern frameworks. Instead of defining routes in a separate configuration file, you annotate controller methods directly with `#[Route]` attributes. This lesson walks through building a complete routing system.
 
-## Route Attribute Definition
+## Key Concepts
+- **Declarative Routing**: Defining routes as metadata on controller methods rather than in external configuration.
+- **Route Registration**: The process of scanning controller classes for route attributes and building a lookup table.
+- **Parameter Extraction**: Matching URL patterns like `/users/{id}` and extracting the `id` value.
+
+## Real World Context
+Symfony's routing component and Laravel's route attributes both use this pattern. By building one from scratch, you will understand the reflection-based scanning that happens behind the scenes in every modern PHP framework.
+
+## Deep Dive
+
+### Route Attribute Definition
+
+First, define the attributes for routes, controllers, and middleware:
 
 ```php
 <?php
 #[Attribute(Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
-class Route
-{
+class Route {
     public function __construct(
         public string $path,
         public string $method = 'GET',
@@ -23,160 +35,148 @@ class Route
 }
 
 #[Attribute(Attribute::TARGET_CLASS)]
-class Controller
-{
-    public function __construct(
-        public string $prefix = ''
-    ) {}
+class Controller {
+    public function __construct(public string $prefix = '') {}
 }
 
-#[Attribute(Attribute::TARGET_METHOD)]
-class Middleware
-{
-    public function __construct(
-        public string $name
-    ) {}
+#[Attribute(Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
+class Middleware {
+    public function __construct(public string $name) {}
 }
 ```
 
-## Controller Definition
+The `Route` attribute is repeatable (a method can handle multiple routes) and method-targeted. The `Controller` attribute provides a URL prefix for all routes in the class.
+
+### Controller Definition
+
+Use the attributes on a controller:
 
 ```php
 <?php
 #[Controller('/api/users')]
-class UserController
-{
+class UserController {
     #[Route('/', 'GET', name: 'users.index')]
     #[Middleware('auth')]
-    public function index(): array
-    {
+    public function index(): array {
         return ['users' => []];
     }
     
     #[Route('/{id}', 'GET', name: 'users.show')]
     #[Middleware('auth')]
-    public function show(int $id): array
-    {
+    public function show(int $id): array {
         return ['user' => ['id' => $id]];
     }
     
     #[Route('/', 'POST', name: 'users.create')]
     #[Middleware('auth')]
     #[Middleware('admin')]
-    public function create(): array
-    {
+    public function create(): array {
         return ['created' => true];
     }
 }
 ```
 
-## Route Collection
+Each method declares its route path, HTTP method, and required middleware. The `Controller` attribute provides the `/api/users` prefix.
+
+### Router Implementation
+
+The router scans controllers and builds a route table:
 
 ```php
 <?php
-class RouteDefinition
-{
-    public function __construct(
-        public string $path,
-        public string $method,
-        public string $controller,
-        public string $action,
-        public ?string $name,
-        public array $middleware
-    ) {}
-    
-    public function matches(string $method, string $path): ?array
-    {
-        if ($this->method !== $method) {
-            return null;
-        }
-        
-        // Convert {param} to regex
-        $pattern = preg_replace('/\{(\w+)\}/', '(?P<$1>[^/]+)', $this->path);
-        $pattern = '#^' . $pattern . '$#';
-        
-        if (preg_match($pattern, $path, $matches)) {
-            return array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
-        }
-        
-        return null;
-    }
-}
-```
-
-## Router Implementation
-
-```php
-<?php
-class AttributeRouter
-{
-    /** @var RouteDefinition[] */
+class AttributeRouter {
     private array $routes = [];
     
-    public function registerController(string $className): void
-    {
+    public function registerController(string $className): void {
         $reflection = new ReflectionClass($className);
         
-        // Get controller prefix
         $prefix = '';
         $controllerAttrs = $reflection->getAttributes(Controller::class);
         if (!empty($controllerAttrs)) {
             $prefix = $controllerAttrs[0]->newInstance()->prefix;
         }
         
-        // Register each route method
         foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
             $routeAttrs = $method->getAttributes(Route::class);
             
             foreach ($routeAttrs as $attr) {
                 $route = $attr->newInstance();
                 
-                // Collect middleware
                 $middleware = $route->middleware;
                 foreach ($method->getAttributes(Middleware::class) as $mwAttr) {
                     $middleware[] = $mwAttr->newInstance()->name;
                 }
                 
-                $this->routes[] = new RouteDefinition(
-                    path: $prefix . $route->path,
-                    method: $route->method,
-                    controller: $className,
-                    action: $method->getName(),
-                    name: $route->name,
-                    middleware: $middleware
-                );
+                $this->routes[] = [
+                    'path' => $prefix . $route->path,
+                    'method' => $route->method,
+                    'controller' => $className,
+                    'action' => $method->getName(),
+                    'middleware' => $middleware,
+                ];
             }
         }
-    }
-    
-    public function dispatch(string $method, string $uri): mixed
-    {
-        foreach ($this->routes as $route) {
-            $params = $route->matches($method, $uri);
-            
-            if ($params !== null) {
-                // Run middleware
-                foreach ($route->middleware as $mw) {
-                    $this->runMiddleware($mw);
-                }
-                
-                // Call controller action
-                $controller = new ($route->controller)();
-                return $controller->{$route->action}(...$params);
-            }
-        }
-        
-        throw new NotFoundException('Route not found');
     }
 }
 
-// Usage
 $router = new AttributeRouter();
 $router->registerController(UserController::class);
-
-$result = $router->dispatch('GET', '/api/users/123');
-// Calls UserController::show(123)
 ```
+
+The router reads the controller prefix, then scans each public method for `Route` attributes. It combines the prefix with the route path and collects middleware from both the route and separate `Middleware` attributes.
+
+## Common Pitfalls
+1. **Scanning too many classes** — Reflection on every class is expensive. Use file-system conventions or a class map to limit scanning to controller directories only.
+2. **Route ordering matters** — A wildcard route like `/{slug}` can match before `/create`. Register specific routes before wildcards, or sort routes by specificity.
+
+## Best Practices
+1. **Cache the route table** — Scan controllers once during deployment or first request, serialize the route table, and load from cache on subsequent requests.
+2. **Separate route definition from dispatch** — Build the route table in a boot phase. The dispatch phase should be a simple lookup, not involve reflection.
+
+## Summary
+- Attribute-based routing places route definitions on controller methods.
+- A router scans controllers with reflection, reading `#[Route]` and `#[Middleware]` attributes.
+- Controller-level `#[Controller('/prefix')]` provides URL prefixes.
+- Cache the scanned route table for production performance.
+- This pattern is used by Symfony, Laravel, and most modern PHP frameworks.
+
+## Code Examples
+
+**Minimal route registration function that scans a controller class for Route attributes using reflection**
+
+```php
+<?php
+declare(strict_types=1);
+
+#[Attribute(Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
+class Route {
+    public function __construct(
+        public string $path,
+        public string $method = 'GET',
+        public ?string $name = null
+    ) {}
+}
+
+function registerRoutes(string $controllerClass): array {
+    $routes = [];
+    $reflection = new ReflectionClass($controllerClass);
+    
+    foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+        foreach ($method->getAttributes(Route::class) as $attr) {
+            $route = $attr->newInstance();
+            $routes[] = [
+                'path' => $route->path,
+                'method' => $route->method,
+                'name' => $route->name,
+                'handler' => [$controllerClass, $method->getName()],
+            ];
+        }
+    }
+    return $routes;
+}
+?>
+```
+
 
 ## Resources
 

@@ -5,9 +5,24 @@ source_lesson: "php-security-prepared-statements"
 
 # Prepared Statements: The Solution
 
+## Introduction
 Prepared statements completely prevent SQL injection by separating SQL code from data.
 
-## How Prepared Statements Work
+## Key Concepts
+- **Query Template**: SQL structure is sent to the database first, separate from data values.
+- **Parameter Binding**: Data values are sent separately and never interpreted as SQL code.
+- **Named Parameters**: Use `:name` placeholders for readable, maintainable prepared statements.
+- **Identifier Limitation**: Table and column names cannot be parameterized — use whitelist validation instead.
+
+## Real World Context
+Prepared statements are the industry-standard defense against SQL injection, recommended by OWASP, PHP documentation, and every major security framework. Companies that suffered SQL injection breaches (like Sony in 2011) were consistently found to be using string concatenation instead of prepared statements.
+
+## Deep Dive
+### Intro
+
+Prepared statements completely prevent SQL injection by separating SQL code from data.
+
+### How prepared statements work
 
 ```
 1. PREPARE: Send SQL template to database
@@ -20,7 +35,7 @@ Prepared statements completely prevent SQL injection by separating SQL code from
    The data is NEVER interpreted as SQL
 ```
 
-## PDO Prepared Statements
+### Pdo prepared statements
 
 ### Named Parameters
 
@@ -59,7 +74,7 @@ $stmt->execute([
 ]);
 ```
 
-## What You CANNOT Parameterize
+### What you cannot parameterize
 
 Parameters only work for DATA, not SQL structure:
 
@@ -78,8 +93,7 @@ $orderBy = in_array($_GET['sort'], $allowedColumns, true)
 $stmt = $pdo->prepare("SELECT * FROM users ORDER BY $orderBy");
 ```
 
-## Common Mistakes
-
+## Common Pitfalls
 ```php
 <?php
 // WRONG: Concatenating user input
@@ -95,6 +109,15 @@ $stmt = $pdo->prepare("SELECT * FROM users WHERE id = '$id'");
 $stmt = $pdo->prepare('SELECT * FROM users WHERE id = :id');
 $stmt->execute(['id' => $_GET['id']]);
 ```
+
+## Best Practices
+1. **Disable emulated prepares** — Set `PDO::ATTR_EMULATE_PREPARES` to `false` so the database engine handles parameter binding natively.
+2. **Use named parameters for complex queries** — Named parameters (`:email`) are more readable than positional ones (`?`) and reduce binding errors in queries with many parameters.
+
+## Summary
+- Prepared statements prevent SQL injection by completely separating SQL structure from data.
+- Always use parameter binding for user-supplied values in WHERE, INSERT, and UPDATE clauses.
+- Table and column names cannot be parameterized — validate them against a strict whitelist.
 
 ## Code Examples
 
@@ -176,6 +199,10 @@ class SecureDatabase {
 ?>
 ```
 
+
+## Resources
+
+- [PDO Prepared Statements](https://www.php.net/manual/en/pdo.prepared-statements.php) — PHP PDO prepared statements documentation
 
 ---
 

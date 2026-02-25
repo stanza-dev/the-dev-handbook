@@ -15,8 +15,8 @@ Prevent cross-site scripting and request forgery attacks
 This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: XSS Prevention Function
-- 🧩 Multiple Choice: CSRF Token Purpose
+- 🔗 Matching: Attack Defenses
 - 🧩 Multiple Choice: CSP Nonce Purpose
-- 🧩 Multiple Choice: CSP Unsafe Inline
+- 🧩 Challenge: CSP Weakening Directives
 
 → [Practice in your IDE](https://stanza.dev/courses/php-security)

@@ -5,9 +5,24 @@ source_lesson: "php-performance-connection-pooling"
 
 # Connection Management
 
+## Introduction
 Database connections are expensive. Manage them wisely.
 
-## Connection Pooling
+## Key Concepts
+- **Persistent Connections**: Reusing database connections across requests with `PDO::ATTR_PERSISTENT`, avoiding TCP/SSL handshake overhead.
+- **Connection Pooling**: A pool of pre-established database connections shared among application processes.
+- **Connection Limits**: MySQL's `max_connections` setting and PHP-FPM's `pm.max_children` must be balanced to prevent exhaustion.
+- **Connection Overhead**: Each new MySQL connection involves TCP handshake, SSL negotiation, and authentication — 10-50ms per connection.
+
+## Real World Context
+Database connection overhead becomes significant at scale. If each of your 100 PHP-FPM workers opens a new MySQL connection per request, you're creating and destroying hundreds of connections per second. Persistent connections or a connection pooler like ProxySQL can reduce connection overhead by 90% and prevent `Too many connections` errors.
+
+## Deep Dive
+### Intro
+
+Database connections are expensive. Manage them wisely.
+
+### Connection pooling
 
 ```php
 <?php
@@ -35,7 +50,7 @@ class Database
 }
 ```
 
-## Persistent Connections
+### Persistent connections
 
 ```php
 <?php
@@ -54,7 +69,7 @@ $pdo = new PDO($dsn, $user, $pass, [
 // - May need to increase max_connections
 ```
 
-## Connection Timeouts
+### Connection timeouts
 
 ```php
 <?php
@@ -67,7 +82,7 @@ $pdo->exec('SET wait_timeout = 28800');  // 8 hours
 $pdo->exec('SET interactive_timeout = 28800');
 ```
 
-## Read Replicas
+### Read replicas
 
 ```php
 <?php
@@ -112,6 +127,19 @@ $users = $db->read()->query('SELECT * FROM users');
 // Writes go to primary
 $db->write()->exec('INSERT INTO users ...');
 ```
+
+## Common Pitfalls
+1. **Too many persistent connections** — Each PHP-FPM worker holds a persistent connection. With 100 workers × 3 database servers, you need 300 MySQL connections. Plan capacity carefully.
+2. **Not closing connections in long-running scripts** — Queue workers and daemons should periodically reconnect to prevent stale connections from holding resources.
+
+## Best Practices
+1. **Use persistent connections in production** — Set `PDO::ATTR_PERSISTENT => true` and configure MySQL `max_connections` to accommodate your PHP-FPM worker count.
+2. **Consider ProxySQL for large deployments** — ProxySQL provides connection multiplexing, query caching, and read/write splitting without code changes.
+
+## Summary
+- Persistent connections eliminate the 10-50ms overhead of establishing new database connections per request.
+- Balance `max_connections` with your PHP-FPM worker count to prevent connection exhaustion.
+- Use ProxySQL for connection pooling in large-scale deployments.
 
 ## Code Examples
 
@@ -239,6 +267,10 @@ print_r($query->explain());
 ?>
 ```
 
+
+## Resources
+
+- [PDO Connections](https://www.php.net/manual/en/pdo.connections.php) — PHP PDO connection management
 
 ---
 

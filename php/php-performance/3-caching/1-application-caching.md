@@ -5,9 +5,24 @@ source_lesson: "php-performance-application-caching"
 
 # Application-Level Caching
 
+## Introduction
 Caching stores computed results to avoid redundant processing.
 
-## APCu (In-Memory Cache)
+## Key Concepts
+- **Cache-Aside Pattern**: Application checks cache first, falls back to database on miss, then populates cache.
+- **TTL (Time To Live)**: Maximum age of a cached entry before it's considered stale and must be refreshed.
+- **Cache Invalidation**: Removing or updating cached data when the underlying source data changes.
+- **Serialization**: Converting PHP objects to storable strings (e.g., `serialize()`, `json_encode()`, `igbinary`).
+
+## Real World Context
+Caching is the most impactful performance optimization for read-heavy PHP applications. Stack Overflow caches aggressively and serves millions of requests per day from just a few servers. A well-implemented cache layer can reduce database load by 90% and cut response times from hundreds of milliseconds to single digits.
+
+## Deep Dive
+### Intro
+
+Caching stores computed results to avoid redundant processing.
+
+### Apcu (in-memory cache)
 
 ```php
 <?php
@@ -29,7 +44,7 @@ if (apcu_exists('user_123')) {
 }
 ```
 
-## Cache-Aside Pattern
+### Cache-aside pattern
 
 ```php
 <?php
@@ -65,7 +80,7 @@ class UserRepository
 }
 ```
 
-## Redis Caching
+### Redis caching
 
 ```php
 <?php
@@ -118,7 +133,7 @@ $users = $cache->remember('active_users', 300, function() use ($repo) {
 });
 ```
 
-## Cache Tags (Invalidation Groups)
+### Cache tags (invalidation groups)
 
 ```php
 <?php
@@ -155,6 +170,19 @@ $cache->set('user_list', $allUsers, 3600, ['users']);
 // Invalidate all user-related cache
 $cache->invalidateTag('users');
 ```
+
+## Common Pitfalls
+1. **Setting TTL too high** — Long TTLs mean users see stale data. Balance freshness and performance based on how often your data changes.
+2. **Not handling cache failures gracefully** — When Redis/Memcached goes down, your app should fall back to the database, not crash. Use try/catch around cache operations.
+
+## Best Practices
+1. **Use cache tags for related invalidation** — When a product changes, invalidate all cache entries tagged with that product ID instead of clearing everything.
+2. **Cache at the right granularity** — Cache computed results (e.g., rendered HTML fragments, aggregated stats) not raw database rows, to maximize the benefit.
+
+## Summary
+- The cache-aside pattern (check cache → fallback to DB → populate cache) is the most common caching strategy.
+- Balance TTL between data freshness and performance based on your data's change frequency.
+- Use cache tags and event-driven invalidation for precise cache management.
 
 ## Resources
 

@@ -5,9 +5,24 @@ source_lesson: "php-performance-horizontal-scaling"
 
 # Horizontal Scaling Strategies
 
+## Introduction
 Scale out by adding more servers rather than bigger servers.
 
-## Session Management
+## Key Concepts
+- **Shared-Nothing Architecture**: Each application server is independent with no local state — all shared data lives in external stores (database, Redis, S3).
+- **Horizontal vs Vertical Scaling**: Adding more servers (horizontal) vs upgrading existing hardware (vertical). PHP's stateless model makes horizontal scaling natural.
+- **Session Externalization**: Moving session storage from local files to Redis or database so any server can handle any request.
+- **Stateless Application Design**: No in-memory caches, no local file storage, no sticky sessions — everything shared externally.
+
+## Real World Context
+Companies like Wikipedia, Etsy, and Slack scale PHP horizontally to handle millions of requests. PHP's shared-nothing request model (each request starts fresh) is inherently suited to horizontal scaling — you just add more servers behind a load balancer. The key challenge is externalizing all state.
+
+## Deep Dive
+### Intro
+
+Scale out by adding more servers rather than bigger servers.
+
+### Session management
 
 ```php
 <?php
@@ -67,7 +82,7 @@ $handler = new RedisSessionHandler(new Redis());
 session_set_save_handler($handler, true);
 ```
 
-## Shared Nothing Architecture
+### Shared nothing architecture
 
 ```php
 <?php
@@ -101,7 +116,7 @@ class DistributedCache
 }
 ```
 
-## Database Scaling
+### Database scaling
 
 ```php
 <?php
@@ -146,6 +161,23 @@ class UserRepository
     }
 }
 ```
+
+## Common Pitfalls
+1. **Storing state locally** — File-based sessions, local caches, and uploaded files on the app server break horizontal scaling. Move everything to Redis, database, or object storage (S3).
+2. **Relying on sticky sessions** — Sticky sessions couple users to specific servers, preventing true horizontal scaling and complicating deploys. Externalize session storage instead.
+
+## Best Practices
+1. **Externalize all shared state** — Use Redis for sessions and cache, S3 for file uploads, and database for application state. The app server should be disposable.
+2. **Design for zero-downtime deployments** — With shared-nothing architecture, you can deploy to servers one at a time (rolling deploy) without affecting active users.
+
+## Summary
+- Shared-nothing architecture makes PHP naturally suited for horizontal scaling.
+- Externalize all state (sessions, cache, files) to shared stores like Redis and S3.
+- Design stateless applications where any server can handle any request.
+
+## Resources
+
+- [PHP-FPM Configuration](https://www.php.net/manual/en/install.fpm.configuration.php) — PHP-FPM process manager configuration
 
 ---
 

@@ -5,9 +5,24 @@ source_lesson: "php-security-secure-tokens"
 
 # Generating Secure Tokens
 
+## Introduction
 Secure random tokens are essential for session IDs, CSRF tokens, password reset links, and API keys.
 
-## Cryptographically Secure Randomness
+## Key Concepts
+- **Split Token Pattern**: Dividing a token into a selector (for database lookup) and validator (for verification) to prevent timing attacks.
+- **Constant-Time Comparison**: Using `hash_equals()` to compare token hashes, preventing timing-based side-channel attacks.
+- **Token Expiration**: All tokens must have a creation timestamp and maximum lifetime to limit the window of exploitation.
+- **Token Entropy**: Use `bin2hex(random_bytes(32))` for at least 256 bits of entropy in security tokens.
+
+## Real World Context
+Password reset tokens are a prime target for attackers. If tokens are stored unhashed or compared with `===` (vulnerable to timing attacks), attackers can brute-force or derive valid tokens. The split token pattern (used by frameworks like Laravel) solves both issues elegantly.
+
+## Deep Dive
+### Intro
+
+Secure random tokens are essential for session IDs, CSRF tokens, password reset links, and API keys.
+
+### Cryptographically secure randomness
 
 ```php
 <?php
@@ -19,7 +34,7 @@ $token = bin2hex($bytes);   // 64 character hex string
 $urlSafeToken = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
 ```
 
-## Token Generation Patterns
+### Token generation patterns
 
 ```php
 <?php
@@ -62,7 +77,7 @@ class TokenGenerator
 }
 ```
 
-## Password Reset Tokens
+### Password reset tokens
 
 ```php
 <?php
@@ -119,7 +134,7 @@ class PasswordReset
 }
 ```
 
-## API Key Generation
+### Api key generation
 
 ```php
 <?php
@@ -176,6 +191,19 @@ class ApiKeyManager
     }
 }
 ```
+
+## Common Pitfalls
+1. **Storing tokens unhashed** — A database breach exposes all valid tokens. Always store `hash('sha256', $validator)` and compare with `hash_equals()`.
+2. **Not expiring tokens** — Password reset and email verification tokens should expire within 1 hour. Long-lived tokens increase the attack window.
+
+## Best Practices
+1. **Implement the split token pattern** — Use a random selector for database lookup and a separate validator for verification. This prevents timing attacks on database queries.
+2. **Invalidate tokens after use** — Delete tokens immediately after successful verification. One-time use prevents replay attacks.
+
+## Summary
+- Use the split token pattern to prevent timing attacks on token verification.
+- Always hash tokens before storage and compare with `hash_equals()`.
+- Enforce token expiration (1 hour for password reset) and single-use policies.
 
 ## Resources
 

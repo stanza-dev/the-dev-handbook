@@ -15,8 +15,8 @@ Optimize database queries and connections
 This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: EXPLAIN Type 'ALL'
-- 🧩 Multiple Choice: Persistent Connections
-- 🧩 Multiple Choice: PDO Fetch Unique
-- 🧩 Multiple Choice: EXPLAIN Filesort
+- 🧩 Challenge: Connection Pooling Benefits
+- ✏️ Fill in the Blank: PDO Fetch Unique
+- 🧩 Challenge: MySQL Query Optimization Steps
 
 → [Practice in your IDE](https://stanza.dev/courses/php-performance)

@@ -5,17 +5,38 @@ source_lesson: "php-essentials-prepared-statements"
 
 # Prepared Statements
 
-Prepared statements are the **only safe way** to execute queries with user data. They completely prevent SQL injection.
+## Introduction
 
-## How Prepared Statements Work
+Prepared statements are the only safe way to execute database queries that include user-supplied data. They completely prevent SQL injection by separating SQL logic from data. This lesson covers the prepare-execute-fetch workflow, both named and positional parameters, and all four CRUD operations.
 
-1. **Prepare**: Send query template with placeholders
-2. **Bind/Execute**: Send data separately
-3. **Fetch**: Retrieve results
+## Key Concepts
 
-The database knows what's SQL and what's data - they never mix!
+- **Prepared statement**: A pre-compiled SQL template with placeholders where user data will be inserted safely.
+- **Named parameters (`:name`)**: Placeholders identified by name, making queries more readable.
+- **Positional parameters (`?`)**: Placeholders identified by position, useful for simple queries.
+- **SQL injection**: An attack where malicious SQL is inserted through user input. Prepared statements prevent this entirely.
+- **`lastInsertId()`**: Returns the ID of the most recently inserted row.
+- **`rowCount()`**: Returns the number of rows affected by the last statement.
 
-## Named Parameters (Recommended)
+## Real World Context
+
+SQL injection has been the number one web vulnerability for over two decades. Every time your application uses user input in a database query — login forms, search bars, profile updates — you must use prepared statements. There are no exceptions. Frameworks like Laravel and Symfony use PDO prepared statements under the hood for every database query.
+
+## Deep Dive
+
+### How Prepared Statements Work
+
+The process has three distinct steps:
+
+1. **Prepare**: Send the SQL template with placeholders to the database.
+2. **Execute**: Send the actual data values separately.
+3. **Fetch**: Retrieve the results.
+
+Because the SQL and data are sent separately, the database always knows what is SQL and what is data — they can never be confused.
+
+### Named Parameters (Recommended)
+
+Named parameters use `:name` syntax and make queries self-documenting:
 
 ```php
 <?php
@@ -31,7 +52,11 @@ $stmt->execute([
 $user = $stmt->fetch();
 ```
 
-## Positional Parameters
+Named parameters are preferred for queries with multiple parameters because the intent of each value is clear.
+
+### Positional Parameters
+
+Positional parameters use `?` and are matched by order:
 
 ```php
 <?php
@@ -43,7 +68,11 @@ $stmt->execute([29.99, 'electronics']);
 $products = $stmt->fetchAll();
 ```
 
-## INSERT Operations
+Use positional parameters for simple queries with one or two parameters where the meaning is obvious.
+
+### INSERT Operations
+
+Insert new records and retrieve the generated ID:
 
 ```php
 <?php
@@ -61,7 +90,11 @@ $stmt->execute([
 $newUserId = $pdo->lastInsertId();
 ```
 
-## UPDATE Operations
+`lastInsertId()` is called on the PDO object, not the statement.
+
+### UPDATE Operations
+
+Update records and check how many rows were affected:
 
 ```php
 <?php
@@ -78,7 +111,11 @@ $stmt->execute([
 $rowsUpdated = $stmt->rowCount();
 ```
 
-## DELETE Operations
+`rowCount()` returns 0 if the WHERE clause matched no rows, which is useful for "not found" handling.
+
+### DELETE Operations
+
+Delete records with the same prepare-execute pattern:
 
 ```php
 <?php
@@ -90,7 +127,9 @@ if ($stmt->rowCount() > 0) {
 }
 ```
 
-## Why Prepared Statements Prevent SQL Injection
+### Why Prepared Statements Prevent SQL Injection
+
+Compare unsafe string interpolation with safe prepared statements:
 
 ```php
 <?php
@@ -105,13 +144,35 @@ $stmt->execute([':email' => $email]);
 // The malicious input is treated as a literal string, not SQL
 ```
 
+With prepared statements, the database engine knows the malicious input is data, not SQL commands. The attack is neutralized automatically.
+
+## Common Pitfalls
+
+1. **Concatenating user input into SQL strings** — Never build queries with string concatenation or interpolation. Even for "just this one query," always use prepared statements.
+2. **Reusing `lastInsertId()` after multiple inserts** — `lastInsertId()` only returns the ID from the most recent INSERT. If you need IDs from a batch, call it after each individual insert.
+3. **Mixing named and positional parameters** — A single query must use either all named (`:param`) or all positional (`?`) parameters. Mixing them causes an error.
+
+## Best Practices
+
+1. **Use named parameters for readability** — `:email` is more descriptive than `?` when a query has multiple parameters.
+2. **Use `password_hash()` for passwords** — Never store plain-text passwords. Use `password_hash($pw, PASSWORD_DEFAULT)` for hashing and `password_verify()` for checking.
+3. **Build a repository pattern** — Encapsulate database queries in dedicated repository classes to keep SQL out of your controllers and business logic.
+
+## Summary
+
+- Prepared statements separate SQL structure from data, completely preventing SQL injection.
+- Named parameters (`:name`) are more readable; positional parameters (`?`) are simpler for short queries.
+- Use `lastInsertId()` after INSERT to get the new row's ID.
+- Use `rowCount()` after UPDATE/DELETE to check how many rows were affected.
+- Never concatenate user input into SQL strings, no matter how safe it seems.
+
 ## Code Examples
 
-**Repository pattern with prepared statements**
+**Repository pattern encapsulating all CRUD operations with prepared statements and named parameters**
 
 ```php
 <?php
-// Complete CRUD operations example
+// Repository pattern with prepared statements for all CRUD operations
 class UserRepository {
     public function __construct(private PDO $pdo) {}
     

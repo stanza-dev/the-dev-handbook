@@ -15,7 +15,7 @@ Understand the threat landscape and security principles
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Top Security Risk
-- 🧩 Multiple Choice: Production Error Display
-- 🧩 Multiple Choice: Error Reference ID
+- ✏️ Fill in the Blank: Production Error Display
+- 🔗 Matching: Security Principles
 
 → [Practice in your IDE](https://stanza.dev/courses/php-security)

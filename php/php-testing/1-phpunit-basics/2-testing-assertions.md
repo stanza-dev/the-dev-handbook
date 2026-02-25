@@ -3,212 +3,158 @@ source_course: "php-testing"
 source_lesson: "php-testing-assertions"
 ---
 
-# Assertions in Depth
+# Understanding Assertions
 
-Assertions are the heart of testing. They verify expected outcomes.
+## Introduction
+Assertions are the verdict of every test. They compare an expected value against an actual value and either pass silently or fail with a descriptive message. PHPUnit ships with dozens of built-in assertion methods, and knowing which one to reach for makes your tests both clearer and more maintainable.
 
-## Basic Assertions
+## Key Concepts
+- **assertEquals**: Compares two values with loose (`==`) comparison, allowing type juggling.
+- **assertSame**: Compares two values with strict (`===`) comparison, requiring both value and type to match.
+- **assertTrue / assertFalse**: Verify a value is exactly `true` or `false`.
+- **assertNull**: Confirms a value is `null`.
+- **assertCount**: Checks the number of elements in a countable (array, `Countable` object).
+- **assertInstanceOf**: Verifies that an object is an instance of a given class or interface.
 
-```php
-<?php
-class AssertionExamplesTest extends TestCase
-{
-    public function testBasicAssertions(): void
-    {
-        // Equality
-        $this->assertEquals('hello', 'hello');      // Loose comparison
-        $this->assertSame('hello', 'hello');        // Strict (===)
-        $this->assertNotEquals(1, 2);
-        
-        // Boolean
-        $this->assertTrue(true);
-        $this->assertFalse(false);
-        
-        // Null
-        $this->assertNull(null);
-        $this->assertNotNull('value');
-        
-        // Type
-        $this->assertIsArray([1, 2, 3]);
-        $this->assertIsString('text');
-        $this->assertIsInt(42);
-        $this->assertIsBool(true);
-        $this->assertInstanceOf(User::class, new User());
-    }
-}
-```
+## Real World Context
+Choosing the wrong assertion leads to tests that pass when they should fail. For example, `assertEquals(0, false)` passes because `0 == false` in PHP. Using `assertSame(0, false)` correctly catches the type mismatch. In payment or security code, this distinction can mean the difference between a passing test suite and a production bug.
 
-## Array Assertions
+## Deep Dive
+
+### assertEquals vs assertSame
+
+The most important distinction in PHPUnit assertions is loose vs strict comparison. Consider the following test:
 
 ```php
 <?php
-public function testArrayAssertions(): void
-{
-    $array = ['name' => 'John', 'age' => 30, 'city' => 'NYC'];
-    
-    // Contains
-    $this->assertArrayHasKey('name', $array);
-    $this->assertArrayNotHasKey('email', $array);
-    $this->assertContains(30, $array);  // Value exists
-    
-    // Count
-    $this->assertCount(3, $array);
-    $this->assertNotEmpty($array);
-    $this->assertEmpty([]);
-    
-    // Equality
-    $this->assertEquals(['a', 'b'], ['a', 'b']);
-    $this->assertEqualsCanonicalizing(['b', 'a'], ['a', 'b']);  // Order ignored
-}
+
+$this->assertEquals(0, '');    // PASSES — 0 == '' is true in PHP
+$this->assertSame(0, '');      // FAILS  — 0 !== ''
+
+$this->assertEquals(1, true);  // PASSES — 1 == true
+$this->assertSame(1, true);    // FAILS  — int !== bool
 ```
 
-## String Assertions
+Because PHP's type juggling can produce surprising equalities, `assertSame` is almost always the safer choice when you know the exact type of the return value.
+
+### Boolean and Null Assertions
+
+Use dedicated methods instead of generic equality checks. They produce clearer failure messages:
 
 ```php
 <?php
-public function testStringAssertions(): void
-{
-    $string = 'Hello, World!';
-    
-    $this->assertStringStartsWith('Hello', $string);
-    $this->assertStringEndsWith('!', $string);
-    $this->assertStringContainsString('World', $string);
-    $this->assertStringNotContainsString('Goodbye', $string);
-    
-    // Case insensitive
-    $this->assertStringContainsStringIgnoringCase('world', $string);
-    
-    // Regex
-    $this->assertMatchesRegularExpression('/Hello.*World/', $string);
-}
+
+$userService = new UserService();
+$isActive = $userService->isActive($userId);
+
+// Preferred — failure says "Failed asserting that false is true"
+$this->assertTrue($isActive);
+
+// Avoid — failure says "Failed asserting that false matches expected true"
+$this->assertEquals(true, $isActive);
+
+// Null check
+$deletedUser = $userService->findById($unknownId);
+$this->assertNull($deletedUser);
 ```
 
-## Exception Assertions
+Dedicated assertions also make the test's intent obvious at a glance.
+
+### Collection Assertions
+
+`assertCount` is clearer than manually calling `count()` inside `assertSame`:
 
 ```php
 <?php
-public function testExceptionIsThrown(): void
-{
-    $this->expectException(InvalidArgumentException::class);
-    $this->expectExceptionMessage('Value must be positive');
-    $this->expectExceptionCode(400);
-    
-    // Code that throws
-    throw new InvalidArgumentException('Value must be positive', 400);
-}
 
-// Alternative: Callback approach
-public function testExceptionWithCallback(): void
-{
-    $exception = null;
-    
-    try {
-        $this->calculator->divide(1, 0);
-    } catch (DivisionByZeroError $e) {
-        $exception = $e;
-    }
-    
-    $this->assertNotNull($exception);
-    $this->assertStringContainsString('zero', $exception->getMessage());
-}
+$orderRepository = new OrderRepository();
+$recentOrders = $orderRepository->findRecentByUser($userId);
+
+// Preferred
+$this->assertCount(3, $recentOrders);
+
+// Less readable alternative
+$this->assertSame(3, count($recentOrders));
 ```
 
-## Custom Failure Messages
+The first form produces a better failure message: "Failed asserting that actual size 5 matches expected size 3."
+
+### Type Assertions
+
+`assertInstanceOf` verifies that a factory or container returns the correct type:
 
 ```php
 <?php
-public function testWithCustomMessage(): void
-{
-    $actual = 2 + 2;
-    $expected = 5;
-    
-    $this->assertEquals(
-        $expected,
-        $actual,
-        'Math is broken: 2 + 2 should equal 5 (just kidding)'
-    );
-}
+
+$logger = LoggerFactory::create('file');
+$this->assertInstanceOf(FileLogger::class, $logger);
+
+$cache = CacheFactory::create('redis');
+$this->assertInstanceOf(CacheInterface::class, $cache);
 ```
+
+This is especially useful when testing factories, service containers, or any code that returns interfaces.
+
+## Common Pitfalls
+1. **Using assertEquals when you need assertSame** — Loose comparison hides type bugs. Default to `assertSame` for scalars and switch to `assertEquals` only when you intentionally want loose comparison (e.g., comparing objects by value).
+2. **Asserting too many things in one test** — If a test has ten assertions, the first failure masks the rest. Split the test or use a data provider to test each case independently.
+
+## Best Practices
+1. **Put expected value first** — PHPUnit's assertion signature is `assertSame($expected, $actual)`. Reversing the arguments produces confusing failure messages like "expected 5 but got 10" when you meant the opposite.
+2. **Use the most specific assertion available** — Prefer `assertCount` over `assertSame(3, count(...))`, `assertStringContainsString` over a manual `strpos` check. Specific assertions yield better failure diagnostics.
+
+## Summary
+- `assertSame` uses strict `===` comparison; `assertEquals` uses loose `==`.
+- Prefer `assertSame` for scalar values to avoid PHP type-juggling surprises.
+- Use dedicated assertions (`assertTrue`, `assertNull`, `assertCount`, `assertInstanceOf`) for clearer intent and better failure messages.
+- Always place the expected value as the first argument.
 
 ## Code Examples
 
-**Comprehensive test examples with various assertions**
+**Demonstrates assertInstanceOf, assertSame, assertCount, assertFalse, and assertNull in a single realistic test**
 
 ```php
 <?php
+
 declare(strict_types=1);
 
 namespace Tests\Unit;
 
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use App\UserValidator;
-use App\User;
+use App\InvoiceGenerator;
+use App\Invoice;
 
-class UserValidatorTest extends TestCase
+class InvoiceGeneratorTest extends TestCase
 {
-    private UserValidator $validator;
-    
-    protected function setUp(): void
+    #[Test]
+    public function generatesInvoiceWithCorrectTotal(): void
     {
-        $this->validator = new UserValidator();
-    }
-    
-    public function testValidEmailPasses(): void
-    {
-        $result = $this->validator->validateEmail('john@example.com');
-        $this->assertTrue($result);
-    }
-    
-    public function testInvalidEmailFails(): void
-    {
-        $result = $this->validator->validateEmail('not-an-email');
-        $this->assertFalse($result);
-    }
-    
-    /**
-     * @dataProvider invalidEmailProvider
-     */
-    public function testVariousInvalidEmails(string $email): void
-    {
-        $this->assertFalse($this->validator->validateEmail($email));
-    }
-    
-    public static function invalidEmailProvider(): array
-    {
-        return [
-            'missing @' => ['invalid'],
-            'missing domain' => ['test@'],
-            'missing local' => ['@example.com'],
-            'spaces' => ['test @example.com'],
-            'double @' => ['test@@example.com'],
-        ];
-    }
-    
-    public function testPasswordStrength(): void
-    {
-        // Weak password
-        $result = $this->validator->validatePassword('123');
-        $this->assertFalse($result['valid']);
-        $this->assertArrayHasKey('errors', $result);
-        $this->assertContains('Password must be at least 8 characters', $result['errors']);
-        
-        // Strong password
-        $result = $this->validator->validatePassword('SecureP@ss123');
-        $this->assertTrue($result['valid']);
-        $this->assertEmpty($result['errors']);
-    }
-    
-    public function testValidateUserThrowsOnInvalidData(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Email is required');
-        
-        $this->validator->validateUser(['name' => 'John']);
+        $generator = new InvoiceGenerator();
+
+        $invoice = $generator->create(
+            customerId: 42,
+            lineItems: [
+                ['description' => 'Widget', 'amount' => 19.99],
+                ['description' => 'Gadget', 'amount' => 49.99],
+            ]
+        );
+
+        $this->assertInstanceOf(Invoice::class, $invoice);
+        $this->assertSame(42, $invoice->customerId);
+        $this->assertSame(69.98, $invoice->total);
+        $this->assertCount(2, $invoice->lineItems);
+        $this->assertFalse($invoice->isPaid());
+        $this->assertNull($invoice->paidAt);
     }
 }
-?>
 ```
 
+
+## Resources
+
+- [PHPUnit 12 – Assertions](https://docs.phpunit.de/en/12.0/assertions.html) — Complete reference of all PHPUnit assertion methods
+- [PHP Type Comparison Tables](https://www.php.net/manual/en/types.comparisons.php) — Official PHP comparison tables showing == vs === behaviour
 
 ---
 

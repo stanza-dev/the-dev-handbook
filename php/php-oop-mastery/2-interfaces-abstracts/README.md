@@ -14,8 +14,8 @@ Define contracts and shared behavior with interfaces and abstract classes
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Interface Multiple
-- 🧩 Multiple Choice: Abstract Class Instantiation
-- 🧩 Multiple Choice: Fat Interface Problem
+- 🧩 Multiple Choice: Multiple Interfaces
+- 🧩 Challenge: Abstract vs Interface Features
+- ✏️ Fill in the Blank: Abstract Class Keyword
 
 → [Practice in your IDE](https://stanza.dev/courses/php-oop-mastery)

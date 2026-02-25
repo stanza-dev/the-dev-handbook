@@ -12,10 +12,11 @@ Add metadata to your code with PHP 8's attribute system
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Attribute Target
-- 🧩 Multiple Choice: Getting Attribute Instance
+- ✏️ Fill in the Blank: Getting Attribute Instance
 - 🧩 Multiple Choice: Repeatable Attributes
+- 🧩 Challenge: Built-in PHP Attributes
 
 → [Practice in your IDE](https://stanza.dev/courses/php-modern-features)

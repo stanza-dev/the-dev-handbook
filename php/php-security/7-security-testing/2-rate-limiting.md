@@ -5,9 +5,24 @@ source_lesson: "php-security-rate-limiting"
 
 # Rate Limiting
 
+## Introduction
 Rate limiting prevents abuse by restricting how often actions can be performed.
 
-## Simple Rate Limiter
+## Key Concepts
+- **Token Bucket Algorithm**: A rate limiting strategy where tokens are added at a fixed rate and consumed per request.
+- **Sliding Window**: Tracks request counts in overlapping time windows for smoother rate limit enforcement.
+- **HTTP 429 Too Many Requests**: The standard status code for rate-limited responses, with `Retry-After` header.
+- **Distributed Rate Limiting**: Using Redis or Memcached to enforce rate limits across multiple application servers.
+
+## Real World Context
+Rate limiting is critical for preventing brute-force login attacks, API abuse, and denial-of-service. GitHub's API limits unauthenticated requests to 60/hour and authenticated to 5,000/hour. Without rate limiting, a single attacker can overwhelm your login endpoint with credential stuffing attacks.
+
+## Deep Dive
+### Intro
+
+Rate limiting prevents abuse by restricting how often actions can be performed.
+
+### Simple rate limiter
 
 ```php
 <?php
@@ -61,7 +76,7 @@ if (!$limiter->attempt($key, maxAttempts: 5, windowSeconds: 300)) {
 }
 ```
 
-## Token Bucket with Redis
+### Token bucket with redis
 
 ```php
 <?php
@@ -111,6 +126,19 @@ class TokenBucketLimiter {
     }
 }
 ```
+
+## Common Pitfalls
+1. **Rate limiting by IP only** — Shared IPs (corporate NAT, mobile carriers) can affect legitimate users. Combine IP-based limits with user/API key-based limits.
+2. **Not including Retry-After headers** — Well-behaved clients need to know when they can retry. Always include the `Retry-After` header with 429 responses.
+
+## Best Practices
+1. **Use Redis for distributed rate limiting** — The `INCR` + `EXPIRE` pattern in Redis provides atomic, cross-server rate limiting with minimal overhead.
+2. **Apply tiered rate limits** — Use different limits for different endpoints: stricter for login/password-reset, more generous for read-only API endpoints.
+
+## Summary
+- Rate limiting prevents brute-force attacks, credential stuffing, and API abuse.
+- Return HTTP 429 with a `Retry-After` header when limits are exceeded.
+- Use Redis-backed rate limiting for distributed applications with multiple servers.
 
 ## Code Examples
 
@@ -219,6 +247,10 @@ function rateLimitMiddleware(RateLimiterInterface $limiter): void {
 ?>
 ```
 
+
+## Resources
+
+- [Rate Limiting Best Practices](https://github.com/phpredis/phpredis) — PHP Redis extension for implementing rate limiters
 
 ---
 

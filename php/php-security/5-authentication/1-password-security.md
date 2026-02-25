@@ -5,9 +5,24 @@ source_lesson: "php-security-password-security"
 
 # Password Hashing & Storage
 
+## Introduction
 Never store passwords in plain text. Use proper cryptographic hashing.
 
-## The password_hash() Function
+## Key Concepts
+- **password_hash()**: PHP's built-in function that generates a secure bcrypt or Argon2 hash with automatic salting.
+- **password_verify()**: Safely compares a plain-text password against a stored hash without revealing timing information.
+- **Adaptive Hashing**: Algorithms like bcrypt and Argon2 can increase their cost factor as hardware improves.
+- **password_needs_rehash()**: Detects when a stored hash uses outdated settings and should be re-hashed on next login.
+
+## Real World Context
+The 2012 LinkedIn breach exposed 117 million passwords stored as unsalted SHA-1 hashes, which were cracked within days. Using `password_hash()` with bcrypt or Argon2id would have made those hashes computationally infeasible to crack, even with modern GPU hardware.
+
+## Deep Dive
+### Intro
+
+Never store passwords in plain text. Use proper cryptographic hashing.
+
+### The password_hash() function
 
 ```php
 <?php
@@ -21,7 +36,7 @@ $hash = password_hash($password, PASSWORD_DEFAULT);
 // Future-proof: algorithm may change
 ```
 
-## Verifying Passwords
+### Verifying passwords
 
 ```php
 <?php
@@ -38,7 +53,7 @@ if (password_verify($submitted, $storedHash)) {
 }
 ```
 
-## Algorithm Options
+### Algorithm options
 
 ```php
 <?php
@@ -55,7 +70,7 @@ $hash = password_hash($password, PASSWORD_ARGON2ID, [
 ]);
 ```
 
-## Rehashing When Needed
+### Rehashing when needed
 
 ```php
 <?php
@@ -74,8 +89,27 @@ function login(string $password, string $hash): bool {
 }
 ```
 
-## Common Mistakes
+### Timing attacks
 
+```php
+<?php
+// WRONG: Early return reveals information
+if (strlen($password) < 8) {
+    return false;  // Fast response = password too short
+}
+
+// WRONG: String comparison timing
+if ($hash === $expected) {  // Timing varies by position
+    return true;
+}
+
+// RIGHT: Constant-time comparison
+if (hash_equals($expected, $hash)) {
+    return true;
+}
+```
+
+## Common Pitfalls
 ```php
 <?php
 // WRONG: Plain text storage
@@ -96,25 +130,14 @@ $hash = hash('sha256', 'static_salt' . $password);
 $hash = password_hash($password, PASSWORD_DEFAULT);
 ```
 
-## Timing Attacks
+## Best Practices
+1. **Use Argon2id for new projects** — `PASSWORD_ARGON2ID` (PHP 7.3+) is resistant to both GPU and side-channel attacks. Use `PASSWORD_DEFAULT` (bcrypt) as a reliable fallback.
+2. **Implement password_needs_rehash() in login flow** — Automatically upgrade password hashes when algorithm settings change, ensuring all active users get the latest protection.
 
-```php
-<?php
-// WRONG: Early return reveals information
-if (strlen($password) < 8) {
-    return false;  // Fast response = password too short
-}
-
-// WRONG: String comparison timing
-if ($hash === $expected) {  // Timing varies by position
-    return true;
-}
-
-// RIGHT: Constant-time comparison
-if (hash_equals($expected, $hash)) {
-    return true;
-}
-```
+## Summary
+- Always use `password_hash()` with `PASSWORD_DEFAULT` or `PASSWORD_ARGON2ID` — never MD5, SHA1, or plain SHA-256.
+- Use `password_verify()` for authentication and `password_needs_rehash()` to upgrade hashes over time.
+- Never store plain text passwords or use homegrown hashing schemes.
 
 ## Code Examples
 

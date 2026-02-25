@@ -5,9 +5,24 @@ source_lesson: "php-security-sql-injection-attacks"
 
 # Understanding SQL Injection
 
+## Introduction
 SQL injection is one of the most dangerous and common web vulnerabilities. It allows attackers to execute arbitrary SQL commands.
 
-## How SQL Injection Works
+## Key Concepts
+- **Data theft**: Stealing entire databases including user credentials and financial data.
+- **Data modification**: Altering records, prices, permissions, or admin status.
+- **Authentication bypass**: Logging in as any user by manipulating SQL WHERE clauses.
+- **Remote code execution**: Some database configurations allow executing OS commands via SQL.
+
+## Real World Context
+SQL injection has caused some of the largest data breaches in history. The 2008 Heartland Payment Systems breach exposed 130 million credit cards through SQL injection. Despite being well-understood, SQL injection remains in the OWASP Top 10 because developers continue to concatenate user input into queries.
+
+## Deep Dive
+### Intro
+
+SQL injection is one of the most dangerous and common web vulnerabilities. It allows attackers to execute arbitrary SQL commands.
+
+### How sql injection works
 
 ```php
 <?php
@@ -27,7 +42,7 @@ $query = "SELECT * FROM users WHERE username = '$username'";
 // This DELETES the entire table!
 ```
 
-## Types of SQL Injection
+### Types of sql injection
 
 ### 1. Classic (In-band) Injection
 ```php
@@ -53,7 +68,7 @@ $id = $_GET['id'];  // Input: "1 AND 1=1" vs "1 AND 1=2"
 // If page takes 5 seconds, injection works
 ```
 
-## Real Attack Examples
+### Real attack examples
 
 ```php
 <?php
@@ -70,13 +85,26 @@ $query = "SELECT name, price FROM products WHERE id = $id";
 // Returns credit card data instead of product info!
 ```
 
-## The Damage
+### The damage
 
 - **Data theft**: Steal entire databases
 - **Data modification**: Alter records, prices, permissions
 - **Data deletion**: Drop tables, truncate data
 - **Authentication bypass**: Login as any user
 - **Remote code execution**: Some databases allow OS commands
+
+## Common Pitfalls
+1. **Concatenating user input into SQL strings** — Even a single concatenated variable creates a SQL injection vulnerability. Always use parameterized queries.
+2. **Relying on input sanitization instead of prepared statements** — Sanitization functions like `addslashes()` can be bypassed with multi-byte character attacks. Prepared statements are the only reliable defense.
+
+## Best Practices
+1. **Use prepared statements for every query** — Never concatenate user input into SQL. Use PDO with named or positional parameters for all database interactions.
+2. **Configure PDO securely** — Set `ATTR_ERRMODE` to `EXCEPTION` and `ATTR_EMULATE_PREPARES` to `false` for maximum security.
+
+## Summary
+- SQL injection allows attackers to execute arbitrary SQL by injecting code through user input.
+- The three main types are classic (in-band), blind, and time-based SQL injection.
+- Prepared statements with parameterized queries are the definitive defense against SQL injection.
 
 ## Resources
 

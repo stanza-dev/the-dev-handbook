@@ -5,9 +5,24 @@ source_lesson: "php-performance-efficient-code"
 
 # Writing Efficient PHP Code
 
+## Introduction
 Small optimizations add up. Write efficient code from the start.
 
-## String Operations
+## Key Concepts
+- **Generators**: `yield` keyword creates iterators that process one item at a time, using constant memory regardless of dataset size.
+- **array_flip() for Lookups**: Convert value-search (`in_array()`, O(n)) to key-search (`isset()`, O(1)) by flipping the array.
+- **Early Return**: Exiting functions early when conditions are met, avoiding unnecessary computation.
+- **String vs Array Functions**: Native PHP functions like `isset()`, `count()`, and `implode()` are C-optimized and vastly faster than userland equivalents.
+
+## Real World Context
+PHP 8.x's JIT compiler makes native function calls even faster, but algorithmic improvements always outweigh micro-optimizations. Replacing a single `in_array()` inside a loop with `isset()` on a flipped array can turn an O(n²) operation into O(n), making the difference between a 30-second and 30-millisecond batch job.
+
+## Deep Dive
+### Intro
+
+Small optimizations add up. Write efficient code from the start.
+
+### String operations
 
 ```php
 <?php
@@ -32,7 +47,7 @@ for ($i = 0; $i < 10000; $i++) {
 $result = ob_get_clean();
 ```
 
-## Array Operations
+### Array operations
 
 ```php
 <?php
@@ -57,7 +72,7 @@ foreach ($numbers as &$n) {  // Modifies in place
 }
 ```
 
-## Loops
+### Loops
 
 ```php
 <?php
@@ -76,7 +91,7 @@ while (strlen($string) > 0) {}  // BAD
 while ($string !== '') {}  // GOOD
 ```
 
-## Memory Efficiency
+### Memory efficiency
 
 ```php
 <?php
@@ -100,7 +115,7 @@ processData($largeData);
 unset($largeData);  // Free memory immediately
 ```
 
-## Type Declarations
+### Type declarations
 
 ```php
 <?php
@@ -116,7 +131,7 @@ function calculateTotal(array $items): float {
 }
 ```
 
-## Precomputation
+### Precomputation
 
 ```php
 <?php
@@ -136,6 +151,23 @@ function getDayName(int $day): string {
     return DAYS[$day];
 }
 ```
+
+## Common Pitfalls
+1. **Using `in_array()` in loops** — `in_array()` is O(n) per call. Inside a loop over m items, it becomes O(n×m). Use `array_flip()` + `isset()` for O(1) lookups.
+2. **Loading entire files into memory** — `file_get_contents()` on a 500MB CSV file crashes the process. Use generators or `SplFileObject` for line-by-line processing.
+
+## Best Practices
+1. **Use generators for large datasets** — Process CSV files, database result sets, and API pagination with generators to maintain constant memory usage.
+2. **Prefer native PHP functions over loops** — `array_map()`, `array_filter()`, `array_column()`, and `implode()` are implemented in C and are faster than equivalent foreach loops.
+
+## Summary
+- Use generators (`yield`) for processing large datasets with constant memory usage.
+- Replace `in_array()` with `array_flip()` + `isset()` for O(1) lookups in loops.
+- Prefer native PHP array functions over manual loops for better performance.
+
+## Resources
+
+- [PHP Performance Tips](https://www.php.net/manual/en/intro.opcache.php) — PHP OPcache introduction and performance optimization
 
 ---
 

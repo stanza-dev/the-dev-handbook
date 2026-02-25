@@ -14,7 +14,7 @@ Master arrays, strings, and data manipulation techniques
 
 This section includes **4 interactive challenges** available on Stanza:
 
-- 🧩 Challenge: Array Indexing
+- ✏️ Fill in the Blank: Array Indexing
 - 🧩 Challenge: Array Filter
 - 🔗 Matching: String Functions
 - 🧩 Multiple Choice: Array Spread Operator

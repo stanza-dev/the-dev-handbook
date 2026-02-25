@@ -5,9 +5,23 @@ source_lesson: "php-databases-active-record-queries"
 
 # Query Methods & Relationships
 
-Extend Active Record with fluent query methods and relationship support.
+## Introduction
 
-## Query Methods
+An Active Record class needs more than basic CRUD. Query methods like `where()`, `all()`, and `create()` provide a fluent API for common operations, while relationship methods let objects navigate to their associated records.
+
+## Key Concepts
+
+- **Static Query Methods**: Class-level methods like `User::where()` that return collections of model instances.
+- **Relationships**: Methods on a model instance that load associated records (e.g., `$user->orders()` returns Order instances).
+- **Mass Assignment**: Setting multiple attributes at once from an array, guarded by `$fillable`.
+
+## Real World Context
+
+In a typical controller, you might write `$user = User::find($id)` to load a user, `$user->orders()` to get their orders, and `User::where('status', 'active')->get()` to list active users. These patterns make controllers concise and readable.
+
+## Deep Dive
+
+Adding query methods to the base class:
 
 ```php
 <?php
@@ -16,11 +30,15 @@ abstract class ActiveRecord {
     
     public static function all(): array {
         $table = static::$table;
-        $stmt = static::$pdo->query("SELECT * FROM $table");
+        $stmt = static::$pdo->query("SELECT * FROM {$table}");
         return array_map([static::class, 'hydrate'], $stmt->fetchAll());
     }
     
-    public static function where(string $column, mixed $value, string $operator = '='): QueryBuilder {
+    public static function where(
+        string $column,
+        mixed $value,
+        string $operator = '='
+    ): QueryBuilder {
         return (new QueryBuilder(static::$pdo, static::class))
             ->table(static::$table)
             ->where($column, $value, $operator);
@@ -29,7 +47,7 @@ abstract class ActiveRecord {
     public static function create(array $attributes): static {
         $instance = new static();
         foreach ($attributes as $key => $value) {
-            $instance->$key = $value;
+            $instance->$key = $value; // Goes through __set, checks $fillable
         }
         $instance->save();
         return $instance;
@@ -50,7 +68,7 @@ abstract class ActiveRecord {
 }
 ```
 
-## Concrete Model
+Concrete models define relationships as methods:
 
 ```php
 <?php
@@ -58,19 +76,12 @@ class User extends ActiveRecord {
     protected static string $table = 'users';
     protected static array $fillable = ['name', 'email', 'password_hash'];
     
-    // Relationship: User has many Orders
     public function orders(): array {
         return Order::where('user_id', $this->id)->get();
     }
     
-    // Accessor
     public function getDisplayName(): string {
         return ucfirst($this->name);
-    }
-    
-    // Mutator (called before save)
-    public function setPassword(string $password): void {
-        $this->attributes['password_hash'] = password_hash($password, PASSWORD_DEFAULT);
     }
 }
 
@@ -78,23 +89,20 @@ class Order extends ActiveRecord {
     protected static string $table = 'orders';
     protected static array $fillable = ['user_id', 'status', 'total'];
     
-    // Relationship: Order belongs to User
     public function user(): ?User {
         return User::find($this->user_id);
     }
     
-    // Relationship: Order has many Items
     public function items(): array {
         return OrderItem::where('order_id', $this->id)->get();
     }
 }
 ```
 
-## Usage Examples
+Usage is clean and expressive:
 
 ```php
 <?php
-// Set connection
 ActiveRecord::setConnection($pdo);
 
 // Create
@@ -102,8 +110,6 @@ $user = User::create([
     'name' => 'John Doe',
     'email' => 'john@example.com',
 ]);
-$user->setPassword('secret123');
-$user->save();
 
 // Read
 $user = User::find(1);
@@ -124,84 +130,55 @@ $user->delete();
 $user = User::find(1);
 foreach ($user->orders() as $order) {
     echo "Order #{$order->id}: \${$order->total}\n";
-    foreach ($order->items() as $item) {
-        echo "  - {$item->product_name}\n";
-    }
 }
 ```
 
+In PHP 8.5, the `#[\NoDiscard]` attribute can mark methods whose return values should not be ignored:
+
+```php
+<?php
+class User extends ActiveRecord {
+    #[\NoDiscard]
+    public function save(): bool {
+        return $this->exists ? $this->update() : $this->insert();
+    }
+}
+
+// PHP 8.5 will warn if you ignore the return value:
+$user->save();           // Warning: return value of save() is not used
+$success = $user->save(); // OK
+if (!$user->save()) {     // OK
+    // handle error
+}
+```
+
+This is especially useful for methods that return success/failure booleans.
+
+## Common Pitfalls
+
+1. **Calling relationship methods in a loop** — `$user->orders()` inside a foreach over users creates an N+1 problem. Use eager loading for batch access.
+2. **Ignoring save() return values** — `save()` returns false on failure. Ignoring it means silent data loss. PHP 8.5's `#[\NoDiscard]` attribute helps catch this.
+
+## Best Practices
+
+1. **Add the `#[\NoDiscard]` attribute to save() and delete()** — PHP 8.5's attribute warns developers when they ignore the success/failure return value.
+2. **Combine Active Record with eager loading** — For list pages, use query builder methods with JOINs or IN clauses instead of calling relationship methods in loops.
+
+## Summary
+
+- Static query methods (`find`, `where`, `create`, `all`) provide a fluent API for model operations.
+- Relationship methods navigate between models but risk N+1 if called in loops.
+- PHP 8.5's `#[\NoDiscard]` attribute warns when critical return values like `save()` are ignored.
+- Always guard mass assignment with `$fillable` and avoid relationship methods inside loops.
+
 ## Code Examples
 
-**Active Record with validation and lifecycle hooks**
+**Active Record with validation, hooks, and NoDiscard**
 
 ```php
 <?php
 declare(strict_types=1);
 
-// Complete Active Record with hooks and validation
-abstract class ActiveRecord {
-    protected static string $table = '';
-    protected static string $primaryKey = 'id';
-    protected static array $fillable = [];
-    protected static array $hidden = ['password_hash'];
-    
-    protected array $attributes = [];
-    protected array $original = [];
-    protected bool $exists = false;
-    protected array $errors = [];
-    
-    protected static ?PDO $pdo = null;
-    
-    public static function setConnection(PDO $pdo): void {
-        static::$pdo = $pdo;
-    }
-    
-    // Hooks - override in subclasses
-    protected function beforeSave(): void {}
-    protected function afterSave(): void {}
-    protected function beforeCreate(): void {}
-    protected function afterCreate(): void {}
-    protected function beforeUpdate(): void {}
-    protected function afterUpdate(): void {}
-    protected function beforeDelete(): void {}
-    protected function afterDelete(): void {}
-    protected function validate(): bool { return true; }
-    
-    public function save(): bool {
-        $this->beforeSave();
-        
-        if (!$this->validate()) {
-            return false;
-        }
-        
-        if ($this->exists) {
-            $this->beforeUpdate();
-            $result = $this->performUpdate();
-            if ($result) $this->afterUpdate();
-        } else {
-            $this->beforeCreate();
-            $result = $this->performInsert();
-            if ($result) $this->afterCreate();
-        }
-        
-        if ($result) $this->afterSave();
-        return $result;
-    }
-    
-    public function getErrors(): array {
-        return $this->errors;
-    }
-    
-    public function toArray(): array {
-        return array_diff_key($this->attributes, array_flip(static::$hidden));
-    }
-    
-    public function toJson(): string {
-        return json_encode($this->toArray());
-    }
-}
-
-// Example model with validation and hooks
 class User extends ActiveRecord {
     protected static string $table = 'users';
     protected static array $fillable = ['name', 'email', 'status'];
@@ -209,58 +186,39 @@ class User extends ActiveRecord {
     
     protected function validate(): bool {
         $this->errors = [];
-        
         if (empty($this->attributes['name'])) {
             $this->errors['name'] = 'Name is required';
         }
-        
         if (empty($this->attributes['email'])) {
             $this->errors['email'] = 'Email is required';
         } elseif (!filter_var($this->attributes['email'], FILTER_VALIDATE_EMAIL)) {
             $this->errors['email'] = 'Invalid email format';
         }
-        
         return empty($this->errors);
     }
     
     protected function beforeCreate(): void {
         $this->attributes['created_at'] = date('Y-m-d H:i:s');
-        $this->attributes['status'] = $this->attributes['status'] ?? 'active';
     }
     
-    protected function beforeUpdate(): void {
-        $this->attributes['updated_at'] = date('Y-m-d H:i:s');
+    #[\NoDiscard]
+    public function save(): bool {
+        if (!$this->validate()) { return false; }
+        $this->beforeCreate();
+        return parent::save();
     }
     
-    public function setPassword(string $password): void {
-        $this->attributes['password_hash'] = password_hash($password, PASSWORD_DEFAULT);
-    }
-    
-    public function verifyPassword(string $password): bool {
-        return password_verify($password, $this->attributes['password_hash'] ?? '');
+    public function toArray(): array {
+        return array_diff_key($this->attributes, array_flip(static::$hidden));
     }
 }
-
-// Usage
-$user = new User();
-$user->name = 'John';
-$user->email = 'invalid';
-
-if (!$user->save()) {
-    print_r($user->getErrors());
-    // ['email' => 'Invalid email format']
-}
-
-$user->email = 'john@example.com';
-$user->setPassword('secret123');
-$user->save();  // Success!
-
-echo $user->toJson();
-// {"id":1,"name":"John","email":"john@example.com","status":"active"}
-// Note: password_hash is hidden
 ?>
 ```
 
+
+## Resources
+
+- [PHP 8.5 NoDiscard Attribute](https://wiki.php.net/rfc/marking_return_value_as_important) — RFC for the NoDiscard attribute in PHP 8.5
 
 ---
 

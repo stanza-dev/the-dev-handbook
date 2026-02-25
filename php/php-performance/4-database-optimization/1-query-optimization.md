@@ -5,9 +5,24 @@ source_lesson: "php-performance-query-optimization"
 
 # Query Optimization Techniques
 
+## Introduction
 Database queries are often the biggest performance bottleneck.
 
-## Indexing Strategy
+## Key Concepts
+- **EXPLAIN**: MySQL command that shows how a query will be executed — table scans, index usage, sort operations.
+- **Index Selectivity**: How effectively an index narrows down results. High selectivity (few matching rows) = fast queries.
+- **type=ALL in EXPLAIN**: Indicates a full table scan — the most expensive access type that should be eliminated.
+- **Covering Index**: An index that contains all columns needed by the query, avoiding table lookups entirely.
+
+## Real World Context
+Database queries are the #1 performance bottleneck in most PHP applications. A single unindexed query on a million-row table can take 5+ seconds. EXPLAIN is the essential diagnostic tool — Facebook, Instagram, and Slack all use it extensively to optimize their MySQL queries.
+
+## Deep Dive
+### Intro
+
+Database queries are often the biggest performance bottleneck.
+
+### Indexing strategy
 
 ```sql
 -- Single column index
@@ -23,7 +38,7 @@ CREATE INDEX idx_users_search ON users(email, name, created_at);
 CREATE INDEX idx_active_users ON users(email) WHERE status = 'active';
 ```
 
-## EXPLAIN Analysis
+### Explain analysis
 
 ```php
 <?php
@@ -40,7 +55,7 @@ function explainQuery(PDO $pdo, string $sql): array
 // - Extra: 'Using index' (covering index - excellent)
 ```
 
-## Avoiding Full Table Scans
+### Avoiding full table scans
 
 ```php
 <?php
@@ -63,7 +78,7 @@ $pdo->query('SELECT * FROM users WHERE id = "123"');  // id is INT
 $pdo->query('SELECT * FROM users WHERE id = 123');
 ```
 
-## SELECT Only What You Need
+### Select only what you need
 
 ```php
 <?php
@@ -79,7 +94,7 @@ $pdo->query('SELECT id, name FROM users WHERE status = "active"');
 // Can be satisfied entirely from index!
 ```
 
-## Limit Results
+### Limit results
 
 ```php
 <?php
@@ -94,7 +109,7 @@ $pdo->query('SELECT * FROM users ORDER BY id LIMIT 20 OFFSET 0');
 $pdo->query('SELECT * FROM users WHERE id > :lastId ORDER BY id LIMIT 20');
 ```
 
-## Batch Operations
+### Batch operations
 
 ```php
 <?php
@@ -116,6 +131,23 @@ foreach ($users as $i => $user) {
 $sql = 'INSERT INTO users (name, email) VALUES ' . implode(', ', $values);
 $pdo->prepare($sql)->execute($params);
 ```
+
+## Common Pitfalls
+1. **Adding indexes without analyzing EXPLAIN output** — Random indexes may not help and slow down writes. Always verify with EXPLAIN that your new index is actually used.
+2. **Indexing low-selectivity columns** — Indexing a boolean column (e.g., `is_active`) is nearly useless because it doesn't narrow results. Index columns with high cardinality.
+
+## Best Practices
+1. **Run EXPLAIN on every slow query** — Identify `type=ALL` (full table scan), `Using filesort` (in-memory sort), and `Using temporary` (temp table creation).
+2. **Create composite indexes matching your WHERE + ORDER BY** — A single composite index on `(status, created_at)` is more effective than two separate indexes.
+
+## Summary
+- Use EXPLAIN to analyze query execution plans and identify full table scans and unnecessary sorts.
+- Create composite indexes matching your most common WHERE and ORDER BY patterns.
+- Focus on high-selectivity columns and covering indexes for maximum query performance.
+
+## Resources
+
+- [MySQL EXPLAIN](https://dev.mysql.com/doc/refman/8.4/en/explain.html) — MySQL EXPLAIN statement documentation
 
 ---
 

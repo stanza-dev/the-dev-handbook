@@ -5,11 +5,22 @@ source_lesson: "php-oop-mastery-solid-principles"
 
 # SOLID Principles
 
-Five design principles for maintainable, flexible object-oriented code.
+## Introduction
+SOLID is an acronym for five design principles that help developers write maintainable, flexible, and scalable object-oriented code. These principles were popularized by Robert C. Martin and form the foundation of good OOP design.
 
-## S - Single Responsibility Principle
+## Key Concepts
+- **SRP**: A class should have only one reason to change.
+- **OCP**: Open for extension, closed for modification.
+- **LSP**: Subtypes must be substitutable for their base types.
+- **ISP**: Clients should not depend on interfaces they do not use.
+- **DIP**: Depend on abstractions, not concretions.
 
-**A class should have only one reason to change.**
+## Real World Context
+In a large e-commerce application, violating SOLID leads to classes that are hundreds of lines long, changes that break unrelated features, and impossible-to-write tests. Following SOLID keeps each class focused, changes localized, and testing straightforward.
+
+## Deep Dive
+
+### S - Single Responsibility Principle
 
 ```php
 <?php
@@ -34,21 +45,17 @@ class UserReportGenerator {
 }
 ```
 
-## O - Open/Closed Principle
+Each class has one job and one reason to change.
 
-**Open for extension, closed for modification.**
+### O - Open/Closed Principle
 
 ```php
 <?php
 // BAD: Must modify to add new types
 class PaymentProcessor {
     public function process(string $type, float $amount): void {
-        if ($type === 'credit') {
-            // Process credit
-        } elseif ($type === 'paypal') {
-            // Process PayPal
-        }
-        // Must add more elseif for new types!
+        if ($type === 'credit') { /* ... */ }
+        elseif ($type === 'paypal') { /* ... */ }
     }
 }
 
@@ -61,19 +68,14 @@ class CreditCardGateway implements PaymentGateway {
     public function process(float $amount): void { /* ... */ }
 }
 
-class PayPalGateway implements PaymentGateway {
-    public function process(float $amount): void { /* ... */ }
-}
-
-// Add new payment types without changing existing code
 class CryptoGateway implements PaymentGateway {
     public function process(float $amount): void { /* ... */ }
 }
 ```
 
-## L - Liskov Substitution Principle
+New payment types are added by creating new classes, not modifying existing ones.
 
-**Subtypes must be substitutable for their base types.**
+### L - Liskov Substitution Principle
 
 ```php
 <?php
@@ -81,33 +83,23 @@ class CryptoGateway implements PaymentGateway {
 class Rectangle {
     protected int $width;
     protected int $height;
-    
-    public function setWidth(int $width): void {
-        $this->width = $width;
-    }
-    
-    public function setHeight(int $height): void {
-        $this->height = $height;
-    }
-    
-    public function getArea(): int {
-        return $this->width * $this->height;
-    }
+
+    public function setWidth(int $w): void { $this->width = $w; }
+    public function setHeight(int $h): void { $this->height = $h; }
+    public function getArea(): int { return $this->width * $this->height; }
 }
 
 class Square extends Rectangle {
-    public function setWidth(int $width): void {
-        $this->width = $width;
-        $this->height = $width;  // Breaks expectations!
+    public function setWidth(int $w): void {
+        $this->width = $w;
+        $this->height = $w;  // Breaks expectations!
     }
 }
-
-// Code expecting Rectangle behavior will fail with Square
 ```
 
-## I - Interface Segregation Principle
+Code expecting `Rectangle` behavior produces wrong results with `Square`.
 
-**Clients shouldn't depend on interfaces they don't use.**
+### I - Interface Segregation Principle
 
 ```php
 <?php
@@ -118,32 +110,21 @@ interface Worker {
     public function sleep(): void;
 }
 
-// Robots can't eat or sleep!
-class Robot implements Worker { /* ... */ }
-
 // GOOD: Segregated interfaces
-interface Workable {
-    public function work(): void;
-}
-
-interface Eatable {
-    public function eat(): void;
-}
+interface Workable { public function work(): void; }
+interface Eatable { public function eat(): void; }
 
 class Human implements Workable, Eatable { /* ... */ }
 class Robot implements Workable { /* ... */ }  // Only what it needs
 ```
 
-## D - Dependency Inversion Principle
-
-**Depend on abstractions, not concretions.**
+### D - Dependency Inversion Principle
 
 ```php
 <?php
 // BAD: Depends on concrete class
 class OrderService {
-    private MySQLDatabase $db;  // Concrete!
-    
+    private MySQLDatabase $db;
     public function __construct() {
         $this->db = new MySQLDatabase();
     }
@@ -156,15 +137,27 @@ interface DatabaseInterface {
 
 class OrderService {
     public function __construct(
-        private DatabaseInterface $db  // Abstract!
+        private DatabaseInterface $db
     ) {}
 }
-
-// Can inject any implementation
-$service = new OrderService(new MySQLDatabase());
-$service = new OrderService(new PostgreSQLDatabase());
-$service = new OrderService(new InMemoryDatabase());  // For tests
 ```
+
+Depending on abstractions makes code flexible and testable.
+
+## Common Pitfalls
+1. **Over-engineering SRP** — Do not create a class for every single method. Group related responsibilities that change for the same reason.
+2. **Violating LSP with exceptions** — Throwing `NotImplementedException` in a subclass signals an LSP violation.
+
+## Best Practices
+1. **Apply SOLID incrementally** — Refactor toward SOLID as complexity grows rather than over-designing upfront.
+2. **Use interfaces for DIP** — Always depend on interfaces or abstract classes for external dependencies.
+
+## Summary
+- SRP keeps classes focused with one reason to change.
+- OCP enables extension without modification through polymorphism.
+- LSP ensures subtypes can replace base types without breaking behavior.
+- ISP keeps interfaces small and focused.
+- DIP promotes depending on abstractions for flexibility and testability.
 
 ## Code Examples
 
@@ -174,41 +167,32 @@ $service = new OrderService(new InMemoryDatabase());  // For tests
 <?php
 declare(strict_types=1);
 
-// SOLID-compliant notification system
-
-// Single Responsibility: Each class does one thing
 interface NotificationChannel {
     public function send(string $recipient, string $message): void;
 }
 
 class EmailChannel implements NotificationChannel {
     public function send(string $recipient, string $message): void {
-        // Send email
         echo "Email to $recipient: $message\n";
     }
 }
 
 class SMSChannel implements NotificationChannel {
     public function send(string $recipient, string $message): void {
-        // Send SMS
         echo "SMS to $recipient: $message\n";
     }
 }
 
-// Open/Closed: Add channels without modifying NotificationService
 class PushChannel implements NotificationChannel {
     public function send(string $recipient, string $message): void {
         echo "Push to $recipient: $message\n";
     }
 }
 
-// Dependency Inversion: Depends on abstraction
 class NotificationService {
     /** @param NotificationChannel[] $channels */
-    public function __construct(
-        private array $channels
-    ) {}
-    
+    public function __construct(private array $channels) {}
+
     public function notify(string $recipient, string $message): void {
         foreach ($this->channels as $channel) {
             $channel->send($recipient, $message);
@@ -216,17 +200,19 @@ class NotificationService {
     }
 }
 
-// Usage
 $notifier = new NotificationService([
     new EmailChannel(),
     new SMSChannel(),
     new PushChannel(),
 ]);
-
 $notifier->notify('user@example.com', 'Hello!');
 ?>
 ```
 
+
+## Resources
+
+- [SOLID Principles](https://en.wikipedia.org/wiki/SOLID) — SOLID principles overview
 
 ---
 

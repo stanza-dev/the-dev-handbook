@@ -5,16 +5,31 @@ source_lesson: "php-performance-jit-compilation"
 
 # JIT Compilation in PHP 8
 
+## Introduction
 Just-In-Time compilation converts PHP bytecode to machine code at runtime for maximum performance.
 
-## JIT vs OPcache
+## Key Concepts
+- **JIT (Just-In-Time) Compilation**: Compiles PHP bytecode to native machine code at runtime for CPU-intensive operations.
+- **Tracing JIT**: Observes code execution patterns and compiles hot paths — the recommended JIT mode.
+- **CRTO Configuration**: 4-digit value (CPU optimization, Register allocation, Trigger mode, Optimization level) for fine-grained JIT control.
+- **JIT Buffer**: Dedicated memory (`jit_buffer_size`) for storing generated machine code, separate from OPcache memory.
+
+## Real World Context
+PHP's JIT compiler (introduced in PHP 8.0) provides 1.5-3x speedups for CPU-intensive workloads like mathematical computation, image processing, and machine learning. It has minimal impact on typical I/O-bound web applications (database queries, API calls), which is why profiling is essential before enabling JIT.
+
+## Deep Dive
+### Intro
+
+Just-In-Time compilation converts PHP bytecode to machine code at runtime for maximum performance.
+
+### Jit vs opcache
 
 ```
 OPcache:   Source → Bytecode → Execute on Zend VM
 JIT:       Source → Bytecode → Machine Code → Execute on CPU
 ```
 
-## Enable JIT
+### Enable jit
 
 ```ini
 ; php.ini
@@ -23,7 +38,7 @@ opcache.jit=1255  ; Enable JIT
 opcache.jit_buffer_size=128M
 ```
 
-## JIT Configuration Values
+### Jit configuration values
 
 The `opcache.jit` value has 4 digits: `CRTO`
 
@@ -41,9 +56,9 @@ T - Trigger mode
   0 = compile on script load
   1 = compile on first execution
   2 = compile on first execution and profile
-  3 = compile function on first execution
-  4 = compile based on call count
-  5 = compile based on call count and trace hot functions
+  3 = compile on first call
+  4 = compile based on @jit doc comment
+  5 = compile hot functions based on call count
 
 O - Optimization level
   0 = no JIT
@@ -54,12 +69,12 @@ O - Optimization level
   5 = maximum JIT
 ```
 
-## Recommended Settings
+### Recommended settings
 
 ```ini
 ; Tracing JIT (best for most apps)
 opcache.jit=tracing
-; Equivalent to: opcache.jit=1255
+; Equivalent to: opcache.jit=1254
 
 ; Function JIT (more conservative)
 opcache.jit=function
@@ -70,7 +85,7 @@ opcache.jit=off
 ; Equivalent to: opcache.jit=0
 ```
 
-## When JIT Helps
+### When jit helps
 
 ```php
 <?php
@@ -95,7 +110,7 @@ function fetchData(): array {
 }
 ```
 
-## Monitoring JIT
+### Monitoring jit
 
 ```php
 <?php
@@ -113,7 +128,7 @@ function jitStatus(): array
 }
 ```
 
-## Benchmark Comparison
+### Benchmark comparison
 
 ```php
 <?php
@@ -123,6 +138,19 @@ $start = microtime(true);
 $result = fibonacci(35);
 echo microtime(true) - $start;
 ```
+
+## Common Pitfalls
+1. **Expecting JIT to speed up I/O-bound code** — JIT optimizes CPU execution, not database queries or network calls. Most PHP web apps won't see significant improvement.
+2. **Setting `jit_buffer_size` too small** — If the buffer fills, JIT stops compiling new code. Monitor with `opcache_get_status()` and increase if the buffer is full.
+
+## Best Practices
+1. **Use `opcache.jit=tracing` for most applications** — The tracing JIT observes actual execution patterns and optimizes the hottest code paths.
+2. **Benchmark before and after enabling JIT** — Measure actual request latency, not synthetic benchmarks, to determine if JIT benefits your specific workload.
+
+## Summary
+- JIT compiles PHP bytecode to native machine code, benefiting CPU-intensive operations.
+- Use `opcache.jit=tracing` (equivalent to 1254) for the recommended tracing mode.
+- JIT has minimal impact on I/O-bound web applications — benchmark your specific workload.
 
 ## Code Examples
 

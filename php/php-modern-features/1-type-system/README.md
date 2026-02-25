@@ -16,7 +16,7 @@ Master PHP 8's powerful type system with union types, intersection types, and mo
 This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Valid Union Type
-- 🧩 Multiple Choice: Never Return Type
+- ✏️ Fill in the Blank: Never Return Type
 - 🧩 Multiple Choice: Intersection Type Meaning
 - 🧩 Multiple Choice: Type Narrowing
 

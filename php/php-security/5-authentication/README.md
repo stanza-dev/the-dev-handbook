@@ -14,9 +14,9 @@ Build secure login systems and manage sessions safely
 
 This section includes **4 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Password Hashing Algorithm
+- 🧩 Challenge: TOTP Code Validity
+- ✏️ Fill in the Blank: Password Hashing Algorithm
 - 🧩 Multiple Choice: Session ID Regeneration
-- 🧩 Multiple Choice: TOTP Code Validity
-- 🧩 Multiple Choice: Backup Codes Storage
+- 🧩 Challenge: Backup Codes Storage
 
 → [Practice in your IDE](https://stanza.dev/courses/php-security)

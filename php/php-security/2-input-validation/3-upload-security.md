@@ -5,16 +5,31 @@ source_lesson: "php-security-file-upload-security"
 
 # Secure File Upload Handling
 
+## Introduction
 File uploads are a common attack vector. Improper handling can lead to remote code execution, path traversal, and denial of service.
 
-## Dangers of File Uploads
+## Key Concepts
+- **MIME Type Verification**: Use `finfo_file()` to check actual file content, never trust `$_FILES['type']`.
+- **Filename Sanitization**: Generate random filenames with `bin2hex(random_bytes(16))` — never use the original filename.
+- **Storage Location**: Store uploads outside the web root to prevent direct execution.
+- **File Size Limits**: Enforce limits via both `upload_max_filesize` in php.ini and application-level checks.
+
+## Real World Context
+File upload vulnerabilities have been used to compromise major platforms. Attackers upload PHP shells disguised as images (e.g., a .php file with a JPEG header). If the server trusts the extension or client-supplied MIME type, the shell gets executed when accessed via URL.
+
+## Deep Dive
+### Intro
+
+File uploads are a common attack vector. Improper handling can lead to remote code execution, path traversal, and denial of service.
+
+### Dangers of file uploads
 
 1. **Remote Code Execution**: Uploading PHP files that get executed
 2. **Path Traversal**: Using `../` to write outside upload directory
 3. **MIME Spoofing**: Disguising malicious files with fake extensions
 4. **Denial of Service**: Uploading huge files to exhaust storage
 
-## Secure Upload Handler
+### Secure upload handler
 
 ```php
 <?php
@@ -90,7 +105,7 @@ class SecureFileUpload
 }
 ```
 
-## Serving Uploaded Files Securely
+### Serving uploaded files securely
 
 ```php
 <?php
@@ -127,7 +142,7 @@ class SecureFileServer
 }
 ```
 
-## Image-Specific Validation
+### Image-specific validation
 
 ```php
 <?php
@@ -160,6 +175,19 @@ function validateImage(string $filepath): bool
     return true;
 }
 ```
+
+## Common Pitfalls
+1. **Trusting the file extension** — A file named `photo.jpg.php` will be executed as PHP on many server configurations.
+2. **Storing uploads in the web root** — Files in publicly accessible directories can be directly requested and executed by attackers.
+
+## Best Practices
+1. **Use content-based MIME detection** — Always use `finfo_file()` or `mime_content_type()` to verify the actual file content matches the expected type.
+2. **Generate random storage paths** — Use `bin2hex(random_bytes(16))` for filenames and organize uploads in date-based subdirectories outside the web root.
+
+## Summary
+- Verify file MIME types with `finfo_file()`, never trust client-supplied metadata.
+- Generate random filenames and store uploads outside the web root.
+- Enforce file size limits at both the PHP and application level.
 
 ## Resources
 

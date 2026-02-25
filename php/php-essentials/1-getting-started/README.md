@@ -15,7 +15,7 @@ Set up your development environment and write your first PHP scripts
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: What Does PHP Stand For?
-- 🧩 Multiple Choice: Where Does PHP Execute?
-- ✏️ Fill in the Blank: String Concatenation
+- ✏️ Fill in the Blank: Where Does PHP Execute?
+- 🧩 Multiple Choice: String Concatenation
 
 → [Practice in your IDE](https://stanza.dev/courses/php-essentials)

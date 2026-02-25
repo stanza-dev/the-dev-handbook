@@ -14,9 +14,9 @@ Implement effective caching at multiple levels
 
 This section includes **4 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Cache Invalidation
-- 🧩 Multiple Choice: HTTP 304 Status
-- 🧩 Multiple Choice: Cache Stampede Definition
-- 🧩 Multiple Choice: Cache TTL Meaning
+- 🧩 Multiple Choice: Cache Invalidation Strategy
+- ✏️ Fill in the Blank: Cache TTL Meaning
+- 🧩 Challenge: HTTP Cache Validation Flow
+- ✏️ Fill in the Blank: Cache Stampede Definition
 
 → [Practice in your IDE](https://stanza.dev/courses/php-performance)

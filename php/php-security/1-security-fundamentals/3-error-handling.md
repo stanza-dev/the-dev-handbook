@@ -5,9 +5,24 @@ source_lesson: "php-security-secure-error-handling"
 
 # Secure Error Handling
 
+## Introduction
 Proper error handling prevents information leakage while providing useful debugging capabilities.
 
-## Custom Error Handler
+## Key Concepts
+- **Error Logging vs Display**: Log errors to files, never display them to users in production.
+- **Error Reference IDs**: Return opaque error identifiers to users while logging full details server-side.
+- **Custom Error Handlers**: Use `set_error_handler()` and `set_exception_handler()` for centralized error management.
+- **Sensitive Data Scrubbing**: Remove passwords, tokens, and PII from log entries before writing.
+
+## Real World Context
+Stack traces in error messages have been used in real-world attacks to discover database schemas, file paths, and API keys. Companies like GitHub and Stripe use opaque error IDs (e.g., "ref: abc123") so support teams can look up details without exposing internals to users.
+
+## Deep Dive
+### Intro
+
+Proper error handling prevents information leakage while providing useful debugging capabilities.
+
+### Custom error handler
 
 ```php
 <?php
@@ -35,7 +50,7 @@ set_error_handler(function(int $errno, string $errstr, string $errfile, int $err
 });
 ```
 
-## Custom Exception Handler
+### Custom exception handler
 
 ```php
 <?php
@@ -66,7 +81,7 @@ set_exception_handler(function(Throwable $e): void {
 });
 ```
 
-## Structured Error Logging
+### Structured error logging
 
 ```php
 <?php
@@ -114,7 +129,7 @@ class SecureLogger
 }
 ```
 
-## API Error Responses
+### Api error responses
 
 ```php
 <?php
@@ -152,6 +167,19 @@ class ApiErrorHandler
     }
 }
 ```
+
+## Common Pitfalls
+1. **Logging sensitive data** — Stack traces and context arrays may contain passwords, tokens, or credit card numbers. Always sanitize before logging.
+2. **Catching and silencing exceptions** — Empty catch blocks hide bugs and security issues. Always log the exception, even if you handle it gracefully.
+
+## Best Practices
+1. **Use structured logging** — Log in JSON format with consistent fields (timestamp, severity, error ID, context) for easier analysis and alerting.
+2. **Implement error reference IDs** — Generate a unique ID per error, return it to the user, and log the full details server-side with that ID.
+
+## Summary
+- Never display error details to users in production — use error reference IDs instead.
+- Implement custom error and exception handlers for consistent, secure error processing.
+- Sanitize all log entries to prevent sensitive data leakage.
 
 ## Resources
 
