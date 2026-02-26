@@ -7,8 +7,6 @@
 
 Maintained by [Stanza](https://stanza.dev) — Learn coding faster right in your IDE, Slack, emails and the web.
 
-**132 courses** · **2299+ lessons** · **17 technologies**
-
 ## Courses
 
 ### ⚛️ React
