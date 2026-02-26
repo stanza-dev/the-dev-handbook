@@ -17,9 +17,15 @@ The Prototype pattern creates new objects by cloning existing ones. In JavaScrip
 
 **Prototypal Inheritance**: JavaScript's native inheritance mechanism.
 
+## Real World Context
+
+JavaScript itself uses the Prototype pattern natively—every object has a prototype chain. Libraries like Lodash use `structuredClone()` (a Web API available since 2022) and spread operators for deep/shallow cloning. Component systems often clone template objects to stamp out new instances efficiently.
+
 ## Deep Dive
 
 ### Object.create()
+
+The `Object.create()` method creates a new object with the specified prototype, letting us set up a clean prototype chain:
 
 ```javascript
 const vehiclePrototype = {
@@ -40,7 +46,11 @@ car.getInfo();  // 'Toyota Camry'
 Object.getPrototypeOf(car) === vehiclePrototype;  // true
 ```
 
+The `car` object delegates method lookups to `vehiclePrototype` through the prototype chain, so `getInfo()` is shared rather than copied.
+
 ### Clone with Customization
+
+Prototypes enable efficient inheritance-based cloning where the clone inherits defaults from the original and only stores overridden values:
 
 ```javascript
 const defaultConfig = {
@@ -57,7 +67,11 @@ customConfig.timeout = 10000;  // Override
 customConfig.apiUrl;  // 'https://api.example.com' (inherited)
 ```
 
+The `customConfig` only stores the overridden `timeout` property. The `apiUrl` lookup falls through to the prototype, keeping memory usage minimal.
+
 ### Deep Clone Pattern
+
+When you need a fully independent copy rather than prototype-based inheritance, a recursive deep clone copies all nested objects:
 
 ```javascript
 function deepClone(obj) {
@@ -71,7 +85,7 @@ function deepClone(obj) {
   
   const cloned = {};
   for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
+    if (Object.hasOwn(obj, key)) {
       cloned[key] = deepClone(obj[key]);
     }
   }
@@ -82,7 +96,11 @@ function deepClone(obj) {
 const clone = structuredClone(original);
 ```
 
+The manual `deepClone` handles nested objects and arrays recursively. For most use cases, the built-in `structuredClone()` is simpler and handles more edge cases like `Date`, `Map`, and `Set`.
+
 ### Registry of Prototypes
+
+A prototype registry stores named prototypes in a Map, allowing you to stamp out new instances by name without knowing the concrete type:
 
 ```javascript
 class ShapeRegistry {
@@ -107,6 +125,8 @@ ShapeRegistry.register('circle', {
 const circle = ShapeRegistry.create('circle');
 ```
 
+The registry decouples creation from specific prototype objects. Callers request a shape by name, and the registry handles cloning via `Object.create()`.
+
 ## Common Pitfalls
 
 1. **Shallow vs deep clone**: Object.create/spread are shallow.
@@ -123,6 +143,36 @@ const circle = ShapeRegistry.create('circle');
 ## Summary
 
 The Prototype pattern creates objects by cloning existing ones. JavaScript's Object.create() implements this natively. Use for configuration defaults, template objects, and when you need copies with shared behavior.
+
+## Code Examples
+
+**Prototype pattern using Object.create() — clones inherit methods from the prototype chain, unlike structuredClone() which drops functions**
+
+```javascript
+const vehiclePrototype = {
+  type: 'car',
+  wheels: 4,
+  describe() {
+    return `${this.type} with ${this.wheels} wheels`;
+  }
+};
+
+// Clone via Object.create() — inherits methods from the prototype
+const truck = Object.create(vehiclePrototype);
+truck.type = 'truck';
+truck.wheels = 6;
+
+const motorcycle = Object.create(vehiclePrototype);
+motorcycle.type = 'motorcycle';
+motorcycle.wheels = 2;
+
+console.log(truck.describe());      // "truck with 6 wheels"
+console.log(motorcycle.describe()); // "motorcycle with 2 wheels"
+
+// Note: structuredClone() copies data but drops methods.
+// Use Object.create() or spread ({...proto}) to preserve methods.
+```
+
 
 ## Resources
 

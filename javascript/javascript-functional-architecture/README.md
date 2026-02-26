@@ -14,7 +14,7 @@
 | 🧠 | [Advanced FP Patterns](./4-fp-patterns/) | 4 lessons |
 | 📦 | [Functors & Monads](./5-containers/) | 4 lessons |
 
-**20 lessons** · **16 interactive challenges**
+**20 lessons** · **17 interactive challenges**
 
 ## Want the Interactive Experience?
 

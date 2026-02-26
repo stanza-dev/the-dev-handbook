@@ -15,7 +15,7 @@ Solving problems by breaking them down into smaller self-similar problems.
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Missing Base Case
+- 🧩 Challenge: Recursive Call Count
 - 🧩 Challenge: Recursion Components
 - 🧩 Multiple Choice: Tail Call Optimization
 

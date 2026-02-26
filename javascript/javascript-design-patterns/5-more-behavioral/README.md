@@ -17,6 +17,6 @@ This section includes **3 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: JavaScript Iterator Symbol
 - 🧩 Multiple Choice: Mediator Pattern Benefit
-- 🧩 Multiple Choice: Chain of Responsibility Example
+- 🧩 Challenge: Middleware Chain Execution
 
 → [Practice in your IDE](https://stanza.dev/courses/javascript-design-patterns)

@@ -13,10 +13,11 @@ Building complex logic from small, reusable functions.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Map as HOF
-- 🧩 Multiple Choice: Currying Concept
+- 🧩 Challenge: Currying Transformation
 - 🧩 Multiple Choice: Compose Execution Order
+- ✏️ Fill in the Blank: Compose Direction
 
 → [Practice in your IDE](https://stanza.dev/courses/javascript-functional-architecture)
