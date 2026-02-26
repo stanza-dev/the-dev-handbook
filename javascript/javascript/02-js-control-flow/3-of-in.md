@@ -108,6 +108,37 @@ for (const [key, value] of Object.entries(obj)) {
 }
 ```
 
+### Iterator Helpers (ES2025)
+
+ES2025 adds built-in lazy methods directly on iterators, eliminating the need for intermediate arrays:
+
+```javascript
+const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+// Chain lazy operations on the iterator
+const result = numbers.values()
+  .filter(n => n % 2 === 0)    // Lazy — no intermediate array
+  .map(n => n ** 2)             // Lazy — still no array
+  .take(3)                      // Only take first 3
+  .toArray();                   // Materialize: [4, 16, 36]
+
+// Works with any iterator, including generators
+function* naturals() {
+  let n = 1;
+  while (true) yield n++;
+}
+
+const firstPrimes = naturals()
+  .filter(n => isPrime(n))
+  .take(5)
+  .toArray();  // [2, 3, 5, 7, 11]
+
+// .drop() skips elements
+numbers.values().drop(5).toArray();  // [6, 7, 8, 9, 10]
+```
+
+Iterator helpers are **lazy** — they process elements on demand without creating intermediate arrays. This makes them memory-efficient for large or infinite sequences.
+
 ## Common Pitfalls
 
 1. **Using `for...in` on arrays**: Iterates indices as strings and includes non-index properties.
@@ -124,6 +155,41 @@ for (const [key, value] of Object.entries(obj)) {
 ## Summary
 
 `for...of` iterates over values of iterables (arrays, strings, Maps, Sets). `for...in` iterates over enumerable property keys and should be used for objects, not arrays. Use `Object.entries()` with `for...of` to iterate objects with both keys and values.
+
+## Code Examples
+
+**for...of (Iterate Values)**
+
+```javascript
+// Arrays
+const colors = ['red', 'green', 'blue'];
+for (const color of colors) {
+  console.log(color);  // 'red', 'green', 'blue'
+}
+
+// Strings
+for (const char of 'Hello') {
+  console.log(char);  // 'H', 'e', 'l', 'l', 'o'
+}
+
+// Maps
+const map = new Map([['a', 1], ['b', 2]]);
+for (const [key, value] of map) {
+  console.log(key, value);  // 'a' 1, 'b' 2
+}
+
+// Sets
+```
+
+**for...in (Iterate Keys)**
+
+```javascript
+const user = { name: 'Alice', age: 30, city: 'NYC' };
+for (const key in user) {
+  console.log(key, user[key]);  // 'name' 'Alice', 'age' 30, 'city' 'NYC'
+}
+```
+
 
 ## Resources
 

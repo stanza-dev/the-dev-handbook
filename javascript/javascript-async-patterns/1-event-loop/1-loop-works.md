@@ -105,6 +105,45 @@ console.log('sync');
 
 JavaScript is single-threaded with one call stack. Async operations use Web APIs and queues. The event loop moves queued callbacks to the stack when empty. Even 0ms timeouts go through the queue. Long synchronous code blocks everything.
 
+## Code Examples
+
+**The Call Stack**
+
+```javascript
+function multiply(a, b) {
+  return a * b;
+}
+
+function square(n) {
+  return multiply(n, n);
+}
+
+function printSquare(n) {
+  const result = square(n);
+  console.log(result);
+}
+
+printSquare(4);
+// Stack: [printSquare] -> [square, printSquare] 
+//     -> [multiply, square, printSquare] -> pops down
+```
+
+**How Async Works**
+
+```javascript
+console.log('Start');           // 1. Runs immediately
+
+setTimeout(() => {
+  console.log('Timeout');       // 4. Runs after stack is empty
+}, 0);
+
+console.log('End');             // 2. Runs immediately
+
+// Output: Start, End, Timeout
+// Even 0ms timeout goes to queue!
+```
+
+
 ## Resources
 
 - [MDN: Event Loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Event_loop) — Concurrency model and event loop

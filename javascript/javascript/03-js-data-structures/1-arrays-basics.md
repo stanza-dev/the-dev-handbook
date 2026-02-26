@@ -94,6 +94,42 @@ fruits.indexOf('grape');    // -1 (not found)
 
 Arrays are ordered, zero-indexed collections. Create them with literals (`[]`), access elements with brackets or `.at()`, check contents with `includes()` or `indexOf()`. Use `Array.isArray()` for type checking and destructuring for elegant value extraction.
 
+## Code Examples
+
+**Creating Arrays**
+
+```javascript
+// Array literal (preferred)
+const fruits = ['apple', 'banana', 'cherry'];
+
+// Array constructor (rarely used)
+const empty = new Array(5);  // Creates array with 5 empty slots
+const nums = new Array(1, 2, 3);  // [1, 2, 3]
+
+// Array.of (consistent behavior)
+Array.of(5);  // [5] (not 5 empty slots)
+
+// Array.from (convert iterables/array-likes)
+Array.from('hello');  // ['h', 'e', 'l', 'l', 'o']
+Array.from({ length: 3 }, (_, i) => i);  // [0, 1, 2]
+```
+
+**Accessing Elements**
+
+```javascript
+const arr = ['a', 'b', 'c', 'd', 'e'];
+
+arr[0];      // 'a' (first element)
+arr[arr.length - 1];  // 'e' (last element)
+arr.at(-1);  // 'e' (ES2022: negative indexing)
+arr.at(-2);  // 'd'
+
+// Destructuring
+const [first, second, ...rest] = arr;
+// first = 'a', second = 'b', rest = ['c', 'd', 'e']
+```
+
+
 ## Resources
 
 - [MDN: Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array) — Complete Array reference

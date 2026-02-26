@@ -128,6 +128,42 @@ new Intl.NumberFormat('en-US', {
 
 `Intl.NumberFormat` handles locale-aware number, currency, percent, and unit formatting. Use compact notation for large numbers. Specify precision with fraction/significant digit options. Always prefer Intl over manual formatting for user-facing numbers.
 
+## Code Examples
+
+**Basic Number Formatting**
+
+```javascript
+const num = 1234567.89;
+
+new Intl.NumberFormat('en-US').format(num);  // '1,234,567.89'
+new Intl.NumberFormat('de-DE').format(num);  // '1.234.567,89'
+new Intl.NumberFormat('fr-FR').format(num);  // '1 234 567,89'
+```
+
+**Currency Formatting**
+
+```javascript
+const price = 1234.56;
+
+new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD'
+}).format(price);  // '$1,234.56'
+
+new Intl.NumberFormat('de-DE', {
+  style: 'currency',
+  currency: 'EUR'
+}).format(price);  // '1.234,56 €'
+
+new Intl.NumberFormat('ja-JP', {
+  style: 'currency',
+  currency: 'JPY'
+}).format(price);  // '￥1,235' (no decimals for yen)
+
+// Currency display options
+```
+
+
 ## Resources
 
 - [MDN: Intl.NumberFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat) — NumberFormat reference

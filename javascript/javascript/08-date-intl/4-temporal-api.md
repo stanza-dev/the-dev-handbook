@@ -124,6 +124,46 @@ DateTime.fromISO('2024-12-25').plus({ months: 1 });
 
 Temporal provides immutable, timezone-aware date handling. Different types serve different purposes: Instant for timestamps, PlainDate for dates, ZonedDateTime for events. Operations return new objects. Until standardized, use libraries like Luxon that follow similar patterns.
 
+## Code Examples
+
+**Temporal Types Overview**
+
+```javascript
+// Note: Temporal may require polyfill as of 2025
+
+// Fixed instant in time
+Temporal.Instant.from('2024-12-25T00:00:00Z');
+
+// Plain (no timezone) types
+Temporal.PlainDate.from('2024-12-25');
+Temporal.PlainTime.from('10:30:00');
+Temporal.PlainDateTime.from('2024-12-25T10:30:00');
+
+// With timezone
+Temporal.ZonedDateTime.from('2024-12-25T10:30:00[America/New_York]');
+
+// Current time
+Temporal.Now.instant();
+Temporal.Now.zonedDateTimeISO();
+Temporal.Now.plainDateISO();
+```
+
+**Immutable Operations**
+
+```javascript
+const date = Temporal.PlainDate.from('2024-12-25');
+
+// Returns new object (immutable!)
+const nextMonth = date.add({ months: 1 });  // 2025-01-25
+const lastWeek = date.subtract({ days: 7 }); // 2024-12-18
+
+date.toString();  // Still '2024-12-25'
+
+// Modifying specific fields
+const newDate = date.with({ day: 1 });  // 2024-12-01
+```
+
+
 ## Resources
 
 - [MDN: Temporal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal) — Temporal API reference

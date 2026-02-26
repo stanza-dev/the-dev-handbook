@@ -115,6 +115,29 @@ async function* socketMessages(socket) {
 }
 ```
 
+### Array.fromAsync() (ES2024+)
+
+When you want to collect all values from an async iterable into an array:
+
+```javascript
+// Before: manual collection
+const results = [];
+for await (const item of asyncIterable) {
+  results.push(item);
+}
+
+// After: one-liner with Array.fromAsync()
+const results = await Array.fromAsync(asyncIterable);
+
+// Also works with async mapping
+const doubled = await Array.fromAsync(
+  fetchPages('/api/items'),
+  async (page) => page.map(item => item.id)
+);
+```
+
+`Array.fromAsync()` is the async equivalent of `Array.from()`. It awaits each value from the async iterable and collects them into a plain array.
+
 ## Common Pitfalls
 
 1. **Using for...of instead of for await...of**: Won't await promises.
@@ -130,6 +153,57 @@ async function* socketMessages(socket) {
 ## Summary
 
 Async generators (async function*) combine await and yield. for await...of consumes async iterables. Great for pagination, streaming, and real-time data. Always handle cleanup in finally blocks.
+
+## Code Examples
+
+**Async Generator Syntax**
+
+```javascript
+async function* fetchPages(url) {
+  let page = 1;
+  while (true) {
+    const response = await fetch(`${url}?page=${page}`);
+    const data = await response.json();
+    
+    if (data.length === 0) return;  // No more pages
+    
+    yield data;  // Yield the page data
+    page++;
+  }
+}
+
+// Consume with for await...of
+async function processAllPages() {
+  for await (const pageData of fetchPages('/api/items')) {
+    console.log('Got page:', pageData.length, 'items');
+  }
+}
+```
+
+**for await...of Loop**
+
+```javascript
+// Works with async iterables
+const asyncIterable = {
+  [Symbol.asyncIterator]() {
+    let i = 0;
+    return {
+      async next() {
+        if (i < 3) {
+          await new Promise(r => setTimeout(r, 100));
+          return { value: i++, done: false };
+        }
+        return { done: true };
+      }
+    };
+  }
+};
+
+for await (const num of asyncIterable) {
+  console.log(num);  // 0, 1, 2 (with 100ms delays)
+}
+```
+
 
 ## Resources
 

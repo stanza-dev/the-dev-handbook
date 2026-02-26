@@ -112,6 +112,39 @@ elem.closest('.container');
 
 `querySelector` and `querySelectorAll` select elements using CSS selectors. Use `#` for IDs, `.` for classes. `querySelectorAll` returns a static NodeList; legacy methods return live HTMLCollections. Use `closest()` to find ancestors and cache selections for performance.
 
+## Code Examples
+
+**querySelector and querySelectorAll**
+
+```javascript
+// Select first matching element
+const header = document.querySelector('#header');
+const firstButton = document.querySelector('button');
+const active = document.querySelector('.active');
+
+// Select all matching elements (returns NodeList)
+const allButtons = document.querySelectorAll('button');
+const items = document.querySelectorAll('.list-item');
+
+// Complex selectors
+const nested = document.querySelector('nav > ul > li:first-child');
+const dataAttr = document.querySelector('[data-id="123"]');
+```
+
+**Legacy Methods (Still Useful)**
+
+```javascript
+// By ID (faster than querySelector for IDs)
+const elem = document.getElementById('myId');
+
+// By class (returns live HTMLCollection)
+const items = document.getElementsByClassName('item');
+
+// By tag (returns live HTMLCollection)
+const divs = document.getElementsByTagName('div');
+```
+
+
 ## Resources
 
 - [MDN: Document.querySelector()](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector) — querySelector reference

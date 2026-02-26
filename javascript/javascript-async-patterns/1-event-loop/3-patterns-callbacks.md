@@ -144,6 +144,45 @@ clearTimeout(timerId);  // Cancel
 
 Callbacks are functions passed to other functions for later execution. Node.js uses error-first convention. Callback hell is solved by named functions or promisification. Modern code prefers Promises/async-await, but callbacks remain common in events and many APIs.
 
+## Code Examples
+
+**Basic Callbacks**
+
+```javascript
+function fetchData(callback) {
+  setTimeout(() => {
+    callback({ id: 1, name: 'Alice' });
+  }, 1000);
+}
+
+fetchData((data) => {
+  console.log('Got data:', data);
+});
+```
+
+**Error-First Callbacks (Node.js Style)**
+
+```javascript
+function readFile(path, callback) {
+  setTimeout(() => {
+    if (!path) {
+      callback(new Error('Path required'), null);
+      return;
+    }
+    callback(null, 'file contents');
+  }, 100);
+}
+
+readFile('/data.txt', (error, data) => {
+  if (error) {
+    console.error('Failed:', error.message);
+    return;
+  }
+  console.log('Data:', data);
+});
+```
+
+
 ## Resources
 
 - [MDN: Callback function](https://developer.mozilla.org/en-US/docs/Glossary/Callback_function) — Callback function glossary

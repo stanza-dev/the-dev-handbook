@@ -112,6 +112,31 @@ highlight`Hello, ${name}!`; // 'Hello, <mark>Alice</mark>!'
 
 Strings in JavaScript are immutable sequences of characters. Template literals (backticks) enable interpolation with `${}` and multi-line strings. Key methods include `includes()`, `slice()`, `trim()`, `split()`, and `replace()`. Always remember that string methods return new strings.
 
+## Code Examples
+
+**Template literals with expression interpolation**
+
+```javascript
+const user = 'Alice';
+const greeting = `Hello, ${user}!`; // 'Hello, Alice!'
+
+const price = 19.99;
+const message = `Total: $${(price * 1.1).toFixed(2)}`; // 'Total: $21.99'
+```
+
+**Essential string methods**
+
+```javascript
+const str = '  Hello, World!  ';
+str.includes('World');     // true
+str.startsWith('  He');    // true
+str.trim();                // 'Hello, World!'
+str.replace('World', 'JS'); // '  Hello, JS!  '
+'a,b,c'.split(',');        // ['a', 'b', 'c']
+'5'.padStart(3, '0');      // '005'
+```
+
+
 ## Resources
 
 - [MDN: String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String) — Complete String reference with all methods

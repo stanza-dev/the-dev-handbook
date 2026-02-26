@@ -151,6 +151,43 @@ new obj1.foo();           // undefined (new overrides implicit)
 
 `this` is determined by how a function is called, not where it's defined. Regular functions get `this` from their caller; arrow functions inherit from their lexical scope. Use `call`, `apply`, or `bind` for explicit control. The `new` keyword creates a new object and sets `this` to it.
 
+## Code Examples
+
+**Default Binding**
+
+```javascript
+// In browser global scope
+function showThis() {
+  console.log(this);
+}
+showThis();  // window (or undefined in strict mode)
+
+// Strict mode
+'use strict';
+function strictThis() {
+  console.log(this);
+}
+strictThis();  // undefined
+```
+
+**Implicit Binding (Method Calls)**
+
+```javascript
+const user = {
+  name: 'Alice',
+  greet() {
+    console.log(`Hello, I'm ${this.name}`);
+  }
+};
+
+user.greet();  // 'Hello, I'm Alice'
+
+// Lost binding!
+const greet = user.greet;
+greet();  // 'Hello, I'm undefined' (or error in strict)
+```
+
+
 ## Resources
 
 - [MDN: this](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this) — Complete this keyword reference

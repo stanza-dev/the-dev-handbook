@@ -112,6 +112,34 @@ for (let i = 0, len = arr.length; i < len; i++) {
 
 The `for` loop is ideal when you know the iteration count. `while` loops check conditions before each iteration. `do...while` guarantees at least one execution. Use `break` to exit early and `continue` to skip iterations. For most array operations, prefer modern iterators or array methods.
 
+## Code Examples
+
+**Classic for Loop**
+
+```javascript
+for (let i = 0; i < 5; i++) {
+  console.log(i);  // 0, 1, 2, 3, 4
+}
+
+// Iterating arrays by index
+const arr = ['a', 'b', 'c'];
+for (let i = 0; i < arr.length; i++) {
+  console.log(arr[i]);
+}
+```
+
+**while Loop**
+
+```javascript
+let attempts = 0;
+while (attempts < 3) {
+  const success = tryOperation();
+  if (success) break;
+  attempts++;
+}
+```
+
+
 ## Resources
 
 - [MDN: Loops and Iteration](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Loops_and_iteration) — Comprehensive guide to all loop types

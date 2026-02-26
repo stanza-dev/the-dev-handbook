@@ -150,6 +150,43 @@ tabs.addEventListener('click', (e) => {
 
 Events bubble up from target to ancestors by default. Event delegation attaches one listener to a parent to handle events on children. Use `e.target.closest(selector)` for robust delegation. `stopPropagation()` stops bubbling but use sparingly. Delegation is essential for dynamic content and better performance.
 
+## Code Examples
+
+**Event Propagation Phases**
+
+```javascript
+// Three phases:
+// 1. Capture: window → document → ... → parent → target
+// 2. Target: event fires on target
+// 3. Bubble: target → parent → ... → document → window
+
+document.body.addEventListener('click', (e) => {
+  console.log('Body clicked (bubble phase)');
+});
+
+document.body.addEventListener('click', (e) => {
+  console.log('Body clicked (capture phase)');
+}, true);  // or { capture: true }
+```
+
+**Stopping Propagation**
+
+```javascript
+child.addEventListener('click', (e) => {
+  e.stopPropagation();  // Parent won't see this event
+  console.log('Child clicked');
+});
+
+// stopImmediatePropagation stops other listeners on SAME element too
+child.addEventListener('click', (e) => {
+  e.stopImmediatePropagation();
+});
+child.addEventListener('click', (e) => {
+  // This won't run!
+});
+```
+
+
 ## Resources
 
 - [MDN: Event bubbling](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Building_blocks/Event_bubbling) — Understanding event bubbling

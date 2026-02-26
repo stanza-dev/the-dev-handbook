@@ -126,6 +126,44 @@ new Intl.DurationFormat('en', { style: 'long' })
 
 `Intl.DateTimeFormat` provides locale-aware date formatting. Use `dateStyle`/`timeStyle` for common formats or individual options for control. `RelativeTimeFormat` creates "3 days ago" style strings. Always prefer Intl over manual string building.
 
+## Code Examples
+
+**Basic Formatting**
+
+```javascript
+const date = new Date('2024-12-25T10:30:00');
+
+// toLocaleString variants
+date.toLocaleDateString('en-US');  // '12/25/2024'
+date.toLocaleDateString('en-GB');  // '25/12/2024'
+date.toLocaleDateString('de-DE');  // '25.12.2024'
+date.toLocaleTimeString('en-US');  // '10:30:00 AM'
+date.toLocaleString('en-US');      // '12/25/2024, 10:30:00 AM'
+```
+
+**Intl.DateTimeFormat**
+
+```javascript
+const date = new Date('2024-12-25T10:30:00');
+
+// Create reusable formatter
+const formatter = new Intl.DateTimeFormat('en-US', {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+});
+
+formatter.format(date);  // 'Wednesday, December 25, 2024'
+
+// Format options
+new Intl.DateTimeFormat('en-US', {
+  dateStyle: 'full',   // 'Wednesday, December 25, 2024'
+  timeStyle: 'short'   // '10:30 AM'
+}).format(date);
+```
+
+
 ## Resources
 
 - [MDN: Intl.DateTimeFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat) — DateTimeFormat reference

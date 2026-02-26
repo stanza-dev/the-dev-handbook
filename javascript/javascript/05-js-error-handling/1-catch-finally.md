@@ -136,6 +136,38 @@ try {
 
 `try` wraps code that might throw. `catch` handles errors. `finally` always runs for cleanup. The error object contains `name`, `message`, and `stack`. Always handle or log errors—never ignore them.
 
+## Code Examples
+
+**Basic Structure**
+
+```javascript
+try {
+  // Code that might fail
+  const data = JSON.parse(userInput);
+  processData(data);
+} catch (error) {
+  // Handle the error
+  console.error('Failed to parse:', error.message);
+  showUserError('Invalid input format');
+} finally {
+  // Always runs (cleanup)
+  hideLoadingSpinner();
+}
+```
+
+**The Error Object**
+
+```javascript
+try {
+  throw new Error('Something went wrong');
+} catch (error) {
+  console.log(error.name);     // 'Error'
+  console.log(error.message);  // 'Something went wrong'
+  console.log(error.stack);    // Stack trace
+}
+```
+
+
 ## Resources
 
 - [MDN: try...catch](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/try...catch) — Complete try-catch reference

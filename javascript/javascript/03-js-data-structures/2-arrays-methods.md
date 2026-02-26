@@ -114,6 +114,28 @@ const index = users.findIndex(u => u.id === 2);
 // 1
 ```
 
+### Object.groupBy() (ES2024+)
+
+The `reduce()` grouping pattern shown above now has a built-in alternative:
+
+```javascript
+const items = [
+  { type: 'fruit', name: 'apple' },
+  { type: 'veg', name: 'carrot' },
+  { type: 'fruit', name: 'banana' }
+];
+
+// Object.groupBy — returns a null-prototype object
+const grouped = Object.groupBy(items, item => item.type);
+// { fruit: [{...}, {...}], veg: [{...}] }
+
+// Map.groupBy — returns a Map (useful for non-string keys)
+const byLength = Map.groupBy(items, item => item.name.length);
+// Map { 5 => [{apple}], 6 => [{carrot}, {banana}] }
+```
+
+`Object.groupBy()` replaces the common reduce-based pattern with a single readable call. Use `Map.groupBy()` when your grouping keys are objects, numbers, or other non-string values.
+
 ## Common Pitfalls
 
 1. **Forgetting `return` in reduce**: The accumulator won't update.
@@ -130,6 +152,43 @@ const index = users.findIndex(u => u.id === 2);
 ## Summary
 
 `map()` transforms each element, `filter()` selects elements, `reduce()` accumulates to a single value. These methods are immutable, chainable, and fundamental to functional JavaScript. Use `find()` for single elements and always provide initial values to `reduce()`.
+
+## Code Examples
+
+**map() - Transform Each Element**
+
+```javascript
+const numbers = [1, 2, 3, 4];
+const doubled = numbers.map(n => n * 2);
+// [2, 4, 6, 8]
+
+// With index
+const indexed = numbers.map((n, i) => `${i}: ${n}`);
+// ['0: 1', '1: 2', '2: 3', '3: 4']
+
+// Transform objects
+const users = [{ name: 'Alice' }, { name: 'Bob' }];
+const names = users.map(user => user.name);
+// ['Alice', 'Bob']
+```
+
+**filter() - Select Elements**
+
+```javascript
+const numbers = [1, 2, 3, 4, 5, 6];
+const evens = numbers.filter(n => n % 2 === 0);
+// [2, 4, 6]
+
+// Filter objects
+const products = [
+  { name: 'A', price: 10 },
+  { name: 'B', price: 25 },
+  { name: 'C', price: 5 }
+];
+const affordable = products.filter(p => p.price < 20);
+// [{ name: 'A', price: 10 }, { name: 'C', price: 5 }]
+```
+
 
 ## Resources
 

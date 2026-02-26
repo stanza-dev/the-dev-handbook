@@ -122,6 +122,49 @@ Date.UTC(2024, 11, 25, 10, 0); // Create UTC timestamp
 
 Date objects represent moments in time. Months are 0-indexed (0-11). Use ISO 8601 format for reliable parsing. Get components with `getFullYear()`, `getMonth()`, etc. Arithmetic works through timestamps. For production apps, consider modern date libraries.
 
+## Code Examples
+
+**Creating Dates**
+
+```javascript
+// Current date/time
+const now = new Date();
+
+// From string (ISO 8601 format recommended)
+const date1 = new Date('2024-12-25');  // Midnight UTC
+const date2 = new Date('2024-12-25T10:30:00');  // Local time
+const date3 = new Date('2024-12-25T10:30:00Z'); // UTC
+
+// From components (months are 0-indexed!)
+const date4 = new Date(2024, 11, 25);  // Dec 25, 2024
+const date5 = new Date(2024, 11, 25, 10, 30, 0);  // With time
+
+// From timestamp
+const date6 = new Date(1703505600000);
+```
+
+**Getting Date Components**
+
+```javascript
+const date = new Date('2024-12-25T10:30:45');
+
+date.getFullYear();    // 2024
+date.getMonth();       // 11 (0-indexed! December = 11)
+date.getDate();        // 25 (day of month)
+date.getDay();         // 3 (day of week, 0=Sunday)
+date.getHours();       // 10
+date.getMinutes();     // 30
+date.getSeconds();     // 45
+date.getMilliseconds(); // 0
+date.getTime();        // Timestamp in ms
+
+// UTC versions
+date.getUTCFullYear();
+date.getUTCMonth();
+// ... etc
+```
+
+
 ## Resources
 
 - [MDN: Date](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date) — Complete Date reference

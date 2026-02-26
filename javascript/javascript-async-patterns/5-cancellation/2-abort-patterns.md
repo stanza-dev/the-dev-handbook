@@ -131,6 +131,45 @@ controller.abort();  // Rejects immediately
 
 Use `AbortSignal.timeout()` for simple timeouts. `AbortSignal.any()` combines multiple signals. Cancel previous requests for search/autocomplete. Always abort in React cleanup. Make custom operations cancellable by listening to the signal.
 
+## Code Examples
+
+**Timeout Pattern**
+
+```javascript
+// Using AbortSignal.timeout() (modern browsers)
+fetch('/api/data', { 
+  signal: AbortSignal.timeout(5000)  // 5 second timeout
+});
+
+// Manual timeout
+function fetchWithTimeout(url, timeout = 5000) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort('Timeout'), timeout);
+  
+  return fetch(url, { signal: controller.signal })
+    .finally(() => clearTimeout(timeoutId));
+}
+```
+
+**Combining Signals**
+
+```javascript
+// AbortSignal.any() - abort if ANY signal aborts
+const controller = new AbortController();
+const timeoutSignal = AbortSignal.timeout(5000);
+
+const combinedSignal = AbortSignal.any([
+  controller.signal,
+  timeoutSignal
+]);
+
+fetch('/api/data', { signal: combinedSignal });
+
+// Can be cancelled by timeout OR manual abort
+controller.abort();  // Cancels immediately
+```
+
+
 ## Resources
 
 - [MDN: AbortSignal.timeout()](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal/timeout_static) — Timeout helper method

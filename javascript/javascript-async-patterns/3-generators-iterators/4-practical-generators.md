@@ -107,9 +107,77 @@ function runCooperatively(gen) {
 }
 ```
 
+### Iterator Helpers Replace Manual Patterns (ES2025)
+
+The manual `lazyMap`, `lazyFilter`, and `lazyTake` functions shown above are now built into the language:
+
+```javascript
+// Before (manual generator helpers):
+const result = lazyTake(
+  lazyFilter(
+    lazyMap(hugeData(), x => x * 2),
+    x => x % 3 === 0
+  ),
+  5
+);
+
+// After (built-in iterator helpers):
+const result = hugeData()
+  .map(x => x * 2)
+  .filter(x => x % 3 === 0)
+  .take(5)
+  .toArray();
+```
+
+Built-in iterator helpers (`.map()`, `.filter()`, `.take()`, `.drop()`, `.flatMap()`, `.reduce()`, `.forEach()`, `.some()`, `.every()`, `.find()`, `.toArray()`) work directly on any iterator. They are lazy — no intermediate arrays are created.
+
 ## Summary
 
 Generators enable lazy evaluation, state machines, ID generation, and cooperative multitasking. Use them when you need on-demand computation, infinite sequences, or fine-grained control over execution flow.
+
+## Code Examples
+
+**Lazy Evaluation**
+
+```javascript
+// Only compute values when needed
+function* lazyMap(iterable, fn) {
+  for (const item of iterable) {
+    yield fn(item);
+  }
+}
+
+function* lazyFilter(iterable, predicate) {
+  for (const item of iterable) {
+    if (predicate(item)) yield item;
+  }
+}
+
+function* lazyTake(iterable, n) {
+  let count = 0;
+  for (const item of iterable) {
+    if (count++ >= n) return;
+    yield item;
+```
+
+**State Machine**
+
+```javascript
+function* trafficLight() {
+  while (true) {
+    yield 'green';
+    yield 'yellow';
+    yield 'red';
+  }
+}
+
+const light = trafficLight();
+light.next().value;  // 'green'
+light.next().value;  // 'yellow'
+light.next().value;  // 'red'
+light.next().value;  // 'green' (cycles)
+```
+
 
 ## Resources
 

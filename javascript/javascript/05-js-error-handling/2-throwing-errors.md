@@ -149,6 +149,44 @@ try {
 
 Use `throw` to signal errors. Always throw Error objects, not strings. Use built-in error types (`TypeError`, `RangeError`, `SyntaxError`) when appropriate. Create custom error classes for domain-specific errors. Use the `cause` property to chain errors.
 
+## Code Examples
+
+**The throw Statement**
+
+```javascript
+// Throw an Error object
+throw new Error('Something went wrong');
+
+// You can throw anything (but don't)
+throw 'error string';  // Works but loses stack trace
+throw 42;              // Works but meaningless
+throw { code: 500 };   // Works but loses Error features
+
+// Always throw Error objects!
+```
+
+**Built-in Error Types**
+
+```javascript
+// TypeError - wrong type
+const obj = null;
+obj.method();  // TypeError: Cannot read properties of null
+
+// ReferenceError - undefined variable
+console.log(undefinedVar);  // ReferenceError
+
+// SyntaxError - invalid syntax (usually at parse time)
+JSON.parse('invalid');  // SyntaxError: Unexpected token
+
+// RangeError - value out of range
+new Array(-1);  // RangeError: Invalid array length
+
+// Throwing specific types
+throw new TypeError('Expected a string');
+throw new RangeError('Value must be between 0 and 100');
+```
+
+
 ## Resources
 
 - [MDN: throw](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/throw) — throw statement reference

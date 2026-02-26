@@ -15,9 +15,9 @@ Understanding how JavaScript executes code non-blockingly.
 
 This section includes **4 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Predict the Output Order
-- 🧩 Multiple Choice: Blocking the Event Loop
-- 🧩 Multiple Choice: Microtask Queue Priority
+- 🧩 Challenge: Predict the Output Order
+- 🧩 Challenge: Minimum setTimeout Delay
+- 🧩 Challenge: Microtask Queue Priority
 - 🧩 Challenge: requestAnimationFrame Purpose
 
 → [Practice in your IDE](https://stanza.dev/courses/javascript-async-patterns)
