@@ -5,10 +5,24 @@ source_lesson: "php-ddd-ddd-best-practices"
 
 # DDD Best Practices & Common Pitfalls
 
+## Introduction
+
 After learning the patterns, let's discuss practical wisdom for successful DDD adoption.
 
-## Best Practices
+## Key Concepts
 
+- **Anemic Domain Model** - an anti-pattern where entities lack behavior
+- **Bounded Context** - an explicit boundary within which a domain model applies
+- **Ubiquitous Language** - the shared vocabulary between developers and domain experts
+- **Aggregate Size** - keeping aggregates small to minimize transaction conflicts
+
+## Real World Context
+
+In production PHP applications, ddd best practices & pitfalls helps teams build maintainable software by providing clear patterns for organizing complex business logic.
+
+## Deep Dive
+
+## Best Practices
 ### 1. Start with the Domain, Not the Database
 
 ```php
@@ -133,7 +147,6 @@ class Order {
 ```
 
 ## Common Pitfalls
-
 ### 1. Anemic Domain Model
 
 ```php
@@ -202,16 +215,14 @@ namespace Inventory { class StockItem { /* stock info */ } }
 namespace Pricing { class PricedProduct { /* pricing */ } }
 ```
 
-## When NOT to Use DDD
-
+### When NOT to Use DDD
 - Simple CRUD applications
 - Prototypes and MVPs
 - Well-understood, stable domains
 - Small teams with simple requirements
 - Short-lived projects
 
-## Summary Checklist
-
+### Summary Checklist
 ✅ Domain experts involved in modeling
 ✅ Ubiquitous language documented and enforced
 ✅ Bounded contexts identified

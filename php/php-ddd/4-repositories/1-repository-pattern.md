@@ -5,10 +5,21 @@ source_lesson: "php-ddd-repository-pattern"
 
 # The Repository Pattern
 
+## Introduction
+
 A **Repository** mediates between the domain and data mapping layers. It provides a collection-like interface for accessing domain objects while hiding persistence details.
 
-## Why Repositories?
+## Key Concepts
 
+- **Repository**
+
+## Real World Context
+
+In production PHP applications, the repository pattern helps teams build maintainable software by providing clear patterns for organizing complex business logic.
+
+## Deep Dive
+
+### Why Repositories?
 ```php
 <?php
 // BAD: Domain coupled to persistence
@@ -34,8 +45,7 @@ class OrderService {
 }
 ```
 
-## Repository Interface (Domain Layer)
-
+### Repository Interface (Domain Layer)
 ```php
 <?php
 namespace Domain\Ordering;
@@ -63,8 +73,7 @@ interface OrderRepository {
 }
 ```
 
-## Repository Implementation (Infrastructure Layer)
-
+### Repository Implementation (Infrastructure Layer)
 ```php
 <?php
 namespace Infrastructure\Persistence\Doctrine;
@@ -132,8 +141,7 @@ final class DoctrineOrderRepository implements OrderRepository {
 }
 ```
 
-## In-Memory Repository for Testing
-
+### In-Memory Repository for Testing
 ```php
 <?php
 namespace Infrastructure\Persistence\InMemory;
@@ -181,8 +189,7 @@ final class InMemoryOrderRepository implements OrderRepository {
 }
 ```
 
-## Repository Guidelines
-
+### Repository Guidelines
 ### 1. One Repository Per Aggregate
 
 ```php
@@ -230,6 +237,25 @@ interface OrderRepository {
     public function findRecentlyCompleted(int $days): array;
 }
 ```
+
+## Common Pitfalls
+
+1. **Overcomplicating simple cases** - Not every part of the application needs the repository pattern. Apply it where complexity warrants the investment.
+2. **Ignoring the ubiquitous language** - Naming classes and methods without input from domain experts leads to a model that does not reflect the business.
+3. **Mixing infrastructure concerns** - Allowing framework dependencies to leak into the domain layer undermines the architectural benefits.
+
+## Best Practices
+
+1. **Start from the domain** - Model the business concepts first, then figure out persistence and infrastructure.
+2. **Keep it simple** - Use the simplest pattern that solves the problem. Introduce complexity only when needed.
+3. **Collaborate with domain experts** - The model should be shaped by business knowledge, not just technical preferences.
+
+## Summary
+
+- The Repository Pattern is a fundamental concept in Domain-Driven Design
+- Proper implementation leads to more maintainable and expressive code
+- Always align your implementation with the ubiquitous language
+- Apply these patterns where business complexity justifies the investment
 
 ## Resources
 

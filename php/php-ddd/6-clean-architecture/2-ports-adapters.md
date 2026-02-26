@@ -5,10 +5,21 @@ source_lesson: "php-ddd-ports-adapters"
 
 # Ports and Adapters (Hexagonal Architecture)
 
+## Introduction
+
 **Ports and Adapters** is another way to visualize Clean Architecture. The application core defines "ports" (interfaces), and "adapters" connect the outside world.
 
-## The Hexagonal Model
+## Key Concepts
 
+- **Ports and Adapters**
+
+## Real World Context
+
+In production PHP applications, ports and adapters pattern helps teams build maintainable software by providing clear patterns for organizing complex business logic.
+
+## Deep Dive
+
+### The Hexagonal Model
 ```
                     ┌─────────────────┐
           REST API  │    Adapter      │  CLI
@@ -30,8 +41,7 @@ source_lesson: "php-ddd-ports-adapters"
                     └─────────────────┘
 ```
 
-## Primary Ports (Driving/Input)
-
+### Primary Ports (Driving/Input)
 Ports that drive the application - user actions:
 
 ```php
@@ -52,8 +62,7 @@ interface GetOrder {
 }
 ```
 
-## Primary Adapters (Controllers)
-
+### Primary Adapters (Controllers)
 ```php
 <?php
 namespace Infrastructure\Adapter\Input\Http;
@@ -97,8 +106,7 @@ final class PlaceOrderCommand extends Command {
 }
 ```
 
-## Secondary Ports (Driven/Output)
-
+### Secondary Ports (Driven/Output)
 Ports the application uses - infrastructure needs:
 
 ```php
@@ -128,8 +136,7 @@ interface InventoryChecker {
 }
 ```
 
-## Secondary Adapters (Infrastructure)
-
+### Secondary Adapters (Infrastructure)
 ```php
 <?php
 namespace Infrastructure\Adapter\Output\Persistence;
@@ -180,8 +187,7 @@ final class StripePaymentProcessor implements PaymentProcessor {
 }
 ```
 
-## Testing with Ports and Adapters
-
+### Testing with Ports and Adapters
 ```php
 <?php
 namespace Tests\Application;
@@ -229,6 +235,25 @@ final class AlwaysAvailableInventory implements InventoryChecker {
     }
 }
 ```
+
+## Common Pitfalls
+
+1. **Overcomplicating simple cases** - Not every part of the application needs ports and adapters pattern. Apply it where complexity warrants the investment.
+2. **Ignoring the ubiquitous language** - Naming classes and methods without input from domain experts leads to a model that does not reflect the business.
+3. **Mixing infrastructure concerns** - Allowing framework dependencies to leak into the domain layer undermines the architectural benefits.
+
+## Best Practices
+
+1. **Start from the domain** - Model the business concepts first, then figure out persistence and infrastructure.
+2. **Keep it simple** - Use the simplest pattern that solves the problem. Introduce complexity only when needed.
+3. **Collaborate with domain experts** - The model should be shaped by business knowledge, not just technical preferences.
+
+## Summary
+
+- Ports and Adapters Pattern is a fundamental concept in Domain-Driven Design
+- Proper implementation leads to more maintainable and expressive code
+- Always align your implementation with the ubiquitous language
+- Apply these patterns where business complexity justifies the investment
 
 ## Resources
 

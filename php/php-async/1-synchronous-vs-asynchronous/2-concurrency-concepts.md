@@ -5,8 +5,18 @@ source_lesson: "php-async-concurrency-concepts"
 
 # Concurrency, Parallelism, and Async
 
-These terms are often confused, but understanding their differences is essential for writing efficient PHP applications.
+## Introduction
+The terms concurrency, parallelism, and asynchronous are often confused, but understanding their differences is essential for writing efficient PHP applications. Choosing the wrong approach for your workload can mean wasted effort or, worse, introducing complexity without any performance benefit.
+## Key Concepts
+- **Concurrency**: Managing multiple tasks that can make progress over time by interleaving their execution, even on a single thread.
+- **Parallelism**: Actually executing multiple tasks at the exact same time, requiring multiple CPU cores or threads.
+- **Cooperative Multitasking**: A model where tasks voluntarily yield control (used by PHP Fibers), as opposed to preemptive multitasking where the scheduler forces switches.
+- **Event Loop**: A programming construct that continuously checks for and dispatches events, forming the foundation of async programming.
+- **Promises**: Objects representing a value that may not be available yet, providing a cleaner alternative to callbacks for async result handling.
+## Real World Context
+Modern web applications routinely call multiple APIs, databases, and services to render a single page. Understanding the difference between concurrency and parallelism helps you choose the right tool: Fibers for I/O-bound concurrency, or pcntl_fork for CPU-bound parallelism.
 
+## Deep Dive
 ## Concurrency vs Parallelism
 
 These are related but distinct concepts:
@@ -187,8 +197,17 @@ Async PHP Server (ReactPHP/Swoole):
 └─────────────────────────────────────────┘
 ```
 
-## Key Takeaways
+## Common Pitfalls
+1. **Confusing concurrency with parallelism** - Running Fibers does not make your code run on multiple CPU cores. Fibers provide concurrency (interleaved execution) on a single thread.
+2. **Using async for CPU-bound tasks** - Async only helps when tasks spend time waiting. CPU-bound work needs true parallelism (pcntl_fork or ext-parallel).
+3. **Overcomplicating simple flows** - If operations are sequential dependencies (B needs A's result), async adds complexity without benefit.
 
+## Best Practices
+1. **Choose the right concurrency model** - Use Fibers/event loops for I/O-bound work, pcntl_fork for CPU-bound work, and synchronous code for simple sequential tasks.
+2. **Start with a high-level library** - Libraries like ReactPHP and Amp handle the complexity of Fibers and event loops so you can focus on business logic.
+3. **Understand your bottleneck** - Determine whether your application is I/O-bound or CPU-bound before choosing a concurrency strategy.
+
+## Summary
 1. **Concurrency** ≠ **Parallelism**: Concurrency is about structure, parallelism is about execution
 2. **Async** shines for I/O-bound work, not CPU-bound work
 3. **Event loops** are the foundation of async programming

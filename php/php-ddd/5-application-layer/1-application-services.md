@@ -5,10 +5,21 @@ source_lesson: "php-ddd-application-services"
 
 # Application Services
 
+## Introduction
+
 **Application Services** orchestrate use cases by coordinating domain objects, repositories, and infrastructure services. They're the entry point for application operations.
 
-## Role of Application Services
+## Key Concepts
 
+- **Application Services**
+
+## Real World Context
+
+In production PHP applications, application services helps teams build maintainable software by providing clear patterns for organizing complex business logic.
+
+## Deep Dive
+
+### Role of Application Services
 ```
 ┌─────────────────────────────────────────────────────┐
 │                  Presentation Layer                  │
@@ -34,8 +45,7 @@ source_lesson: "php-ddd-application-services"
 └─────────────────────────────────────────────────────┘
 ```
 
-## Implementing Application Services
-
+### Implementing Application Services
 ```php
 <?php
 namespace Application\Order;
@@ -106,8 +116,7 @@ final class OrderApplicationService {
 }
 ```
 
-## Data Transfer Objects (DTOs)
-
+### Data Transfer Objects (DTOs)
 ```php
 <?php
 namespace Application\Order\DTO;
@@ -176,8 +185,7 @@ final readonly class OrderResponse {
 }
 ```
 
-## Application Service Guidelines
-
+### Application Service Guidelines
 ### 1. Thin Application Services
 
 ```php
@@ -232,6 +240,25 @@ class OrderApplicationService {
     }
 }
 ```
+
+## Common Pitfalls
+
+1. **Overcomplicating simple cases** - Not every part of the application needs application services. Apply it where complexity warrants the investment.
+2. **Ignoring the ubiquitous language** - Naming classes and methods without input from domain experts leads to a model that does not reflect the business.
+3. **Mixing infrastructure concerns** - Allowing framework dependencies to leak into the domain layer undermines the architectural benefits.
+
+## Best Practices
+
+1. **Start from the domain** - Model the business concepts first, then figure out persistence and infrastructure.
+2. **Keep it simple** - Use the simplest pattern that solves the problem. Introduce complexity only when needed.
+3. **Collaborate with domain experts** - The model should be shaped by business knowledge, not just technical preferences.
+
+## Summary
+
+- Application Services is a fundamental concept in Domain-Driven Design
+- Proper implementation leads to more maintainable and expressive code
+- Always align your implementation with the ubiquitous language
+- Apply these patterns where business complexity justifies the investment
 
 ## Resources
 

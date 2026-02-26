@@ -5,10 +5,25 @@ source_lesson: "php-ddd-complete-example"
 
 # Complete DDD Example: Order Processing
 
+## Introduction
+
 Let's build a complete, production-ready order processing system using all DDD patterns we've learned.
 
-## Domain Model
+## Key Concepts
 
+- **Aggregate Root** - the entry point for all modifications within an aggregate
+- **Application Service** - orchestrates use cases by coordinating domain objects
+- **Event Handler** - a listener that reacts to domain events with side effects
+- **Domain Event** - a record of something meaningful that happened in the domain
+- **Controller** - the infrastructure adapter that translates HTTP requests into commands
+
+## Real World Context
+
+In production PHP applications, complete ddd example helps teams build maintainable software by providing clear patterns for organizing complex business logic.
+
+## Deep Dive
+
+### Domain Model
 ```php
 <?php
 declare(strict_types=1);
@@ -156,8 +171,7 @@ final class Order {
 }
 ```
 
-## Application Service
-
+### Application Service
 ```php
 <?php
 namespace Application\Ordering;
@@ -251,8 +265,7 @@ final class OrderApplicationService {
 }
 ```
 
-## Event Handlers
-
+### Event Handlers
 ```php
 <?php
 namespace Application\Ordering\EventHandler;
@@ -291,8 +304,7 @@ final class UpdateAnalyticsOnOrderSubmitted {
 }
 ```
 
-## Controller
-
+### Controller
 ```php
 <?php
 namespace Infrastructure\Http\Controller;
@@ -336,9 +348,28 @@ final class OrderController {
 }
 ```
 
+## Common Pitfalls
+
+1. **Overcomplicating simple cases** - Not every part of the application needs complete ddd example. Apply it where complexity warrants the investment.
+2. **Ignoring the ubiquitous language** - Naming classes and methods without input from domain experts leads to a model that does not reflect the business.
+3. **Mixing infrastructure concerns** - Allowing framework dependencies to leak into the domain layer undermines the architectural benefits.
+
+## Best Practices
+
+1. **Start from the domain** - Model the business concepts first, then figure out persistence and infrastructure.
+2. **Keep it simple** - Use the simplest pattern that solves the problem. Introduce complexity only when needed.
+3. **Collaborate with domain experts** - The model should be shaped by business knowledge, not just technical preferences.
+
+## Summary
+
+- Complete DDD Example is a fundamental concept in Domain-Driven Design
+- Proper implementation leads to more maintainable and expressive code
+- Always align your implementation with the ubiquitous language
+- Apply these patterns where business complexity justifies the investment
+
 ## Resources
 
-- [Implementing Domain-Driven Design](https://www.oreilly.com/library/view/implementing-domain-driven-design/9780133039900/) — Vaughn Vernon's comprehensive DDD implementation guide
+- [DDD Reference Card](https://www.domainlanguage.com/ddd/reference/) — Eric Evans' Domain-Driven Design Reference (free)
 
 ---
 

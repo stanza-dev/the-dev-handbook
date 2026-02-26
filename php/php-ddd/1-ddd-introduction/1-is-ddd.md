@@ -5,10 +5,26 @@ source_lesson: "php-ddd-what-is-ddd"
 
 # What is Domain-Driven Design?
 
+## Introduction
+
 Domain-Driven Design (DDD) is an approach to software development that centers the design around the core business domain. Introduced by Eric Evans in 2003, DDD helps teams build complex software that accurately models real-world business processes.
 
-## The Problem DDD Solves
+## Key Concepts
 
+- **Business experts**
+- **Developers**
+- **Good fit for DDD:**
+- **Probably overkill:**
+- **Strategic Design**
+- **Tactical Design**
+
+## Real World Context
+
+In production PHP applications, what is domain-driven design? helps teams build maintainable software by providing clear patterns for organizing complex business logic.
+
+## Deep Dive
+
+### The Problem DDD Solves
 In many software projects, a disconnect exists between:
 - **Business experts** who understand the problem domain
 - **Developers** who write the code
@@ -19,8 +35,7 @@ This leads to:
 - Technical debt from poor modeling
 - Difficulty adapting to business changes
 
-## Core Principles of DDD
-
+### Core Principles of DDD
 ### 1. Focus on the Core Domain
 
 Not all parts of your system are equally important. DDD encourages identifying and focusing on:
@@ -105,8 +120,7 @@ final class Order {
 }
 ```
 
-## Strategic vs Tactical Design
-
+### Strategic vs Tactical Design
 DDD operates at two levels:
 
 **Strategic Design** (high-level):
@@ -119,8 +133,7 @@ DDD operates at two levels:
 - How to implement the domain model in code
 - Patterns for managing complexity
 
-## When to Use DDD
-
+### When to Use DDD
 ✅ **Good fit for DDD:**
 - Complex business logic
 - Long-lived projects with evolving requirements
@@ -133,8 +146,7 @@ DDD operates at two levels:
 - Well-understood, stable domains
 - Technical (non-business) systems
 
-## The DDD Building Blocks
-
+### The DDD Building Blocks
 ```
 Strategic Patterns          Tactical Patterns
 ───────────────────         ─────────────────
@@ -147,8 +159,7 @@ Strategic Patterns          Tactical Patterns
                             • Factory
 ```
 
-## A Simple Example
-
+### A Simple Example
 Consider an e-commerce system. A business expert might say:
 
 > "When a customer places an order, we need to check inventory, reserve the items, calculate the total including any applicable discounts, and then process the payment."
@@ -199,6 +210,25 @@ final class PlaceOrderService {
 ```
 
 Notice how the code reads almost like the business description.
+
+## Common Pitfalls
+
+1. **Overcomplicating simple cases** - Not every part of the application needs what is domain-driven design?. Apply it where complexity warrants the investment.
+2. **Ignoring the ubiquitous language** - Naming classes and methods without input from domain experts leads to a model that does not reflect the business.
+3. **Mixing infrastructure concerns** - Allowing framework dependencies to leak into the domain layer undermines the architectural benefits.
+
+## Best Practices
+
+1. **Start from the domain** - Model the business concepts first, then figure out persistence and infrastructure.
+2. **Keep it simple** - Use the simplest pattern that solves the problem. Introduce complexity only when needed.
+3. **Collaborate with domain experts** - The model should be shaped by business knowledge, not just technical preferences.
+
+## Summary
+
+- What is Domain-Driven Design? is a fundamental concept in Domain-Driven Design
+- Proper implementation leads to more maintainable and expressive code
+- Always align your implementation with the ubiquitous language
+- Apply these patterns where business complexity justifies the investment
 
 ## Resources
 

@@ -5,10 +5,26 @@ source_lesson: "php-ddd-value-objects"
 
 # Value Objects
 
+## Introduction
+
 A **Value Object** is a domain object defined entirely by its attributes. Two value objects with the same attributes are considered equal and interchangeable.
 
-## Value Objects vs Entities
+## Key Concepts
 
+- **Equality by value**
+- **Immutable**
+- **Replaceable**
+- **Self-validating**
+- **Side-effect free**
+- **Value Object**
+
+## Real World Context
+
+In production PHP applications, value objects helps teams build maintainable software by providing clear patterns for organizing complex business logic.
+
+## Deep Dive
+
+### Value Objects vs Entities
 ```php
 <?php
 // VALUE OBJECT: Money - defined by amount and currency
@@ -22,8 +38,7 @@ $customer2 = new Customer(new CustomerId('2'), 'John');
 $customer1->equals($customer2);  // false - different identity
 ```
 
-## Implementing Value Objects
-
+### Implementing Value Objects
 ```php
 <?php
 declare(strict_types=1);
@@ -121,8 +136,7 @@ final readonly class Money {
 }
 ```
 
-## Common Value Objects
-
+### Common Value Objects
 ### Email Address
 
 ```php
@@ -237,8 +251,7 @@ final readonly class DateRange {
 }
 ```
 
-## Value Object Characteristics
-
+### Value Object Characteristics
 | Characteristic | Description |
 |----------------|-------------|
 | **Immutable** | State never changes after creation |
@@ -247,8 +260,7 @@ final readonly class DateRange {
 | **Side-effect free** | Operations return new instances |
 | **Replaceable** | Can be swapped with equal value objects |
 
-## When to Use Value Objects
-
+### When to Use Value Objects
 ```php
 <?php
 // BAD: Primitive obsession
@@ -272,6 +284,25 @@ Use value objects when:
 - Validation rules apply
 - Operations make sense (add money, compare dates)
 - You want to avoid primitive obsession
+
+## Common Pitfalls
+
+1. **Overcomplicating simple cases** - Not every part of the application needs value objects. Apply it where complexity warrants the investment.
+2. **Ignoring the ubiquitous language** - Naming classes and methods without input from domain experts leads to a model that does not reflect the business.
+3. **Mixing infrastructure concerns** - Allowing framework dependencies to leak into the domain layer undermines the architectural benefits.
+
+## Best Practices
+
+1. **Start from the domain** - Model the business concepts first, then figure out persistence and infrastructure.
+2. **Keep it simple** - Use the simplest pattern that solves the problem. Introduce complexity only when needed.
+3. **Collaborate with domain experts** - The model should be shaped by business knowledge, not just technical preferences.
+
+## Summary
+
+- Value Objects is a fundamental concept in Domain-Driven Design
+- Proper implementation leads to more maintainable and expressive code
+- Always align your implementation with the ubiquitous language
+- Apply these patterns where business complexity justifies the investment
 
 ## Resources
 

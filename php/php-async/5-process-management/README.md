@@ -14,8 +14,8 @@ Learn to manage child processes and achieve true parallelism with PCNTL.
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Fork Return Value
+- 🧩 Challenge: Fork Return Value
 - 🧩 Multiple Choice: Challenge Sigkill
-- 🧩 Multiple Choice: IPC Method Speed
+- 🔗 Matching: IPC Method Speed
 
 → [Practice in your IDE](https://stanza.dev/courses/php-async)

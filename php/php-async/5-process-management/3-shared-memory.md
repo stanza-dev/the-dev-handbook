@@ -5,8 +5,18 @@ source_lesson: "php-async-ipc-shared-memory"
 
 # Inter-Process Communication (IPC)
 
-When using multiple processes, they need ways to share data. PHP offers several IPC mechanisms.
+## Introduction
+When using multiple processes via pcntl_fork(), those processes need ways to share data and coordinate work. PHP offers several IPC mechanisms, each with different trade-offs between speed, complexity, and use case suitability.
+## Key Concepts
+- **Shared Memory (shmop)**: The fastest IPC mechanism, allowing processes to read and write the same memory region directly without kernel mediation.
+- **Message Queues**: Kernel-managed FIFO queues that enable asynchronous message passing between processes, ideal for task distribution.
+- **Socket Pairs**: Bidirectional communication channels created with socket_create_pair(), providing network-like IPC between related processes.
+- **Worker Pool**: A pattern where a fixed number of child processes consume tasks from a shared queue and store results in shared memory.
+- **ftok()**: A function that generates a unique IPC key from a file path and project identifier, ensuring consistent access to the same IPC resource.
+## Real World Context
+IPC mechanisms are the backbone of multi-process PHP applications. Queue workers use message queues for task distribution, while high-performance applications use shared memory for zero-copy data exchange between processes.
 
+## Deep Dive
 ## IPC Methods Overview
 
 | Method | Speed | Complexity | Use Case |
@@ -311,6 +321,23 @@ for ($i = 0; $i < 20; $i++) {
 $results = $pool->shutdown();
 print_r($results);
 ```
+
+## Common Pitfalls
+1. **Not cleaning up IPC resources** - Shared memory segments and message queues persist after process exit. Always call shmop_delete() or msg_remove_queue().
+2. **Race conditions with shared memory** - Multiple processes writing to shared memory simultaneously corrupts data. Use semaphores for synchronization.
+3. **Exceeding message queue limits** - System V message queues have a maximum size. Large payloads should use shared memory or files instead.
+
+## Best Practices
+1. **Choose IPC based on your needs** - Shared memory for speed, message queues for task distribution, sockets for bidirectional communication.
+2. **Always clean up IPC resources** - Register shutdown functions to delete shared memory segments and message queues.
+3. **Use semaphores for shared memory synchronization** - Protect shared memory with semaphores (sem_acquire/sem_release) to prevent race conditions.
+
+## Summary
+- Shared memory (shmop/shm) provides the fastest IPC through direct memory access.
+- Message queues offer asynchronous, kernel-managed message passing between processes.
+- Socket pairs enable bidirectional communication between parent and child.
+- System V IPC (shm_attach, msg_get_queue) provides richer features than basic shmop.
+- Always clean up IPC resources (shared memory, queues) when processes exit.
 
 ## Resources
 

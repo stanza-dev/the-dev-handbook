@@ -5,8 +5,18 @@ source_lesson: "php-async-signal-handling"
 
 # Signal Handling in PHP
 
-Signals are software interrupts sent to a process. Handling them properly is essential for robust CLI applications.
+## Introduction
+Signals are software interrupts sent to a process by the operating system. Handling them properly is essential for building robust CLI applications, queue workers, and long-running daemons that shut down gracefully without data loss.
+## Key Concepts
+- **Signal**: A software interrupt sent to a process by the operating system or another process, triggering a registered handler function.
+- **pcntl_async_signals()**: Enables immediate signal handling in PHP instead of requiring manual dispatch, making signal handling more reliable.
+- **SIGTERM/SIGINT**: Standard termination signals: SIGTERM requests graceful shutdown, SIGINT is triggered by Ctrl+C.
+- **SIGKILL**: A special signal (9) that cannot be caught, blocked, or ignored -- it always force-terminates the process immediately.
+- **Graceful Shutdown**: A pattern where the signal handler sets a flag, and the main loop checks it to finish current work before exiting cleanly.
+## Real World Context
+Signal handling is essential for building robust CLI daemons and queue workers. Graceful shutdown on SIGTERM ensures active jobs complete before the process exits, preventing data corruption and duplicate processing.
 
+## Deep Dive
 ## Common Signals
 
 | Signal | Number | Description | Default Action |
@@ -240,6 +250,23 @@ while (!$shutdown) {
     }
 }
 ```
+
+## Common Pitfalls
+1. **Doing complex work in signal handlers** - Signal handlers should only set flags. Complex operations like database writes can cause deadlocks or corruption.
+2. **Not enabling async signals** - Without pcntl_async_signals(true), signals are only processed when you call pcntl_signal_dispatch().
+3. **Ignoring SIGCHLD in multi-process applications** - Not handling SIGCHLD leads to zombie processes accumulating in the process table.
+
+## Best Practices
+1. **Use pcntl_async_signals(true)** - Enable async signal handling so signals are processed immediately, not only when pcntl_signal_dispatch() is called.
+2. **Keep signal handlers minimal** - Set a flag in the handler and check it in your main loop. Do complex cleanup in the main code path.
+3. **Handle SIGTERM and SIGINT at minimum** - These are the standard shutdown signals. Graceful handling prevents data loss and corruption.
+
+## Summary
+- Signals are software interrupts handled with pcntl_signal() and pcntl_async_signals().
+- SIGTERM and SIGINT are the standard graceful shutdown signals.
+- SIGKILL cannot be caught or handled; it always force-terminates the process.
+- Signal handlers should be minimal: set a flag and handle cleanup in the main loop.
+- SIGCHLD notifies the parent when child processes change state.
 
 ## Resources
 

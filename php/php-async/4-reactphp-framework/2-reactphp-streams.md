@@ -5,8 +5,18 @@ source_lesson: "php-async-reactphp-streams"
 
 # Working with ReactPHP Streams
 
-Streams are the backbone of I/O in ReactPHP. They provide a consistent interface for reading and writing data asynchronously.
+## Introduction
+Streams are the backbone of I/O in ReactPHP, providing a consistent event-driven interface for reading and writing data asynchronously. Whether you are handling file uploads, HTTP requests, or WebSocket frames, streams are the underlying abstraction.
+## Key Concepts
+- **ReadableStreamInterface**: A stream that emits 'data', 'end', 'error', and 'close' events as data becomes available.
+- **WritableStreamInterface**: A stream that accepts data via write() and signals when its buffer is full or drained.
+- **DuplexStreamInterface**: A stream that combines both readable and writable capabilities for bidirectional communication.
+- **pipe()**: A method that connects a readable stream to a writable stream, automatically handling data transfer and back pressure.
+- **ThroughStream**: A transform stream that processes data passing through it, enabling composable stream pipelines.
+## Real World Context
+PHP's stream functions power everything from file uploads to WebSocket servers. In production, non-blocking streams enable a single PHP process to handle thousands of simultaneous connections, which is essential for real-time features.
 
+## Deep Dive
 ## Stream Interfaces
 
 ReactPHP defines several stream interfaces:
@@ -269,6 +279,23 @@ $writable->on('drain', function () use ($readable) {
 // Or simply use pipe() which handles this automatically
 $readable->pipe($writable);
 ```
+
+## Common Pitfalls
+1. **Not setting streams to non-blocking mode** - Forgetting stream_set_blocking(false) causes fread() to block, defeating the purpose of async I/O.
+2. **Confusing empty string with false from fread** - An empty string means no data yet; false means an error occurred. Both need different handling.
+3. **Ignoring stream_select() modifying arrays** - stream_select() modifies the arrays passed to it, so you must copy them before each call.
+
+## Best Practices
+1. **Always set non-blocking mode for async I/O** - Call stream_set_blocking($stream, false) before using streams with an event loop.
+2. **Use stream_select() for multiplexing** - Monitor multiple streams simultaneously instead of polling them sequentially.
+3. **Handle all edge cases in stream reads** - Check for empty string (no data), false (error), and EOF condition separately.
+
+## Summary
+- stream_set_blocking(false) enables non-blocking I/O operations.
+- stream_select() monitors multiple streams simultaneously for read/write readiness.
+- stream_socket_client() with STREAM_CLIENT_ASYNC_CONNECT creates non-blocking connections.
+- stream_socket_server() combined with stream_select() enables handling many concurrent clients.
+- Always handle timeouts, EOF conditions, and errors when working with async streams.
 
 ## Resources
 

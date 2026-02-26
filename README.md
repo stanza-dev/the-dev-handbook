@@ -7,7 +7,7 @@
 
 Maintained by [Stanza](https://stanza.dev) — Learn coding faster right in your IDE, Slack, emails and the web.
 
-**132 courses** · **2293+ lessons** · **17 technologies**
+**132 courses** · **2299+ lessons** · **17 technologies**
 
 ## Courses
 
@@ -134,9 +134,9 @@ Maintained by [Stanza](https://stanza.dev) — Learn coding faster right in your
 ### 🐘 PHP
 
 - 🌐 [RESTful API Development with PHP](./php/php-api-development/) — 24 lessons
-- ⚡ [Asynchronous PHP](./php/php-async/) — 17 lessons
+- ⚡ [Asynchronous PHP](./php/php-async/) — 18 lessons
 - 🗄️ [PHP & Relational Databases](./php/php-databases/) — 18 lessons
-- 🏛️ [Domain-Driven Design with PHP](./php/php-ddd/) — 16 lessons
+- 🏛️ [Domain-Driven Design with PHP](./php/php-ddd/) — 21 lessons
 - 🐘 [PHP Essentials](./php/php-essentials/) — 23 lessons
 - 🚀 [Modern PHP 8.x: Latest Language Features](./php/php-modern-features/) — 21 lessons
 - 🏛️ [Object-Oriented PHP Mastery](./php/php-oop-mastery/) — 20 lessons

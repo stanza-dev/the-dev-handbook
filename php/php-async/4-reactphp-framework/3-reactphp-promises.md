@@ -5,8 +5,18 @@ source_lesson: "php-async-reactphp-promises"
 
 # Promises in ReactPHP
 
-ReactPHP uses promises extensively for async operations. Understanding them is essential for effective async programming.
+## Introduction
+ReactPHP uses promises extensively for handling async operations. Understanding how to create, chain, combine, and cancel promises is essential for writing effective async code with the ReactPHP ecosystem.
+## Key Concepts
+- **Deferred**: A ReactPHP class that creates a Promise you can resolve or reject externally, useful for wrapping callback-based APIs.
+- **Utils::all()**: Waits for all promises to resolve and returns an array of results, rejecting immediately if any promise fails.
+- **Utils::race()**: Returns the result of the first promise to settle (resolve or reject), regardless of the others.
+- **Cancellation**: The ability to cancel a pending promise, cleaning up associated resources like timers or network connections.
+- **Error Recovery**: Using the second parameter of then() or catch() to handle specific errors and continue the promise chain with a fallback value.
+## Real World Context
+Promises are the primary abstraction for handling async results in ReactPHP and Guzzle. Whether you are fetching data from APIs, querying databases, or reading files, promises provide a consistent interface for managing async operations.
 
+## Deep Dive
 ## Creating Promises
 
 ```php
@@ -249,6 +259,23 @@ React\EventLoop\Loop::addTimer(2.0, function () use ($promise) {
     echo "Operation cancelled\n";
 });
 ```
+
+## Common Pitfalls
+1. **Forgetting to handle rejections** - Unhandled promise rejections can silently swallow errors. Always add a catch() handler.
+2. **Creating promise chains without returning** - In then() callbacks, you must return the next promise for proper chaining. Forgetting this breaks the chain.
+3. **Using synchronous blocking inside then() callbacks** - This blocks the event loop, defeating the purpose of promises.
+
+## Best Practices
+1. **Always add error handlers** - Every promise chain should end with catch() to handle rejections. Unhandled rejections are silent bugs.
+2. **Return promises from then() callbacks** - To properly chain async operations, return the next promise from your then() callback.
+3. **Use finally() for cleanup** - Cleanup operations like closing connections should go in finally() so they run regardless of success or failure.
+
+## Summary
+- Promises represent eventual values that may resolve (success) or reject (failure).
+- Promise chaining with then() creates readable sequential async flows.
+- Utils::all() runs promises concurrently and collects all results.
+- Utils::race() returns the first promise to settle; Utils::any() returns the first to resolve.
+- Always handle rejections with catch() and use finally() for cleanup.
 
 ## Resources
 

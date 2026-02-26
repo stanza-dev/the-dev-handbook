@@ -2,7 +2,7 @@
 
 > Master concurrent programming in PHP with Fibers, event loops, ReactPHP, and real-time communication patterns for high-performance applications.
 
-**PHP 8.4+** · Intermediate → Advanced
+**PHP 8.5+** · Intermediate → Advanced
 
 ## Sections
 
@@ -13,9 +13,9 @@
 | 🔁 | [Event Loops & Non-Blocking I/O](./3-event-loops/) | 3 lessons |
 | ⚛️ | [ReactPHP Framework](./4-reactphp-framework/) | 3 lessons |
 | 🔀 | [Process Management & PCNTL](./5-process-management/) | 3 lessons |
-| 🌐 | [WebSockets & Real-Time](./6-websockets-realtime/) | 2 lessons |
+| 🌐 | [WebSockets & Real-Time](./6-websockets-realtime/) | 3 lessons |
 
-**17 lessons** · **21 interactive challenges**
+**18 lessons** · **21 interactive challenges**
 
 ## Want the Interactive Experience?
 

@@ -5,8 +5,18 @@ source_lesson: "php-async-websocket-fundamentals"
 
 # WebSocket Fundamentals
 
-WebSockets enable full-duplex, persistent connections between clients and servers—essential for real-time applications.
+## Introduction
+WebSockets enable full-duplex, persistent connections between clients and servers, making them essential for real-time applications like chat, live notifications, and collaborative editing. Unlike HTTP's request-response model, either side can send data at any time.
+## Key Concepts
+- **WebSocket Protocol**: A full-duplex communication protocol over a single TCP connection, enabling real-time bidirectional data transfer between client and server.
+- **HTTP Upgrade Handshake**: The initial HTTP request that switches the protocol from HTTP to WebSocket, establishing the persistent connection.
+- **Ratchet**: The most popular PHP library for building WebSocket servers, built on top of ReactPHP's event loop.
+- **Rooms/Channels**: A pattern for organizing WebSocket connections into groups so messages can be broadcast to specific subsets of connected clients.
+- **Connection Lifecycle**: The events of a WebSocket connection: onOpen (connected), onMessage (data received), onClose (disconnected), onError (failure).
+## Real World Context
+WebSockets power real-time features like live chat, collaborative editing, notifications, and live sports scores. Any feature that requires instant server-to-client communication benefits from WebSockets.
 
+## Deep Dive
 ## HTTP vs WebSocket
 
 ```
@@ -292,6 +302,23 @@ class AuthenticatedServer implements MessageComponentInterface, WsServerInterfac
     }
 }
 ```
+
+## Common Pitfalls
+1. **Not handling connection drops** - Network interruptions are common. Without proper onClose/onError handling, orphaned connections waste resources.
+2. **Trusting WebSocket messages without validation** - All incoming messages must be validated and sanitized, just like HTTP requests.
+3. **Sending too much data on open** - Flooding a new connection with historical data can cause the client to lag or crash.
+
+## Best Practices
+1. **Validate all incoming messages** - Never trust WebSocket client data. Parse JSON safely, validate types, and sanitize content.
+2. **Implement authentication early** - Authenticate during the WebSocket handshake using query parameters or headers, not after the connection is open.
+3. **Use rooms/channels for message routing** - Don't broadcast to all connections. Use a channel system so clients only receive relevant messages.
+
+## Summary
+- WebSockets provide persistent, bidirectional communication unlike HTTP's request-response model.
+- The connection starts with an HTTP upgrade handshake, then switches to the WebSocket protocol.
+- Ratchet is the most popular PHP library for WebSocket servers.
+- Rooms/channels organize connections for targeted message broadcasting.
+- Authentication should happen during the WebSocket handshake using tokens.
 
 ## Resources
 

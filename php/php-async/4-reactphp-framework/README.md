@@ -15,7 +15,7 @@ Build high-performance async applications with the ReactPHP ecosystem.
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: ReactPHP Timer Behavior
-- 🧩 Multiple Choice: Challenge Stream Pipe
-- 🧩 Multiple Choice: Promise::all Error Behavior
+- ✏️ Fill in the Blank: Challenge Stream Pipe
+- 🧩 Challenge: Promise::all Error Behavior
 
 → [Practice in your IDE](https://stanza.dev/courses/php-async)

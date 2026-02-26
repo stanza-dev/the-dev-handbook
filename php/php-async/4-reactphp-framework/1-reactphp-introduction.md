@@ -5,8 +5,18 @@ source_lesson: "php-async-reactphp-introduction"
 
 # Introduction to ReactPHP
 
-ReactPHP is a low-level library for event-driven programming in PHP. It provides the foundational components for building non-blocking, asynchronous applications.
+## Introduction
+ReactPHP is a low-level library for event-driven programming in PHP that provides the foundational components for building non-blocking, asynchronous applications. It is not a framework but a collection of composable components that power many production PHP async applications.
+## Key Concepts
+- **ReactPHP**: A low-level library collection for event-driven programming in PHP, providing components for the event loop, streams, promises, HTTP, and more.
+- **Loop (Event Loop)**: ReactPHP's core component that drives all async operations, managing timers, stream I/O, and deferred callbacks.
+- **Browser**: ReactPHP's async HTTP client that returns Promises for non-blocking HTTP requests with automatic connection pooling.
+- **HttpServer**: A non-blocking HTTP server that can handle many concurrent connections from a single PHP process.
+- **futureTick()**: Schedules a callback to run on the very next iteration of the event loop, before any timers or I/O checks.
+## Real World Context
+ReactPHP powers production WebSocket servers, API gateways, and real-time dashboards. Companies use it to handle tens of thousands of concurrent connections from a single PHP process, making it a practical alternative to Node.js for event-driven applications.
 
+## Deep Dive
 ## What is ReactPHP?
 
 ReactPHP is not a framework—it's a collection of components that work together:
@@ -219,6 +229,23 @@ $connection->query('SELECT * FROM users WHERE active = ?', [1])
         $connection->quit();
     });
 ```
+
+## Common Pitfalls
+1. **Calling Loop::run() multiple times** - The event loop should only be started once. Multiple run() calls indicate architectural issues.
+2. **Not handling connection errors** - HTTP requests can fail for many reasons. Always add catch() handlers to browser requests.
+3. **Forgetting that Loop::run() blocks** - Code after Loop::run() only executes after the loop stops. Structure your program flow accordingly.
+
+## Best Practices
+1. **Use the Browser class for HTTP requests** - ReactPHP's Browser provides a simple, promise-based API for async HTTP that handles connection pooling automatically.
+2. **Leverage promise combinators** - Use Utils::all() for parallel requests, Utils::race() for fastest-wins, and Utils::any() for first-success patterns.
+3. **Handle backpressure in streams** - When piping streams, use pipe() which handles backpressure automatically, or manually pause/resume based on write() return values.
+
+## Summary
+- ReactPHP is a collection of components for event-driven PHP, not a monolithic framework.
+- The EventLoop drives all async operations: timers, streams, and I/O.
+- Browser provides a simple async HTTP client with promise-based responses.
+- HttpServer enables building high-performance, non-blocking web servers.
+- ReactPHP supports async database queries, DNS resolution, and child process management.
 
 ## Resources
 

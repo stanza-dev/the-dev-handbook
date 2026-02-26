@@ -5,8 +5,18 @@ source_lesson: "php-async-stream-functions"
 
 # PHP Stream Functions for Async I/O
 
-PHP's stream functions are the foundation for non-blocking I/O. Understanding them is essential for async programming.
+## Introduction
+PHP's built-in stream functions are the foundation for non-blocking I/O. Before using higher-level libraries, understanding these low-level primitives helps you grasp how async I/O actually works under the hood and troubleshoot issues effectively.
+## Key Concepts
+- **stream_set_blocking()**: Controls whether stream operations block (wait for data) or return immediately. Setting false enables non-blocking mode.
+- **stream_select()**: The core I/O multiplexing function that waits for multiple streams to become ready for reading, writing, or have errors.
+- **stream_socket_client()**: Creates client connections with optional async mode (STREAM_CLIENT_ASYNC_CONNECT) for non-blocking connection establishment.
+- **stream_socket_server()**: Creates a server socket that can accept multiple connections, the foundation for building async servers.
+- **Stream Context**: Configuration options for streams including HTTP method, headers, SSL verification, and timeouts.
+## Real World Context
+PHP's stream functions power everything from file uploads to WebSocket servers. In production, non-blocking streams enable a single PHP process to handle thousands of simultaneous connections, which is essential for real-time features.
 
+## Deep Dive
 ## Essential Stream Functions
 
 ### stream_set_blocking()
@@ -277,6 +287,23 @@ function readWithTimeout($stream, int $bytes, float $timeout): string|false {
     return $data;
 }
 ```
+
+## Common Pitfalls
+1. **Not setting streams to non-blocking mode** - Forgetting stream_set_blocking(false) causes fread() to block, defeating the purpose of async I/O.
+2. **Confusing empty string with false from fread** - An empty string means no data yet; false means an error occurred. Both need different handling.
+3. **Ignoring stream_select() modifying arrays** - stream_select() modifies the arrays passed to it, so you must copy them before each call.
+
+## Best Practices
+1. **Always set non-blocking mode for async I/O** - Call stream_set_blocking($stream, false) before using streams with an event loop.
+2. **Use stream_select() for multiplexing** - Monitor multiple streams simultaneously instead of polling them sequentially.
+3. **Handle all edge cases in stream reads** - Check for empty string (no data), false (error), and EOF condition separately.
+
+## Summary
+- stream_set_blocking(false) enables non-blocking I/O operations.
+- stream_select() monitors multiple streams simultaneously for read/write readiness.
+- stream_socket_client() with STREAM_CLIENT_ASYNC_CONNECT creates non-blocking connections.
+- stream_socket_server() combined with stream_select() enables handling many concurrent clients.
+- Always handle timeouts, EOF conditions, and errors when working with async streams.
 
 ## Resources
 

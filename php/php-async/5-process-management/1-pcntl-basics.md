@@ -5,8 +5,18 @@ source_lesson: "php-async-pcntl-basics"
 
 # Introduction to PCNTL
 
-The PCNTL (Process Control) extension allows PHP to create and manage child processes, enabling true parallelism for CPU-bound tasks.
+## Introduction
+The PCNTL (Process Control) extension allows PHP to create and manage child processes, enabling true parallelism for CPU-bound tasks. Unlike Fibers which provide concurrency on a single thread, PCNTL lets you leverage multiple CPU cores simultaneously.
+## Key Concepts
+- **pcntl_fork()**: Duplicates the current process, returning the child's PID to the parent and 0 to the child, enabling true parallelism.
+- **Copy-on-Write**: After forking, parent and child share memory pages until one modifies data, at which point the page is copied. This makes forking memory-efficient.
+- **pcntl_waitpid()**: Waits for a child process to change state (exit), collecting its status and preventing zombie processes.
+- **WNOHANG**: A flag for pcntl_waitpid() that makes it non-blocking, returning immediately if no child has exited yet.
+- **Exit Codes**: Integer values (0-255) returned by child processes to indicate success (0) or failure (non-zero) to the parent.
+## Real World Context
+PCNTL is commonly used in CLI tools, queue workers, and batch processors where true parallelism is needed. For example, a data import script can fork multiple child processes to process different segments of a large dataset simultaneously.
 
+## Deep Dive
 ## What is PCNTL?
 
 PCNTL provides Unix-style process control:
@@ -216,6 +226,23 @@ while (!empty($children)) {
     usleep(500000);  // 0.5 seconds
 }
 ```
+
+## Common Pitfalls
+1. **Forgetting to exit in child processes** - After fork(), without exit(), the child continues executing parent code, leading to unexpected behavior.
+2. **Not waiting for child processes** - Failing to call pcntl_waitpid() creates zombie processes that consume system resources.
+3. **Sharing database connections after fork** - Both parent and child share the same connection, causing corrupted state. Each process must create its own connection.
+
+## Best Practices
+1. **Always call exit() in child processes** - After fork(), the child should perform its work and call exit(). Without exit(), the child continues executing parent code.
+2. **Wait for all children** - Use pcntl_waitpid() in a loop to collect all child processes and prevent zombies.
+3. **Limit the number of concurrent children** - Fork bombing crashes the system. Use a worker pool pattern with a maximum process count.
+
+## Summary
+- pcntl_fork() duplicates the entire process; the child gets 0, the parent gets the child's PID.
+- Each child process has its own memory space (copy-on-write).
+- pcntl_waitpid() collects child exit status and prevents zombie processes.
+- WNOHANG flag enables non-blocking checks on child process status.
+- PCNTL only works on Unix-like systems in CLI mode.
 
 ## Resources
 

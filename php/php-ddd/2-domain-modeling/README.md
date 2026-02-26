@@ -14,9 +14,9 @@ Learn to model your domain with Entities, Value Objects, and Aggregates.
 
 This section includes **4 interactive challenges** available on Stanza:
 
+- 🧩 Challenge: Value Object Immutability
 - 🧩 Multiple Choice: Entity or Value Object?
-- 🧩 Multiple Choice: Value Object Immutability
-- 🧩 Multiple Choice: Aggregate Root Access
+- ✏️ Fill in the Blank: Aggregate Root Access
 - 🧩 Multiple Choice: Aggregate Transaction Rule
 
 → [Practice in your IDE](https://stanza.dev/courses/php-ddd)

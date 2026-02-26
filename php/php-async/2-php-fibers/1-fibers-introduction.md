@@ -5,8 +5,18 @@ source_lesson: "php-async-fibers-introduction"
 
 # Introduction to PHP Fibers
 
-PHP 8.1 introduced **Fibers**, a revolutionary feature that enables cooperative multitasking without the complexity of callbacks or generators. Fibers are the foundation for modern async PHP libraries.
+## Introduction
+PHP 8.1 introduced Fibers, a revolutionary feature that enables cooperative multitasking without the complexity of callbacks or generators. Fibers are the foundation for modern async PHP libraries like ReactPHP and Amp, and understanding them unlocks a new level of PHP performance.
+## Key Concepts
+- **Fiber**: A lightweight execution context in PHP 8.1+ that can be paused (suspended) and resumed, enabling cooperative multitasking.
+- **Fiber::suspend()**: Pauses the Fiber's execution and returns control to the caller, optionally passing a value out.
+- **Fiber::resume()**: Continues a suspended Fiber's execution from where it left off, optionally passing a value in.
+- **Stack Switching**: The mechanism Fibers use to save and restore the entire call stack, unlike Generators which only preserve the current function's state.
+- **Fiber Lifecycle**: The states a Fiber transitions through: Created, Running, Suspended, and Terminated.
+## Real World Context
+Libraries like ReactPHP and Amp use Fibers internally to provide clean async/await-style APIs. Understanding how Fibers work helps you debug issues, write custom async utilities, and make informed architectural decisions.
 
+## Deep Dive
 ## What is a Fiber?
 
 A **Fiber** is a lightweight execution context that can be paused and resumed. Think of it as a function that can be suspended mid-execution and later continued from exactly where it left off.
@@ -182,6 +192,23 @@ for ($i = 0; $i < 10000; $i++) {
 echo "Created 10,000 fibers\n";
 echo "Memory: " . round(memory_get_usage() / 1024 / 1024, 2) . " MB\n";
 ```
+
+## Common Pitfalls
+1. **Using Fibers directly in application code** - Fibers are a low-level primitive. Use higher-level libraries like ReactPHP or Amp that abstract the complexity.
+2. **Forgetting that Fibers are single-threaded** - A blocking operation inside a Fiber blocks the entire thread, defeating the purpose of concurrency.
+3. **Not checking Fiber state before operations** - Calling resume() on a non-suspended Fiber or start() on an already-started Fiber throws FiberError.
+
+## Best Practices
+1. **Use libraries that abstract Fibers** - ReactPHP and Amp provide high-level APIs built on Fibers. Use those instead of raw Fiber operations.
+2. **Keep Fiber callbacks short and focused** - Each Fiber should do one thing. Complex logic should be broken into multiple functions.
+3. **Always handle the Fiber return value** - After a Fiber terminates, call getReturn() to retrieve its result or detect if it threw an exception.
+
+## Summary
+- Fibers are lightweight execution contexts that can be paused (suspended) and resumed.
+- Unlike Generators, Fibers preserve the entire call stack across suspension points.
+- Data flows bidirectionally through suspend() and resume() parameters.
+- Fibers are memory-efficient (~8KB stack each) and support thousands of concurrent instances.
+- In practice, use libraries like ReactPHP or Amp rather than raw Fibers.
 
 ## Resources
 

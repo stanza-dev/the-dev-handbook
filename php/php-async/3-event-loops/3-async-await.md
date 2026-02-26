@@ -5,8 +5,17 @@ source_lesson: "php-async-promises-async-await"
 
 # Promises and Async/Await Patterns
 
-Promises provide a cleaner way to handle asynchronous operations than callbacks. Combined with Fibers, PHP can support async/await-style syntax.
+## Introduction
+Promises provide a cleaner way to handle asynchronous operations than raw callbacks, and when combined with Fibers, PHP can support async/await-style syntax. This combination gives you the power of async with the readability of synchronous code.
+## Key Concepts
+- **Promise**: An object representing a value that will be available in the future, with three states: Pending, Fulfilled (success), or Rejected (failure).
+- **Promise Chaining**: Connecting multiple async operations with then() where each step receives the previous step's result.
+- **Promise Combinators**: Utility functions like all() (wait for all), race() (first to settle), and allSettled() (wait for all, never rejects) for managing multiple promises.
+- **Async/Await with Fibers**: A pattern combining Fibers and Promises to write async code that looks synchronous, with await() suspending the Fiber until a Promise resolves.
+## Real World Context
+Real-world Fiber usage is typically through libraries rather than direct Fiber manipulation. However, understanding patterns like schedulers and async/await simulation helps you use these libraries effectively and troubleshoot issues.
 
+## Deep Dive
 ## What is a Promise?
 
 A **Promise** represents a value that may not be available yet but will be at some point, or will fail with an error.
@@ -370,6 +379,23 @@ async(function() {
     return $results;
 });
 ```
+
+## Common Pitfalls
+1. **Not checking Fiber state before calling start/resume** - Calling resume() on a terminated Fiber throws a FiberError. Always verify state with isSuspended().
+2. **Creating Fiber deadlocks** - If a Fiber suspends but nothing ever resumes it, resources are leaked and the scheduler may hang.
+3. **Blocking inside Fibers** - Using sleep() or synchronous I/O inside a Fiber blocks the entire event loop, not just that Fiber.
+
+## Best Practices
+1. **Prefer async/await style over raw Fibers** - Using libraries that provide await() functions makes async code read like synchronous code, improving maintainability.
+2. **Implement proper error handling in schedulers** - Any task scheduler must catch and handle exceptions from Fibers to prevent one failed task from crashing the entire application.
+3. **Test Fiber-based code with deterministic schedulers** - For unit testing, use a scheduler that gives you control over execution order.
+
+## Summary
+- A simple scheduler manages multiple Fibers by starting, resuming, and requeuing them.
+- Async sleep patterns use timers and Fiber suspension to yield control during waits.
+- The async/await pattern wraps Fibers in Promises for clean, synchronous-looking code.
+- Generator-based async code can be migrated to Fiber-based code for better readability.
+- Always use established libraries rather than implementing these patterns from scratch.
 
 ## Resources
 

@@ -5,8 +5,17 @@ source_lesson: "php-async-fiber-error-handling"
 
 # Error Handling in Fibers
 
-Proper error handling is crucial when working with Fibers. Exceptions can propagate in unexpected ways if you're not careful.
+## Introduction
+Proper error handling is crucial when working with Fibers because exceptions can propagate in unexpected ways between the Fiber and its caller. In long-running async applications, a single unhandled exception can crash the entire server, making robust error handling essential.
+## Key Concepts
+- **Exception Propagation**: Exceptions thrown inside a Fiber propagate to the caller of start() or resume(), where they can be caught normally.
+- **Fiber::throw()**: A method to inject an exception into a suspended Fiber at its suspension point, useful for signaling timeouts or cancellations.
+- **Supervisor Pattern**: An error handling strategy where a supervisor manages Fiber execution, implementing retry logic for retryable failures.
+- **AsyncResult**: A Result type pattern (success/failure wrapper) that makes error handling explicit and composable for async operations.
+## Real World Context
+Libraries like ReactPHP and Amp use Fibers internally to provide clean async/await-style APIs. Understanding how Fibers work helps you debug issues, write custom async utilities, and make informed architectural decisions.
 
+## Deep Dive
 ## Exceptions Inside Fibers
 
 Exceptions thrown inside a Fiber propagate to the caller of `start()` or `resume()`:
@@ -220,7 +229,6 @@ if ($result->success) {
 ```
 
 ## Common Pitfalls
-
 ### 1. Forgetting to Check State
 
 ```php
@@ -269,6 +277,18 @@ $fiber->start();
 // CORRECT: Ensure resume path exists
 // Use a scheduler or event loop that tracks suspended fibers
 ```
+
+## Best Practices
+1. **Use libraries that abstract Fibers** - ReactPHP and Amp provide high-level APIs built on Fibers. Use those instead of raw Fiber operations.
+2. **Keep Fiber callbacks short and focused** - Each Fiber should do one thing. Complex logic should be broken into multiple functions.
+3. **Always handle the Fiber return value** - After a Fiber terminates, call getReturn() to retrieve its result or detect if it threw an exception.
+
+## Summary
+- Fibers are lightweight execution contexts that can be paused (suspended) and resumed.
+- Unlike Generators, Fibers preserve the entire call stack across suspension points.
+- Data flows bidirectionally through suspend() and resume() parameters.
+- Fibers are memory-efficient (~8KB stack each) and support thousands of concurrent instances.
+- In practice, use libraries like ReactPHP or Amp rather than raw Fibers.
 
 ## Resources
 

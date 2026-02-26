@@ -5,10 +5,22 @@ source_lesson: "php-ddd-aggregates"
 
 # Aggregates
 
+## Introduction
+
 An **Aggregate** is a cluster of domain objects treated as a single unit for data changes. Each aggregate has a root entity (the **Aggregate Root**) that controls all access to the aggregate.
 
-## Why Aggregates?
+## Key Concepts
 
+- **Aggregate**
+- **Aggregate Root**
+
+## Real World Context
+
+In production PHP applications, aggregates helps teams build maintainable software by providing clear patterns for organizing complex business logic.
+
+## Deep Dive
+
+### Why Aggregates?
 Without aggregates, maintaining consistency is hard:
 
 ```php
@@ -37,8 +49,7 @@ $order->updateLineQuantity($lineId, 5);
 $orderRepo->save($order);  // Save entire aggregate
 ```
 
-## Aggregate Design
-
+### Aggregate Design
 ```
 ┌─────────────────────────────────────────────┐
 │              ORDER AGGREGATE                │
@@ -63,8 +74,7 @@ $orderRepo->save($order);  // Save entire aggregate
 └─────────────────────────────────────────────┘
 ```
 
-## Implementing an Aggregate
-
+### Implementing an Aggregate
 ```php
 <?php
 declare(strict_types=1);
@@ -239,8 +249,7 @@ final class Order {
 }
 ```
 
-## Aggregate Rules
-
+### Aggregate Rules
 ### 1. Reference by Identity
 
 ```php
@@ -298,8 +307,7 @@ class Order {
 }
 ```
 
-## The Order Line (Internal Entity)
-
+### The Order Line (Internal Entity)
 ```php
 <?php
 /**
@@ -334,6 +342,25 @@ final readonly class OrderLine {
     }
 }
 ```
+
+## Common Pitfalls
+
+1. **Overcomplicating simple cases** - Not every part of the application needs aggregates. Apply it where complexity warrants the investment.
+2. **Ignoring the ubiquitous language** - Naming classes and methods without input from domain experts leads to a model that does not reflect the business.
+3. **Mixing infrastructure concerns** - Allowing framework dependencies to leak into the domain layer undermines the architectural benefits.
+
+## Best Practices
+
+1. **Start from the domain** - Model the business concepts first, then figure out persistence and infrastructure.
+2. **Keep it simple** - Use the simplest pattern that solves the problem. Introduce complexity only when needed.
+3. **Collaborate with domain experts** - The model should be shaped by business knowledge, not just technical preferences.
+
+## Summary
+
+- Aggregates is a fundamental concept in Domain-Driven Design
+- Proper implementation leads to more maintainable and expressive code
+- Always align your implementation with the ubiquitous language
+- Apply these patterns where business complexity justifies the investment
 
 ## Resources
 

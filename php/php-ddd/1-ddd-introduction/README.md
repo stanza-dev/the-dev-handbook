@@ -15,8 +15,8 @@ Understand the philosophy and strategic patterns of Domain-Driven Design.
 This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: When to Use DDD
-- 🧩 Multiple Choice: Ubiquitous Language Violation
+- ✏️ Fill in the Blank: Ubiquitous Language Violation
 - 🧩 Multiple Choice: Bounded Context Indicator
-- 🧩 Multiple Choice: Anti-Corruption Layer Purpose
+- 🔗 Matching: Anti-Corruption Layer Purpose
 
 → [Practice in your IDE](https://stanza.dev/courses/php-ddd)

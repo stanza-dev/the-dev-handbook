@@ -5,10 +5,25 @@ source_lesson: "php-ddd-persistence-strategies"
 
 # Persistence Strategies
 
+## Introduction
+
 How you persist domain objects significantly impacts your architecture. Let's explore different approaches.
 
-## Active Record vs Data Mapper
+## Key Concepts
 
+- **Active Record** - a pattern where entities know how to persist themselves
+- **Data Mapper** - a pattern that separates domain objects from persistence logic
+- **Event Sourcing** - storing events instead of current state
+- **Manual Mapping** - hand-writing the translation between domain and database
+- **Doctrine ORM** - a PHP Data Mapper implementation for database abstraction
+
+## Real World Context
+
+In production PHP applications, persistence strategies helps teams build maintainable software by providing clear patterns for organizing complex business logic.
+
+## Deep Dive
+
+### Active Record vs Data Mapper
 ### Active Record
 
 The entity knows how to persist itself:
@@ -48,8 +63,7 @@ class OrderRepository {
 
 ✅ **Benefit**: Clean domain model
 
-## Manual Mapping
-
+### Manual Mapping
 ```php
 <?php
 final class PdoOrderRepository implements OrderRepository {
@@ -119,8 +133,7 @@ final class PdoOrderRepository implements OrderRepository {
 }
 ```
 
-## Using Doctrine ORM
-
+### Using Doctrine ORM
 ```php
 <?php
 // Domain entity with Doctrine attributes
@@ -161,8 +174,7 @@ final class Money {
 }
 ```
 
-## Event Sourcing (Advanced)
-
+### Event Sourcing (Advanced)
 Instead of storing current state, store all events:
 
 ```php
@@ -206,6 +218,25 @@ final class SqlEventStore implements EventStore {
     }
 }
 ```
+
+## Common Pitfalls
+
+1. **Overcomplicating simple cases** - Not every part of the application needs persistence strategies. Apply it where complexity warrants the investment.
+2. **Ignoring the ubiquitous language** - Naming classes and methods without input from domain experts leads to a model that does not reflect the business.
+3. **Mixing infrastructure concerns** - Allowing framework dependencies to leak into the domain layer undermines the architectural benefits.
+
+## Best Practices
+
+1. **Start from the domain** - Model the business concepts first, then figure out persistence and infrastructure.
+2. **Keep it simple** - Use the simplest pattern that solves the problem. Introduce complexity only when needed.
+3. **Collaborate with domain experts** - The model should be shaped by business knowledge, not just technical preferences.
+
+## Summary
+
+- Persistence Strategies is a fundamental concept in Domain-Driven Design
+- Proper implementation leads to more maintainable and expressive code
+- Always align your implementation with the ubiquitous language
+- Apply these patterns where business complexity justifies the investment
 
 ## Resources
 

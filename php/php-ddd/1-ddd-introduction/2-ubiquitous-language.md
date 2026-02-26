@@ -5,10 +5,26 @@ source_lesson: "php-ddd-ubiquitous-language"
 
 # Ubiquitous Language
 
+## Introduction
+
 The **Ubiquitous Language** is a shared vocabulary used by everyone on the team—developers, domain experts, product owners, and stakeholders. It forms the foundation of effective DDD.
 
-## Why Language Matters
+## Key Concepts
 
+- **Confirm an Order**
+- **Customer**
+- **Line Item**
+- **New concepts emerge**
+- **Old terms retire**
+- **Order**
+
+## Real World Context
+
+In production PHP applications, ubiquitous language helps teams build maintainable software by providing clear patterns for organizing complex business logic.
+
+## Deep Dive
+
+### Why Language Matters
 Miscommunication is expensive:
 
 ```
@@ -19,8 +35,7 @@ Business actually means: Customer can log in but can't make purchases
 → Wrong feature built → Wasted time → Frustrated users
 ```
 
-## Building the Language
-
+### Building the Language
 ### 1. Discovery Through Conversation
 
 ```
@@ -36,8 +51,8 @@ Expert: "The order is 'pending' until we 'confirm' it."
 Create a glossary that everyone references:
 
 ```markdown
-## Order Management Glossary
 
+### Order Management Glossary
 **Customer** - A person or organization that purchases products.
 Not "user" or "client".
 
@@ -86,8 +101,7 @@ final class LineItem {
 }
 ```
 
-## Language in Different Contexts
-
+### Language in Different Contexts
 The same word can mean different things in different contexts:
 
 ```php
@@ -120,8 +134,7 @@ final class Customer {
 }
 ```
 
-## Patterns for Maintaining Language
-
+### Patterns for Maintaining Language
 ### Use Static Analysis
 
 ```php
@@ -169,8 +182,7 @@ final class Order {
 }
 ```
 
-## Common Language Anti-Patterns
-
+### Common Language Anti-Patterns
 ### 1. Technical Leakage
 
 ```php
@@ -221,8 +233,7 @@ $lineItem = new LineItem();
 $purchaseOrder = $repository->findPurchaseOrder($id);
 ```
 
-## Evolving the Language
-
+### Evolving the Language
 The ubiquitous language isn't static—it evolves:
 
 1. **New concepts emerge** as business grows
@@ -247,6 +258,25 @@ enum OrderStatus: string {
     case Cancelled = 'cancelled';
 }
 ```
+
+## Common Pitfalls
+
+1. **Overcomplicating simple cases** - Not every part of the application needs ubiquitous language. Apply it where complexity warrants the investment.
+2. **Ignoring the ubiquitous language** - Naming classes and methods without input from domain experts leads to a model that does not reflect the business.
+3. **Mixing infrastructure concerns** - Allowing framework dependencies to leak into the domain layer undermines the architectural benefits.
+
+## Best Practices
+
+1. **Start from the domain** - Model the business concepts first, then figure out persistence and infrastructure.
+2. **Keep it simple** - Use the simplest pattern that solves the problem. Introduce complexity only when needed.
+3. **Collaborate with domain experts** - The model should be shaped by business knowledge, not just technical preferences.
+
+## Summary
+
+- Ubiquitous Language is a fundamental concept in Domain-Driven Design
+- Proper implementation leads to more maintainable and expressive code
+- Always align your implementation with the ubiquitous language
+- Apply these patterns where business complexity justifies the investment
 
 ## Resources
 

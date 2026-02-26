@@ -14,9 +14,9 @@ Master PHP 8.1+ Fibers for cooperative multitasking and lightweight concurrency.
 
 This section includes **4 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Fiber State After Start
+- ✏️ Fill in the Blank: Fiber State After Start
 - 🧩 Multiple Choice: Predict Fiber Output
-- 🧩 Multiple Choice: Fiber vs Generator Advantage
-- 🧩 Multiple Choice: Exception Handling in Fibers
+- 🔗 Matching: Fiber vs Generator Advantage
+- 🧩 Challenge: Exception Handling in Fibers
 
 → [Practice in your IDE](https://stanza.dev/courses/php-async)

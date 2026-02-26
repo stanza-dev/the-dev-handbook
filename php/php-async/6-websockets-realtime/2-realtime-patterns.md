@@ -5,8 +5,18 @@ source_lesson: "php-async-realtime-patterns"
 
 # Real-Time Application Patterns
 
-Beyond basic messaging, real-time applications require careful architecture for scalability and reliability.
+## Introduction
+Beyond basic WebSocket messaging, production real-time applications require carefully designed patterns for scalability, reliability, and security. These patterns are the difference between a demo and a system that handles thousands of concurrent users.
+## Key Concepts
+- **Pub/Sub Pattern**: A messaging pattern where publishers send messages to channels and subscribers receive them, enabling decoupled communication.
+- **Presence Channel**: A specialized channel that tracks which users are currently connected, enabling features like online indicators and typing notifications.
+- **Rate Limiting**: Restricting the number of messages a client can send per time window to prevent abuse and protect server resources.
+- **Heartbeat/Keepalive**: Periodic ping/pong messages between client and server to detect dead connections and maintain the connection through proxies and firewalls.
+- **Sticky Sessions**: A load balancer configuration ensuring that a client's requests always route to the same backend server, required for WebSocket upgrades.
+## Real World Context
+Real-world Fiber usage is typically through libraries rather than direct Fiber manipulation. However, understanding patterns like schedulers and async/await simulation helps you use these libraries effectively and troubleshoot issues.
 
+## Deep Dive
 ## Pub/Sub Pattern with Redis
 
 ```php
@@ -307,9 +317,26 @@ Key considerations:
 - Store presence/state in Redis for consistency
 - Implement reconnection logic on clients
 
+## Common Pitfalls
+1. **Not checking Fiber state before calling start/resume** - Calling resume() on a terminated Fiber throws a FiberError. Always verify state with isSuspended().
+2. **Creating Fiber deadlocks** - If a Fiber suspends but nothing ever resumes it, resources are leaked and the scheduler may hang.
+3. **Blocking inside Fibers** - Using sleep() or synchronous I/O inside a Fiber blocks the entire event loop, not just that Fiber.
+
+## Best Practices
+1. **Prefer async/await style over raw Fibers** - Using libraries that provide await() functions makes async code read like synchronous code, improving maintainability.
+2. **Implement proper error handling in schedulers** - Any task scheduler must catch and handle exceptions from Fibers to prevent one failed task from crashing the entire application.
+3. **Test Fiber-based code with deterministic schedulers** - For unit testing, use a scheduler that gives you control over execution order.
+
+## Summary
+- A simple scheduler manages multiple Fibers by starting, resuming, and requeuing them.
+- Async sleep patterns use timers and Fiber suspension to yield control during waits.
+- The async/await pattern wraps Fibers in Promises for clean, synchronous-looking code.
+- Generator-based async code can be migrated to Fiber-based code for better readability.
+- Always use established libraries rather than implementing these patterns from scratch.
+
 ## Resources
 
-- [PHP Manual - Redis Extension](https://www.php.net/manual/en/book.redis.php) — PHP Redis extension for pub/sub messaging
+- [PHP Manual - Redis Extension](https://github.com/phpredis/phpredis) — PHP Redis extension for pub/sub messaging
 
 ---
 

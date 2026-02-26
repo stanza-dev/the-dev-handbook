@@ -15,8 +15,8 @@ Learn the fundamental differences between synchronous and asynchronous execution
 This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Identify the Blocking Operation
-- 🧩 Multiple Choice: Concurrency vs Parallelism
-- 🧩 Multiple Choice: Calculate Async Benefit
+- 🧩 Challenge: Calculate Async Benefit
+- ✏️ Fill in the Blank: Concurrency vs Parallelism
 - 🧩 Multiple Choice: Appropriate Async Scenario
 
 → [Practice in your IDE](https://stanza.dev/courses/php-async)

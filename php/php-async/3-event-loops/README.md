@@ -14,9 +14,9 @@ Understand the core of async programming: event loops and non-blocking operation
 
 This section includes **4 interactive challenges** available on Stanza:
 
+- 🧩 Challenge: Promise Chain Result
+- 🧩 Challenge: Challenge Promise All
 - 🧩 Multiple Choice: Challenge Stream Select
-- 🧩 Multiple Choice: Non-Blocking Read Behavior
-- 🧩 Multiple Choice: Promise Chain Result
-- 🧩 Multiple Choice: Challenge Promise All
+- ✏️ Fill in the Blank: Non-Blocking Read Behavior
 
 → [Practice in your IDE](https://stanza.dev/courses/php-async)

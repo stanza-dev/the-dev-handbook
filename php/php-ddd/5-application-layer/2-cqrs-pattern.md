@@ -5,10 +5,25 @@ source_lesson: "php-ddd-cqrs-pattern"
 
 # CQRS: Command Query Responsibility Segregation
 
+## Introduction
+
 **CQRS** separates read operations (Queries) from write operations (Commands), allowing different models optimized for each purpose.
 
-## Why CQRS?
+## Key Concepts
 
+- **CQRS**
+- **Flexibility**
+- **Performance**
+- **Scalability**
+- **Simplicity**
+
+## Real World Context
+
+In production PHP applications, cqrs: command query separation helps teams build maintainable software by providing clear patterns for organizing complex business logic.
+
+## Deep Dive
+
+### Why CQRS?
 ```
 Traditional: Same model for reads and writes
 ┌─────────────────────────────────────┐
@@ -29,8 +44,7 @@ CQRS: Separate models
 └─────────────────────┘  └─────────────────────┘
 ```
 
-## Commands
-
+### Commands
 ```php
 <?php
 namespace Application\Order\Command;
@@ -77,8 +91,7 @@ final class PlaceOrderHandler {
 }
 ```
 
-## Queries
-
+### Queries
 ```php
 <?php
 namespace Application\Order\Query;
@@ -150,8 +163,7 @@ final readonly class OrderView {
 }
 ```
 
-## Command/Query Bus
-
+### Command/Query Bus
 ```php
 <?php
 namespace Infrastructure\Bus;
@@ -214,14 +226,32 @@ final class OrderController {
 }
 ```
 
-## Benefits of CQRS
-
+### Benefits of CQRS
 | Benefit | Description |
 |---------|-------------|
 | **Performance** | Queries optimized for reads, no aggregate loading |
 | **Scalability** | Read and write sides scale independently |
 | **Simplicity** | Each model focused on one responsibility |
 | **Flexibility** | Different storage for reads vs writes |
+
+## Common Pitfalls
+
+1. **Overcomplicating simple cases** - Not every part of the application needs cqrs: command query separation. Apply it where complexity warrants the investment.
+2. **Ignoring the ubiquitous language** - Naming classes and methods without input from domain experts leads to a model that does not reflect the business.
+3. **Mixing infrastructure concerns** - Allowing framework dependencies to leak into the domain layer undermines the architectural benefits.
+
+## Best Practices
+
+1. **Start from the domain** - Model the business concepts first, then figure out persistence and infrastructure.
+2. **Keep it simple** - Use the simplest pattern that solves the problem. Introduce complexity only when needed.
+3. **Collaborate with domain experts** - The model should be shaped by business knowledge, not just technical preferences.
+
+## Summary
+
+- CQRS: Command Query Separation is a fundamental concept in Domain-Driven Design
+- Proper implementation leads to more maintainable and expressive code
+- Always align your implementation with the ubiquitous language
+- Apply these patterns where business complexity justifies the investment
 
 ## Resources
 

@@ -5,8 +5,17 @@ source_lesson: "php-async-blocking-operations"
 
 # Understanding Blocking Operations
 
-Before diving into asynchronous programming, you need to understand what makes PHP traditionally synchronous and why blocking operations can be problematic for certain applications.
+## Introduction
+Before diving into asynchronous programming, you need to understand what makes PHP traditionally synchronous and why blocking operations can be problematic for certain applications. Every PHP developer encounters blocking operations daily, but few realize the performance implications until they need to scale.
+## Key Concepts
+- **Synchronous Execution**: Code that runs line by line, waiting for each operation to complete before moving to the next. This is PHP's default execution model.
+- **Blocking Operation**: Any operation that pauses program execution while waiting for a result, such as network requests, file reads, or database queries.
+- **I/O-Bound vs CPU-Bound**: I/O-bound operations spend time waiting for external systems (ideal for async), while CPU-bound operations keep the processor busy (async does not help).
+- **Request-Response Cycle**: PHP's traditional model where each HTTP request starts a script, executes synchronously, sends a response, and terminates.
+## Real World Context
+In production web applications, blocking operations are the most common cause of slow response times. A single slow API call or database query can make an entire page load take seconds. Understanding blocking is the first step toward building applications that handle thousands of concurrent users efficiently.
 
+## Deep Dive
 ## What is Synchronous Execution?
 
 **Synchronous execution** means your code runs line by line, in order, waiting for each operation to complete before moving to the next one. This is how PHP has traditionally worked and how most developers first learn to program.
@@ -129,9 +138,26 @@ PHP was designed for the **request-response cycle**:
 
 This model is simple and effective for most web applications. Each request is isolated, making PHP naturally scalable through multiple processes.
 
+## Common Pitfalls
+1. **Assuming all operations are equally slow** - Network I/O (API calls, database queries) is typically orders of magnitude slower than local file reads or CPU operations. Profile before optimizing.
+2. **Using async for everything** - Adding async complexity to simple CRUD operations introduces bugs without meaningful performance gains. Only use async when the performance benefit is measurable.
+3. **Ignoring CPU-bound bottlenecks** - Async programming helps with I/O-bound waits but does nothing for CPU-intensive operations like image processing or complex calculations.
+
+## Best Practices
+1. **Profile before optimizing** - Measure actual response times to identify which operations are blocking and worth making async.
+2. **Use async for independent I/O operations** - When you have multiple independent network or database calls, running them concurrently provides the biggest performance wins.
+3. **Keep synchronous code for sequential dependencies** - If each step depends on the previous result, synchronous code is clearer and just as fast.
+
+## Summary
+- Synchronous/blocking execution means each operation must complete before the next begins.
+- Blocking operations (network I/O, database queries) pause the entire script while waiting.
+- Async execution can run independent I/O operations concurrently, reducing total time to the longest single operation.
+- Async benefits I/O-bound work; CPU-bound tasks need true parallelism instead.
+- PHP's traditional request-response model is synchronous by design, but modern features enable async patterns.
+
 ## Resources
 
-- [PHP Manual - Introduction](https://www.php.net/manual/en/intro-whatis.php) — Official overview of what PHP is and its execution model
+- [PHP Manual - Introduction](https://www.php.net/manual/en/introduction.php) — Official overview of what PHP is and its execution model
 
 ---
 

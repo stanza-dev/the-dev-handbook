@@ -5,10 +5,26 @@ source_lesson: "php-ddd-domain-services"
 
 # Domain Services
 
+## Introduction
+
 A **Domain Service** encapsulates domain logic that doesn't naturally fit within a single Entity or Value Object. It represents an operation or process from the ubiquitous language.
 
-## When to Use Domain Services
+## Key Concepts
 
+- **Domain Service**
+- **Domain language**
+- **Interface-based**
+- **Operation involves multiple aggregates**
+- **Pure domain logic**
+- **Stateless**
+
+## Real World Context
+
+In production PHP applications, domain services helps teams build maintainable software by providing clear patterns for organizing complex business logic.
+
+## Deep Dive
+
+### When to Use Domain Services
 Use a Domain Service when:
 
 1. **Operation involves multiple aggregates**
@@ -45,8 +61,7 @@ final class ShippingCostCalculator {
 }
 ```
 
-## Domain Service Examples
-
+### Domain Service Examples
 ### Pricing Calculator
 
 ```php
@@ -153,8 +168,7 @@ final class MoneyTransferService {
 }
 ```
 
-## Domain Service Characteristics
-
+### Domain Service Characteristics
 | Characteristic | Description |
 |----------------|-------------|
 | **Stateless** | No instance state, operates on parameters |
@@ -162,8 +176,7 @@ final class MoneyTransferService {
 | **Interface-based** | Often defined as interface, implemented in infrastructure |
 | **Pure domain logic** | No infrastructure concerns |
 
-## Domain vs Application Services
-
+### Domain vs Application Services
 ```php
 <?php
 // DOMAIN SERVICE: Pure business logic
@@ -195,6 +208,25 @@ final class PlaceOrderHandler {
     }
 }
 ```
+
+## Common Pitfalls
+
+1. **Overcomplicating simple cases** - Not every part of the application needs domain services. Apply it where complexity warrants the investment.
+2. **Ignoring the ubiquitous language** - Naming classes and methods without input from domain experts leads to a model that does not reflect the business.
+3. **Mixing infrastructure concerns** - Allowing framework dependencies to leak into the domain layer undermines the architectural benefits.
+
+## Best Practices
+
+1. **Start from the domain** - Model the business concepts first, then figure out persistence and infrastructure.
+2. **Keep it simple** - Use the simplest pattern that solves the problem. Introduce complexity only when needed.
+3. **Collaborate with domain experts** - The model should be shaped by business knowledge, not just technical preferences.
+
+## Summary
+
+- Domain Services is a fundamental concept in Domain-Driven Design
+- Proper implementation leads to more maintainable and expressive code
+- Always align your implementation with the ubiquitous language
+- Apply these patterns where business complexity justifies the investment
 
 ## Resources
 

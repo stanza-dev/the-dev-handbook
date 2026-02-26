@@ -5,8 +5,18 @@ source_lesson: "php-async-event-loop-basics"
 
 # Understanding Event Loops
 
-The **event loop** is the heart of asynchronous programming. It's a programming construct that waits for and dispatches events or messages in a program.
+## Introduction
+The event loop is the heart of asynchronous programming. It is the programming construct that continuously waits for and dispatches events, enabling a single PHP process to handle thousands of concurrent operations without threading.
+## Key Concepts
+- **Event Loop**: A continuous loop that checks for pending events (I/O readiness, expired timers) and dispatches their callbacks until no work remains.
+- **Non-blocking I/O**: Operations that return immediately even if data is not yet available, allowing the program to continue other work.
+- **Timer**: A scheduled callback that executes after a specified delay (one-shot) or at regular intervals (periodic).
+- **Polling**: Using stream_select() to check multiple streams simultaneously for read/write readiness without blocking.
+- **Tick**: One complete iteration of the event loop, processing deferred callbacks, timers, and I/O events.
+## Real World Context
+Every async PHP framework (ReactPHP, Amp, Swoole) is built on top of an event loop. Understanding event loops helps you reason about execution order, debug timing issues, and optimize performance in real-time applications.
 
+## Deep Dive
 ## What is an Event Loop?
 
 An event loop continuously:
@@ -264,15 +274,22 @@ $loop->addTimer(10.0, function() use ($loop) {
 $loop->run();
 ```
 
-## Key Concepts
+## Common Pitfalls
+1. **Blocking the event loop with synchronous calls** - A single sleep() or synchronous file_get_contents() blocks the entire loop, freezing all concurrent operations.
+2. **Spinning the CPU without sleep** - An event loop without any I/O checks or usleep() will consume 100% CPU doing nothing useful.
+3. **Forgetting to stop the loop** - Without a stop condition, the event loop runs forever. Always have a shutdown mechanism.
 
-| Concept | Description |
-|---------|-------------|
-| **Non-blocking** | Operations return immediately, even if incomplete |
-| **Callback** | Function called when an event occurs |
-| **Polling** | Checking if events are ready (`stream_select`) |
-| **Event dispatch** | Running callbacks for ready events |
-| **Tick** | One iteration of the event loop |
+## Best Practices
+1. **Use a single event loop instance** - Multiple event loops in one application cause confusion and bugs. Use the global loop from your framework.
+2. **Defer heavy computation** - If you must do CPU-intensive work, break it into small chunks with futureTick() to keep the loop responsive.
+3. **Use addPeriodicTimer for health checks** - Periodic timers are useful for monitoring connection health, cleaning up resources, and reporting metrics.
+
+## Summary
+- The event loop continuously checks for I/O events, expired timers, and deferred callbacks.
+- stream_select() is the core PHP function for I/O multiplexing.
+- Non-blocking streams return immediately even when no data is available.
+- Timers enable delayed and periodic execution without blocking.
+- The event loop runs until explicitly stopped or no work remains.
 
 ## Resources
 

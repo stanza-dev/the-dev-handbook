@@ -5,10 +5,26 @@ source_lesson: "php-ddd-entities"
 
 # Entities
 
+## Introduction
+
 An **Entity** is a domain object defined by its identity rather than its attributes. Two entities with the same attributes but different identities are considered different objects.
 
-## Identity vs Equality
+## Key Concepts
 
+- **Continuity**
+- **Entity**
+- **Equality**
+- **Identity**
+- **Lifecycle**
+- **Mutability**
+
+## Real World Context
+
+In production PHP applications, entities helps teams build maintainable software by providing clear patterns for organizing complex business logic.
+
+## Deep Dive
+
+### Identity vs Equality
 Consider a `Customer`:
 
 ```php
@@ -32,8 +48,7 @@ $customer1->changeName('Jonathan Smith');
 $customer1->id();  // Still 'cust-001'
 ```
 
-## Implementing Entities
-
+### Implementing Entities
 ```php
 <?php
 declare(strict_types=1);
@@ -153,8 +168,7 @@ final class Order {
 }
 ```
 
-## Entity Characteristics
-
+### Entity Characteristics
 | Characteristic | Description |
 |----------------|-------------|
 | **Identity** | Unique identifier that never changes |
@@ -163,8 +177,7 @@ final class Order {
 | **Lifecycle** | Created, modified, possibly deleted |
 | **Equality** | Based on identity, not attributes |
 
-## Entity Identity
-
+### Entity Identity
 ```php
 <?php
 // Value Object for identity
@@ -195,8 +208,7 @@ final readonly class OrderId {
 }
 ```
 
-## Entity Design Guidelines
-
+### Entity Design Guidelines
 ### 1. Encapsulate State Changes
 
 ```php
@@ -279,6 +291,25 @@ final class Customer {
     }
 }
 ```
+
+## Common Pitfalls
+
+1. **Overcomplicating simple cases** - Not every part of the application needs entities. Apply it where complexity warrants the investment.
+2. **Ignoring the ubiquitous language** - Naming classes and methods without input from domain experts leads to a model that does not reflect the business.
+3. **Mixing infrastructure concerns** - Allowing framework dependencies to leak into the domain layer undermines the architectural benefits.
+
+## Best Practices
+
+1. **Start from the domain** - Model the business concepts first, then figure out persistence and infrastructure.
+2. **Keep it simple** - Use the simplest pattern that solves the problem. Introduce complexity only when needed.
+3. **Collaborate with domain experts** - The model should be shaped by business knowledge, not just technical preferences.
+
+## Summary
+
+- Entities is a fundamental concept in Domain-Driven Design
+- Proper implementation leads to more maintainable and expressive code
+- Always align your implementation with the ubiquitous language
+- Apply these patterns where business complexity justifies the investment
 
 ## Resources
 
