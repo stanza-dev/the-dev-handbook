@@ -1,8 +1,8 @@
-# 🐍 Python Fundamentals: Modern 3.15 Edition
+# 🐍 Python Fundamentals: Modern 3.14 Edition
 
-> Master modern Python 3.15, from basic syntax to object-oriented programming, with a focus on type safety and modern best practices.
+> Master modern Python 3.14, from basic syntax to object-oriented programming, with a focus on type safety and modern best practices.
 
-**Python 3.15** · Beginner → Intermediate
+**Python 3.14** · Beginner → Advanced
 
 ## Sections
 

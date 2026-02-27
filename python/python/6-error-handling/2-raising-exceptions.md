@@ -3,9 +3,24 @@ source_course: "python"
 source_lesson: "python-raising-exceptions"
 ---
 
-# Raising Exceptions
+# Raising & Creating Exceptions
 
-## The raise Statement
+## Introduction
+Knowing how to raise, re-raise, chain, and define custom exceptions is essential for writing libraries and applications that communicate errors clearly. This lesson covers the `raise` statement, exception chaining, custom exception hierarchies, and the role of `assert`.
+
+## Key Concepts
+- **`raise`**: Throws an exception, stopping normal execution.
+- **Re-raising (`raise` with no argument)**: Propagates the currently handled exception after logging or partial handling.
+- **Exception chaining (`from`)**: Links a new exception to its root cause via `__cause__`.
+- **Custom exceptions**: Application-specific exception classes that inherit from `Exception`.
+- **`assert`**: A debugging aid that raises `AssertionError` when a condition is false (can be disabled with `-O`).
+
+## Real World Context
+Well-designed exception hierarchies let callers decide how granularly to handle errors. A library might raise `DatabaseError` as a base, with `ConnectionError` and `QueryError` as specifics. Callers who want a blanket handler catch `DatabaseError`; those who need precision catch the subclass. Exception chaining preserves the full error trail, which is invaluable for debugging issues in production.
+
+## Deep Dive
+
+### The raise Statement
 
 ```python
 def divide(a, b):
@@ -20,7 +35,7 @@ def validate_age(age):
         raise ValueError("Age seems unrealistic")
 ```
 
-## Re-raising Exceptions
+### Re-raising Exceptions
 
 ```python
 try:
@@ -30,7 +45,7 @@ except ValueError:
     raise  # Re-raise the same exception
 ```
 
-## Exception Chaining
+### Exception Chaining
 
 ```python
 try:
@@ -41,7 +56,7 @@ except FileNotFoundError as e:
 # The original exception is preserved in __cause__
 ```
 
-## Custom Exceptions
+### Custom Exceptions
 
 ```python
 class ValidationError(Exception):
@@ -63,7 +78,7 @@ class QueryError(DatabaseError):
     pass
 ```
 
-## assert Statements
+### assert Statements
 
 ```python
 def calculate_discount(price, percent):
@@ -73,6 +88,22 @@ def calculate_discount(price, percent):
 
 # Note: asserts can be disabled with -O flag
 ```
+
+## Common Pitfalls
+1. **Using `assert` for input validation** -- Assertions are disabled when Python runs with `-O` (optimize). Never use `assert` to validate user input or function arguments in production; use `raise ValueError` instead.
+2. **Forgetting `from e` when chaining exceptions** -- Without `from e`, the original traceback is lost, making it harder to find the root cause. Always chain with `from` when wrapping exceptions.
+3. **Creating custom exceptions that do not call `super().__init__()`** -- Skipping the parent initializer can break pickling and string representation. Always call `super().__init__(message)`.
+
+## Best Practices
+1. **Build a custom exception hierarchy for your library** -- A single base exception (e.g., `AppError`) lets callers catch everything from your library with one clause while still being able to handle specifics.
+2. **Always use `raise` without arguments to re-raise** -- `raise` alone preserves the original traceback. `raise e` resets it, losing context.
+
+## Summary
+- Use `raise` to signal errors explicitly with clear messages.
+- Re-raise with bare `raise` to preserve the full traceback.
+- Chain exceptions with `from` to link new errors to their root cause.
+- Build custom exception hierarchies for libraries and applications.
+- Never use `assert` for production input validation -- it can be disabled.
 
 ## Code Examples
 
@@ -95,6 +126,10 @@ class PermissionDeniedError(AppError):
 ```
 
 
+## Resources
+
+- [Raising Exceptions](https://docs.python.org/3.14/tutorial/errors.html#raising-exceptions) — Official Python 3.14 tutorial on raising, re-raising, and chaining exceptions
+
 ---
 
-> 📘 *This lesson is part of the [Python Fundamentals: Modern 3.15 Edition](https://stanza.dev/courses/python) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*
+> 📘 *This lesson is part of the [Python Fundamentals: Modern 3.14 Edition](https://stanza.dev/courses/python) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*

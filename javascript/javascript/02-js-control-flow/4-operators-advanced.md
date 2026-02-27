@@ -122,35 +122,6 @@ config.retries ??= 3;
 
 Logical operators (`&&`, `||`) short-circuit and return values, not just booleans. Nullish coalescing (`??`) only triggers on `null`/`undefined`. Logical assignment operators (`||=`, `&&=`, `??=`) combine logic with assignment for concise initialization patterns.
 
-## Code Examples
-
-**Short-circuit Evaluation**
-
-```javascript
-// AND short-circuits on first falsy
-false && expensive();  // expensive() never called
-const name = user && user.name;  // Safe property access
-
-// OR short-circuits on first truthy
-true || expensive();  // expensive() never called
-const theme = userTheme || 'default';  // Fallback value
-```
-
-**Logical Operators Return Values (Not Booleans!)**
-
-```javascript
-// && returns first falsy OR last value
-'hello' && 'world';  // 'world'
-'' && 'world';       // ''
-0 && 'hello';        // 0
-
-// || returns first truthy OR last value
-'' || 'fallback';    // 'fallback'
-'value' || 'fallback'; // 'value'
-0 || null || 'last'; // 'last'
-```
-
-
 ## Resources
 
 - [MDN: Logical AND (&&)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Logical_AND) — AND operator reference

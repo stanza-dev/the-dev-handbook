@@ -16,7 +16,7 @@ Handling streaming data in chunks.
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Stream Chunk Type
-- 🔗 Matching: Response Body Methods
+- 🧩 Multiple Choice: Stream Consumption
 - 🧩 Multiple Choice: Transform Stream Purpose
 
 → [Practice in your IDE](https://stanza.dev/courses/javascript-async-patterns)

@@ -163,54 +163,6 @@ function divide(a, b) {
 
 Guard clauses validate early and reduce nesting. Result objects avoid exceptions for expected failures. Global handlers catch unhandled errors. Wrapper functions provide safe defaults. Assertion functions enforce contracts. Layer these patterns for robust error handling.
 
-## Code Examples
-
-**Guard Clauses (Fail Fast)**
-
-```javascript
-// Instead of deeply nested conditionals
-function processOrder(order) {
-  if (order) {
-    if (order.items) {
-      if (order.items.length > 0) {
-        // Process order
-      }
-    }
-  }
-}
-
-// Use guard clauses
-function processOrder(order) {
-  if (!order) throw new Error('Order required');
-  if (!order.items) throw new Error('Order items required');
-  if (order.items.length === 0) throw new Error('Order cannot be empty');
-  
-  // Happy path - process order
-}
-```
-
-**Result Objects Pattern**
-
-```javascript
-// Return success/error object instead of throwing
-function parseConfig(json) {
-  try {
-    const config = JSON.parse(json);
-    return { success: true, data: config };
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
-}
-
-const result = parseConfig(input);
-if (result.success) {
-  useConfig(result.data);
-} else {
-  showError(result.error);
-}
-```
-
-
 ## Resources
 
 - [MDN: Control Flow and Error Handling](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Control_flow_and_error_handling) — Error handling guide

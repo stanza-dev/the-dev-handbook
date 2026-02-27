@@ -75,43 +75,6 @@ await writer.close();
 
 WritableStream is a data destination. Use getWriter() to write. await writer.ready for backpressure. pipeTo() connects readable to writable. Important for file operations and custom data processing.
 
-## Code Examples
-
-**Basic Writing**
-
-```javascript
-const writableStream = new WritableStream({
-  write(chunk) {
-    console.log('Writing:', chunk);
-  },
-  close() {
-    console.log('Stream closed');
-  },
-  abort(err) {
-    console.error('Stream aborted:', err);
-  }
-});
-
-const writer = writableStream.getWriter();
-await writer.write('Hello');
-await writer.write('World');
-await writer.close();
-```
-
-**File System Access API**
-
-```javascript
-// Save streamed data to file (Chrome)
-const fileHandle = await window.showSaveFilePicker();
-const writable = await fileHandle.createWritable();
-
-// Stream response to file
-const response = await fetch('/large-file');
-await response.body.pipeTo(writable);
-// File is automatically closed
-```
-
-
 ## Resources
 
 - [MDN: WritableStream](https://developer.mozilla.org/en-US/docs/Web/API/WritableStream) — WritableStream reference

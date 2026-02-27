@@ -1,8 +1,8 @@
 # 🏗️ Modern Python Foundations
 
-> Part of [Python Fundamentals: Modern 3.15 Edition](https://stanza.dev/courses/python)
+> Part of [Python Fundamentals: Modern 3.14 Edition](https://stanza.dev/courses/python)
 
-Understanding the core philosophy and modern syntax of Python 3.15.
+Understanding the core philosophy and modern syntax of Python 3.14.
 
 ## Lessons
 
@@ -16,9 +16,9 @@ Understanding the core philosophy and modern syntax of Python 3.15.
 This section includes **5 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Zen Philosophy Quiz
-- 🧩 Multiple Choice: Walrus Operator Quiz
-- 🧩 Challenge: LEGB Scope Order
 - 🧩 Challenge: Python Falsy Values
 - 🔗 Matching: F-String Format Matching
+- 🧩 Multiple Choice: Walrus Operator Quiz
+- 🧩 Challenge: LEGB Scope Order
 
 → [Practice in your IDE](https://stanza.dev/courses/python)

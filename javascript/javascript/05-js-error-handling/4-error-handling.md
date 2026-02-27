@@ -157,52 +157,6 @@ async function processData() {
 
 Use `.catch()` for promise chains and `try/catch` for async/await. Always await or handle promises to avoid unhandled rejections. Use `Promise.allSettled` when you need all results regardless of individual failures. Never forget the `await` keyword.
 
-## Code Examples
-
-**Promise Error Handling**
-
-```javascript
-// .catch() method
-fetch('/api/data')
-  .then(response => response.json())
-  .then(data => process(data))
-  .catch(error => {
-    console.error('Request failed:', error);
-  });
-
-// catch handles errors from any previous .then()
-fetch('/api/data')
-  .then(response => {
-    if (!response.ok) throw new Error('HTTP error');
-    return response.json();
-  })
-  .then(data => process(data))
-  .catch(error => {
-    // Catches both network errors and our thrown error
-    console.error(error);
-  });
-```
-
-**Async/Await Error Handling**
-
-```javascript
-// try/catch with async/await
-async function fetchData() {
-  try {
-    const response = await fetch('/api/data');
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Fetch failed:', error);
-    throw error;  // Re-throw to let caller handle
-  }
-}
-```
-
-
 ## Resources
 
 - [MDN: Using Promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises) — Promise error handling guide

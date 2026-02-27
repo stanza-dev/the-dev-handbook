@@ -5,9 +5,22 @@ source_lesson: "python-classes-and-dataclasses"
 
 # Data Classes
 
-Data classes reduce boilerplate for classes that primarily store data.
+## Introduction
+Data classes eliminate the boilerplate of writing `__init__`, `__repr__`, and `__eq__` for classes that primarily hold data. With a single decorator, Python generates these methods for you automatically. This lesson covers the `@dataclass` decorator, its options, field configuration, and inheritance.
 
-## Basic Data Class
+## Key Concepts
+- **`@dataclass`**: A decorator that auto-generates `__init__`, `__repr__`, and `__eq__` from annotated class attributes.
+- **`frozen=True`**: Makes instances immutable (read-only after creation).
+- **`slots=True`**: Uses `__slots__` for memory-efficient attribute storage (Python 3.10+).
+- **`field()`**: Configures individual attributes with defaults, factories, and metadata.
+- **`__post_init__`**: A hook that runs after `__init__` for computed attributes.
+
+## Real World Context
+Data classes are the go-to for DTOs, configuration objects, API response models, and database rows. Pydantic v2 uses a dataclass-like API for validation. Choosing `frozen=True` gives you hashable, immutable objects that can be used as dict keys or set members -- ideal for caching and deduplication patterns.
+
+## Deep Dive
+
+### Basic Data Class
 
 ```python
 from dataclasses import dataclass
@@ -25,7 +38,7 @@ class User:
 # - __eq__(self, other)
 ```
 
-## Data Class Options
+### Data Class Options
 
 ```python
 @dataclass(frozen=True)  # Immutable
@@ -43,7 +56,7 @@ class Efficient:
     value: int
 ```
 
-## Field Options
+### Field Options
 
 ```python
 from dataclasses import dataclass, field
@@ -59,7 +72,7 @@ class Config:
         self.computed = self.name.upper()
 ```
 
-## Inheritance with Data Classes
+### Inheritance with Data Classes
 
 ```python
 @dataclass
@@ -72,6 +85,22 @@ class Dog(Animal):
 
 dog = Dog(name="Buddy", breed="Labrador")
 ```
+
+## Common Pitfalls
+1. **Using a mutable default directly** -- `tags: list = []` is a bug: all instances share the same list. Always use `field(default_factory=list)`.
+2. **Expecting `__hash__` to be generated automatically** -- When `eq=True` (the default), `__hash__` is set to `None` to prevent mutable objects from being used as dict keys. Use `frozen=True` if you need hashability.
+3. **Putting fields with defaults before fields without** -- This causes a TypeError. Non-default fields must come first, or use `field(init=False)` for computed defaults.
+
+## Best Practices
+1. **Use `frozen=True` for value objects** -- Immutable data classes are safer to pass around and can be used in sets and as dict keys.
+2. **Combine `slots=True` with `frozen=True` for maximum efficiency** -- This gives you immutable, memory-efficient objects ideal for large collections.
+
+## Summary
+- `@dataclass` auto-generates `__init__`, `__repr__`, and `__eq__` from type-annotated attributes.
+- Use `frozen=True` for immutable, hashable objects and `slots=True` for memory savings.
+- Always use `field(default_factory=...)` for mutable defaults like lists and dicts.
+- `__post_init__` lets you compute derived attributes after initialization.
+- Data classes support inheritance; fields from parent classes come first in `__init__`.
 
 ## Code Examples
 
@@ -103,6 +132,10 @@ c = Coordinate(40.7, -74.0)
 ```
 
 
+## Resources
+
+- [dataclasses Module](https://docs.python.org/3.14/library/dataclasses.html) — Official Python 3.14 reference for the dataclasses module and decorator
+
 ---
 
-> 📘 *This lesson is part of the [Python Fundamentals: Modern 3.15 Edition](https://stanza.dev/courses/python) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*
+> 📘 *This lesson is part of the [Python Fundamentals: Modern 3.14 Edition](https://stanza.dev/courses/python) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*

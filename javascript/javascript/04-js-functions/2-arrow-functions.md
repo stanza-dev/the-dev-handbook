@@ -139,55 +139,6 @@ button.addEventListener('click', (e) => {
 
 Arrow functions provide concise syntax and lexical `this` binding. They don't have their own `this`, `arguments`, or `prototype`. Use them for callbacks and when you want to inherit `this`. Use regular functions for object methods and constructors.
 
-## Code Examples
-
-**Syntax Variations**
-
-```javascript
-// Multiple parameters
-const add = (a, b) => a + b;
-
-// Single parameter (parens optional)
-const double = n => n * 2;
-const double2 = (n) => n * 2;  // Also valid
-
-// No parameters
-const getRandom = () => Math.random();
-
-// Implicit return (single expression)
-const square = x => x * x;
-
-// Explicit return (block body)
-const cube = x => {
-  const result = x * x * x;
-  return result;
-};
-```
-
-**Lexical `this` Binding**
-
-```javascript
-// Problem with regular functions
-const counter = {
-  count: 0,
-  start: function() {
-    setInterval(function() {
-      this.count++;  // `this` is NOT counter!
-      console.log(this.count);  // NaN
-    }, 1000);
-  }
-};
-
-// Solution with arrow function
-const counter2 = {
-  count: 0,
-  start: function() {
-    setInterval(() => {
-      this.count++;  // `this` IS counter2
-      console.log(this.count);  // 1, 2, 3...
-```
-
-
 ## Resources
 
 - [MDN: Arrow Functions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions) — Complete arrow function reference

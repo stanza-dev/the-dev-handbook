@@ -3,9 +3,23 @@ source_course: "python-concurrency"
 source_lesson: "python-concurrency-nogil-best-practices"
 ---
 
-# Best Practices
+# Best Practices for Free-Threading
 
-## 1. Prefer Immutable Data
+## Introduction
+Free-threaded Python gives you true parallelism with threads, but that power comes with responsibility. This lesson distills the most important practices for writing correct, performant free-threaded code: favoring immutability, using thread-safe collections, minimizing shared state, leveraging high-level abstractions, and testing for races.
+
+## Key Concepts
+- **Immutable data**: Data that cannot be modified after creation. Immutable objects are inherently thread-safe because no thread can change them.
+- **Thread-safe collections**: Data structures designed to be safely accessed from multiple threads, such as `queue.Queue`.
+- **Data partitioning**: Splitting work so each thread operates on its own slice, eliminating the need for synchronization.
+- **Higher-level abstractions**: Tools like `ThreadPoolExecutor` that handle thread management and synchronization internally.
+
+## Real World Context
+A machine learning pipeline pre-processes training data across multiple threads. By partitioning the dataset so each thread works on its own chunk and using a `Queue` to collect results, the pipeline achieves near-linear speedup without a single lock. Frozen dataclasses carry configuration safely across threads. This approach scales from 4 to 64 cores without code changes.
+
+## Deep Dive
+
+### 1. Prefer Immutable Data
 
 ```python
 from dataclasses import dataclass
@@ -19,7 +33,7 @@ class Config:
 config = Config("localhost", 8080)
 ```
 
-## 2. Use Thread-Safe Collections
+### 2. Use Thread-Safe Collections
 
 ```python
 from queue import Queue, LifoQueue, PriorityQueue
@@ -34,7 +48,7 @@ from collections import Counter
 # Note: Counter itself isn't fully thread-safe
 ```
 
-## 3. Minimize Shared State
+### 3. Minimize Shared State
 
 ```python
 def parallel_process(items):
@@ -58,7 +72,7 @@ def parallel_process(items):
     return results
 ```
 
-## 4. Use Higher-Level Abstractions
+### 4. Use Higher-Level Abstractions
 
 ```python
 from concurrent.futures import ThreadPoolExecutor
@@ -68,7 +82,7 @@ with ThreadPoolExecutor(max_workers=4) as executor:
     results = list(executor.map(process, items))
 ```
 
-## 5. Test with Race Detection
+### 5. Test with Race Detection
 
 ```python
 # Use tools like:
@@ -76,6 +90,23 @@ with ThreadPoolExecutor(max_workers=4) as executor:
 # - Python's faulthandler
 # - Stress testing with many threads
 ```
+
+## Common Pitfalls
+1. **Using mutable global state for configuration** — A shared mutable dict as config is a race condition waiting to happen. Use frozen dataclasses or `types.MappingProxyType` for read-only configuration.
+2. **Collecting results in a shared list without protection** — `list.extend()` across threads can interleave and corrupt the list. Use a `Queue` to collect results from worker threads safely.
+3. **Ignoring race detection tools** — Code that looks correct may have subtle races. ThreadSanitizer and stress tests catch issues that code review misses.
+
+## Best Practices
+1. **Design for immutability first** — If data does not need to change, make it immutable. Frozen dataclasses, tuples, and frozensets eliminate entire categories of thread-safety bugs.
+2. **Partition work instead of sharing state** — Give each thread its own independent slice of the input. Merge results after all threads finish. This is the simplest path to correct parallel code.
+3. **Use `ThreadPoolExecutor` or `InterpreterPoolExecutor`** — These high-level abstractions handle thread lifecycle and result collection, reducing the surface area for bugs.
+
+## Summary
+- Immutable data is inherently thread-safe and should be the default for shared configuration.
+- Thread-safe collections like `Queue` are the safest way to pass data between threads.
+- Data partitioning eliminates the need for synchronization by giving each thread its own slice.
+- Higher-level abstractions like `ThreadPoolExecutor` manage threads and results safely.
+- Always test with race detection tools and high thread counts.
 
 ## Code Examples
 
@@ -119,6 +150,10 @@ for w in workers:
 ```
 
 
+## Resources
+
+- [Free-threaded Python](https://docs.python.org/3.14/howto/free-threading-python.html) — Best practices and patterns for writing free-threaded Python code
+
 ---
 
-> 📘 *This lesson is part of the [Python Concurrency: Asyncio & No-GIL](https://stanza.dev/courses/python-concurrency) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*
+> 📘 *This lesson is part of the [Python Concurrency: Asyncio & Free-Threading](https://stanza.dev/courses/python-concurrency) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*

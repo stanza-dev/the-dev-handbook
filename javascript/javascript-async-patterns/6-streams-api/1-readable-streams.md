@@ -138,51 +138,6 @@ await response.arrayBuffer(); // Reads stream as ArrayBuffer
 
 ReadableStream lets you process data incrementally. Get a reader with getReader(), read chunks in a loop, check done to know when finished. Chunks are Uint8Array by default. Use TextDecoder for text. Can only consume once.
 
-## Code Examples
-
-**Reading a Fetch Response Stream**
-
-```javascript
-const response = await fetch('/large-file');
-const reader = response.body.getReader();
-
-let totalBytes = 0;
-
-while (true) {
-  const { done, value } = await reader.read();
-  if (done) break;
-  
-  totalBytes += value.byteLength;  // value is Uint8Array
-  console.log(`Received ${value.byteLength} bytes`);
-}
-
-console.log(`Total: ${totalBytes} bytes`);
-```
-
-**Reading as Text**
-
-```javascript
-async function* streamLines(response) {
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  
-  while (true) {
-    const { done, value } = await reader.read();
-    
-    if (done) {
-      if (buffer) yield buffer;
-      return;
-    }
-    
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop();  // Keep incomplete line
-    
-    for (const line of lines) {
-```
-
-
 ## Resources
 
 - [MDN: Streams API](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API) — Streams API overview

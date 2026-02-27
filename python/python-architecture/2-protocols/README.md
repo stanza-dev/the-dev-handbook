@@ -15,8 +15,8 @@ Duck Typing made static.
 
 This section includes **3 interactive challenges** available on Stanza:
 
+- ✏️ Fill in the Blank: Runtime Checkable
 - 🧩 Multiple Choice: Protocol Inheritance Quiz
 - 🧩 Challenge: Protocol Features
-- ✏️ Fill in the Blank: Runtime Checkable
 
 → [Practice in your IDE](https://stanza.dev/courses/python-architecture)

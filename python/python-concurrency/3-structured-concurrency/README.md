@@ -1,6 +1,6 @@
 # 🏗️ Structured Concurrency
 
-> Part of [Python Concurrency: Asyncio & No-GIL](https://stanza.dev/courses/python-concurrency)
+> Part of [Python Concurrency: Asyncio & Free-Threading](https://stanza.dev/courses/python-concurrency)
 
 Safe task management with TaskGroups.
 
@@ -16,7 +16,7 @@ Safe task management with TaskGroups.
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: TaskGroup Cancellation Quiz
-- 🧩 Multiple Choice: TaskGroup vs Gather
+- 🔗 Matching: TaskGroup vs Gather
 - 🧩 Challenge: ExceptionGroup Features
 
 → [Practice in your IDE](https://stanza.dev/courses/python-concurrency)

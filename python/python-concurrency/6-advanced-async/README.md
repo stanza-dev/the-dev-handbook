@@ -1,6 +1,6 @@
 # 🌊 Advanced Async Patterns
 
-> Part of [Python Concurrency: Asyncio & No-GIL](https://stanza.dev/courses/python-concurrency)
+> Part of [Python Concurrency: Asyncio & Free-Threading](https://stanza.dev/courses/python-concurrency)
 
 Async iterators, context managers, and real-world patterns.
 

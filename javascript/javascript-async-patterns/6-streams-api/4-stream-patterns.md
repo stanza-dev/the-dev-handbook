@@ -144,55 +144,6 @@ async function processLargeCSV(file) {
 
 Use streams for SSE parsing, upload progress, large file processing. tee() duplicates streams for multiple consumers. Convert async generators to streams. Process large files row-by-row to avoid memory issues.
 
-## Code Examples
-
-**Server-Sent Events with Streams**
-
-```javascript
-async function* readSSE(url) {
-  const response = await fetch(url);
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    
-    buffer += decoder.decode(value, { stream: true });
-    
-    // SSE format: "data: ...\n\n"
-    const messages = buffer.split('\n\n');
-    buffer = messages.pop();
-    
-    for (const msg of messages) {
-      if (msg.startsWith('data: ')) {
-```
-
-**Streaming Upload Progress**
-
-```javascript
-async function uploadWithProgress(url, file, onProgress) {
-  const totalSize = file.size;
-  let uploadedSize = 0;
-  
-  const trackingStream = new TransformStream({
-    transform(chunk, controller) {
-      uploadedSize += chunk.byteLength;
-      onProgress(uploadedSize / totalSize);
-      controller.enqueue(chunk);
-    }
-  });
-  
-  await fetch(url, {
-    method: 'POST',
-    body: file.stream().pipeThrough(trackingStream),
-    duplex: 'half'  // Required for streaming body
-  });
-}
-```
-
-
 ## Resources
 
 - [MDN: Using readable streams](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API/Using_readable_streams) — Guide to using readable streams

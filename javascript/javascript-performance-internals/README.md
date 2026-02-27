@@ -9,10 +9,10 @@
 | | Section | Lessons |
 |---|---------|---------|
 | ⚙️ | [The Engine Pipeline](./1-v8-engine/) | 4 lessons |
-| 🧠 | [Memory & Garbage Collection](./2-memory-management/) | 4 lessons |
-| 🚀 | [Runtime Optimization Patterns](./3-optimization-techniques/) | 4 lessons |
-| 📊 | [Profiling & Rendering](./4-profiling-rendering/) | 4 lessons |
-| 🔢 | [Binary Data & TypedArrays](./5-binary-data/) | 4 lessons |
+| 🗑️ | [Memory Management](./2-memory-management/) | 4 lessons |
+| 🚀 | [Code Optimization](./3-optimization-techniques/) | 4 lessons |
+| ⏱️ | [Profiling & Rendering](./4-profiling-rendering/) | 4 lessons |
+| 0️⃣1️⃣ | [Binary Data & TypedArrays](./5-binary-data/) | 4 lessons |
 
 **20 lessons** · **15 interactive challenges**
 

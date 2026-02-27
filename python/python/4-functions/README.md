@@ -1,6 +1,6 @@
 # λ Functions & Functional Programming
 
-> Part of [Python Fundamentals: Modern 3.15 Edition](https://stanza.dev/courses/python)
+> Part of [Python Fundamentals: Modern 3.14 Edition](https://stanza.dev/courses/python)
 
 First-class functions, decorators, and generators.
 
@@ -16,8 +16,8 @@ First-class functions, decorators, and generators.
 This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Lambda Syntax Quiz
-- 🧩 Multiple Choice: Generator State Quiz
-- 🧩 Challenge: Decorator Structure
 - 🔗 Matching: Parameter Types
+- 🧩 Challenge: Decorator Structure
+- 🧩 Multiple Choice: Generator State Quiz
 
 → [Practice in your IDE](https://stanza.dev/courses/python)

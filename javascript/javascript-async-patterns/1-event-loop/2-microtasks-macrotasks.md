@@ -138,43 +138,6 @@ console.log('script end');
 
 Microtasks (Promises, queueMicrotask) run before macrotasks (setTimeout). ALL microtasks drain before the next macrotask. Microtasks can schedule more microtasks. Be careful of infinite microtask loops—they block forever.
 
-## Code Examples
-
-**The Two Queues**
-
-```javascript
-console.log('1: sync');              // Sync - runs first
-
-setTimeout(() => {                    
-  console.log('4: macrotask');       // Macrotask - runs last
-}, 0);
-
-Promise.resolve().then(() => {
-  console.log('3: microtask');       // Microtask - runs second
-});
-
-console.log('2: sync');              // Sync - runs first
-
-// Output: 1: sync, 2: sync, 3: microtask, 4: macrotask
-```
-
-**Microtasks Can Spawn Microtasks**
-
-```javascript
-Promise.resolve().then(() => {
-  console.log('microtask 1');
-  Promise.resolve().then(() => {
-    console.log('microtask 2');
-  });
-});
-
-setTimeout(() => console.log('macrotask'), 0);
-
-// Output: microtask 1, microtask 2, macrotask
-// New microtasks run before ANY macrotask!
-```
-
-
 ## Resources
 
 - [MDN: queueMicrotask()](https://developer.mozilla.org/en-US/docs/Web/API/queueMicrotask) — queueMicrotask API reference

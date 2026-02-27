@@ -109,42 +109,6 @@ const data = await fetchWithCancellation('/api/data', controller.signal);
 
 AbortController creates a signal that can cancel fetch and other operations. Check `error.name === 'AbortError'` to distinguish cancellation. Always clean up by aborting pending requests when components unmount or context changes.
 
-## Code Examples
-
-**Basic Usage**
-
-```javascript
-const controller = new AbortController();
-const { signal } = controller;
-
-fetch('/api/data', { signal })
-  .then(response => response.json())
-  .then(data => console.log(data))
-  .catch(error => {
-    if (error.name === 'AbortError') {
-      console.log('Request was cancelled');
-    } else {
-      console.error('Fetch failed:', error);
-    }
-  });
-
-// Later: cancel the request
-controller.abort();
-```
-
-**Abort with Reason**
-
-```javascript
-const controller = new AbortController();
-
-controller.abort('User cancelled');  // Custom reason
-controller.abort(new Error('Timeout'));  // Error object
-
-// Access the reason
-controller.signal.reason;  // 'User cancelled'
-```
-
-
 ## Resources
 
 - [MDN: AbortController](https://developer.mozilla.org/en-US/docs/Web/API/AbortController) — AbortController reference

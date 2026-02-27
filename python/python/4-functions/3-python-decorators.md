@@ -3,11 +3,23 @@ source_course: "python"
 source_lesson: "python-decorators"
 ---
 
-# Understanding Decorators
+# Decorators
 
-Decorators modify or enhance functions without changing their code.
+## Introduction
+Decorators let you add behavior to functions or methods without modifying their source code. They are one of Python's most elegant patterns and power everything from Flask routes to pytest fixtures. This lesson walks you through writing, stacking, and parameterizing decorators.
 
-## Basic Decorator
+## Key Concepts
+- **Decorator**: A function that takes another function and returns an enhanced version of it.
+- **`@decorator` syntax**: Syntactic sugar for `func = decorator(func)`.
+- **`functools.wraps`**: Preserves the original function's name, docstring, and metadata on the wrapper.
+- **Parameterized decorator**: A decorator factory that accepts arguments and returns the actual decorator.
+
+## Real World Context
+Decorators are everywhere in production Python: `@app.route` in Flask, `@login_required` in Django, `@retry` in tenacity, `@lru_cache` in functools. They enable cross-cutting concerns like logging, timing, authentication, and caching to be applied declaratively, keeping your business logic clean.
+
+## Deep Dive
+
+### Basic Decorator
 
 ```python
 def my_decorator(func):
@@ -25,7 +37,7 @@ def say_hello(name):
 # Equivalent to: say_hello = my_decorator(say_hello)
 ```
 
-## Preserving Metadata with `functools.wraps`
+### Preserving Metadata with `functools.wraps`
 
 ```python
 import functools
@@ -37,7 +49,7 @@ def my_decorator(func):
     return wrapper
 ```
 
-## Decorators with Arguments
+### Decorators with Arguments
 
 ```python
 def repeat(n):
@@ -55,7 +67,7 @@ def greet(name):
     print(f"Hello, {name}")
 ```
 
-## Common Built-in Decorators
+### Common Built-in Decorators
 
 ```python
 class MyClass:
@@ -72,7 +84,7 @@ class MyClass:
         return self._value
 ```
 
-## Stacking Decorators
+### Stacking Decorators
 
 ```python
 @decorator_a
@@ -81,6 +93,22 @@ def func():
     pass
 # Equivalent to: func = decorator_a(decorator_b(func))
 ```
+
+## Common Pitfalls
+1. **Forgetting `functools.wraps`** -- Without it, the wrapper replaces the original function's `__name__` and `__doc__`, which breaks introspection, help(), and debugging tools.
+2. **Not forwarding `*args` and `**kwargs`** -- If your wrapper has a fixed signature, it will break when the decorated function's signature changes. Always use `*args, **kwargs`.
+3. **Confusing decorator vs decorator factory** -- `@repeat(3)` calls `repeat(3)` first, which returns the actual decorator. Writing `@repeat` without parentheses when arguments are expected causes a TypeError.
+
+## Best Practices
+1. **Always use `@functools.wraps(func)`** -- It is a one-line addition that preserves the decorated function's identity.
+2. **Keep decorators focused on one concern** -- A decorator that logs, validates, and retries is doing too much. Write separate decorators and stack them.
+
+## Summary
+- Decorators wrap functions to add behavior without modifying source code.
+- `@decorator` is shorthand for `func = decorator(func)`.
+- Always use `@functools.wraps(func)` to preserve the original function's metadata.
+- Parameterized decorators require an extra layer of nesting (a decorator factory).
+- Stack decorators for composable, single-responsibility enhancements.
 
 ## Code Examples
 
@@ -108,6 +136,10 @@ def slow_function():
 ```
 
 
+## Resources
+
+- [Decorator Glossary](https://docs.python.org/3.14/glossary.html#term-decorator) — Official Python 3.14 glossary entry for decorators with links to related documentation
+
 ---
 
-> 📘 *This lesson is part of the [Python Fundamentals: Modern 3.15 Edition](https://stanza.dev/courses/python) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*
+> 📘 *This lesson is part of the [Python Fundamentals: Modern 3.14 Edition](https://stanza.dev/courses/python) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*

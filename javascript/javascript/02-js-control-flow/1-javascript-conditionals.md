@@ -117,35 +117,6 @@ if (user?.profile?.settings?.darkMode) {
 
 Conditionals (`if`, `else if`, `else`, `switch`) control program flow based on conditions. The ternary operator provides concise single-expression conditionals. Use logical operators (`&&`, `||`) for compound conditions and short-circuit evaluation. Always use strict equality (`===`) and prefer early returns over deep nesting.
 
-## Code Examples
-
-**if...else Statements**
-
-```javascript
-const score = 85;
-
-if (score >= 90) {
-  console.log('A');
-} else if (score >= 80) {
-  console.log('B');
-} else if (score >= 70) {
-  console.log('C');
-} else {
-  console.log('F');
-}
-// Output: 'B'
-```
-
-**Ternary Operator**
-
-```javascript
-const status = age >= 18 ? 'adult' : 'minor';
-
-// Nested ternaries (use sparingly)
-const grade = score >= 90 ? 'A' : score >= 80 ? 'B' : 'C';
-```
-
-
 ## Resources
 
 - [MDN: if...else](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/if...else) — Complete guide to conditional statements

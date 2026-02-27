@@ -1,6 +1,6 @@
 # 📦 Object-Oriented Programming
 
-> Part of [Python Fundamentals: Modern 3.15 Edition](https://stanza.dev/courses/python)
+> Part of [Python Fundamentals: Modern 3.14 Edition](https://stanza.dev/courses/python)
 
 Classes, Data Classes, and Slots.
 
@@ -15,9 +15,9 @@ Classes, Data Classes, and Slots.
 
 This section includes **4 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Dataclass Frozen Quiz
 - 🔗 Matching: Dunder Methods Matching
 - 🧩 Multiple Choice: Method Resolution Order
+- ✏️ Fill in the Blank: Dataclass Frozen Quiz
 - 🧩 Challenge: Dataclass Auto-Generated Methods
 
 → [Practice in your IDE](https://stanza.dev/courses/python)

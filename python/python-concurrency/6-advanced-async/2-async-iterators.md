@@ -5,9 +5,20 @@ source_lesson: "python-concurrency-async-iterators"
 
 # Async Iterators
 
-Async iterators implement `__aiter__` and `__anext__` for `async for` loops.
+## Introduction
+While async generators are the quick way to produce async sequences, async iterators give you full control over the iteration protocol. By implementing `__aiter__` and `__anext__`, you can build custom async data sources like database cursors, WebSocket message streams, and event listeners. This lesson covers the async iterator protocol, practical implementations, the `aiter()`/`anext()` built-ins, and how to merge multiple async streams.
 
-## The Protocol
+## Key Concepts
+- **Async iterator protocol**: An object that implements `__aiter__()` (returns the iterator) and `__anext__()` (an async method that returns the next value or raises `StopAsyncIteration`).
+- **StopAsyncIteration**: The exception that signals the end of an async iterator, analogous to `StopIteration` for sync iterators.
+- **aiter() / anext()**: Built-in functions (Python 3.10+) for working with async iterators, analogous to `iter()` and `next()`.
+
+## Real World Context
+A real-time stock ticker application receives price updates from multiple exchanges via WebSocket. Each exchange is wrapped in an async iterator. A `merge_streams()` function combines them into a single async stream, yielding the latest price from whichever exchange responds first. The consumer processes prices with `async for`, unaware of how many exchanges are feeding the stream.
+
+## Deep Dive
+
+### The Protocol
 
 ```python
 class AsyncIterator:
@@ -19,7 +30,7 @@ class AsyncIterator:
         pass
 ```
 
-## Example: Database Cursor
+### Example: Database Cursor
 
 ```python
 class AsyncCursor:
@@ -47,7 +58,7 @@ async def main():
         print(row)
 ```
 
-## aiter() and anext() Built-ins
+### aiter() and anext() Built-ins
 
 ```python
 # Python 3.10+
@@ -61,7 +72,7 @@ async def main():
     item = await anext(ait, "default")
 ```
 
-## Combining Async Iterators
+### Combining Async Iterators
 
 ```python
 async def merge_streams(*streams):
@@ -81,6 +92,22 @@ async def merge_streams(*streams):
             if result is not StopAsyncIteration:
                 yield result
 ```
+
+## Common Pitfalls
+1. **Making `__aiter__` async** — `__aiter__` must be a regular method (not `async def`) that returns the iterator object. Making it async causes `async for` to fail with a `TypeError`.
+2. **Forgetting `StopAsyncIteration`** — If `__anext__` never raises `StopAsyncIteration`, the `async for` loop runs forever. Always ensure there is a termination condition.
+3. **Reusing an exhausted iterator** — Once an async iterator raises `StopAsyncIteration`, it is spent. Create a new instance to iterate again. Consider implementing `__aiter__` to return a fresh iterator if reuse is needed.
+
+## Best Practices
+1. **Use async generators for simple cases** — If your async iterator is just yielding values from an async source, an async generator is simpler and less error-prone than a full class implementation.
+2. **Use `anext()` with a default for safe single-item consumption** — `await anext(ait, None)` returns `None` if the iterator is exhausted instead of raising an exception.
+
+## Summary
+- Async iterators implement `__aiter__()` and `__anext__()` to support `async for` loops.
+- `StopAsyncIteration` signals the end of the async sequence.
+- `aiter()` and `anext()` (Python 3.10+) provide convenient built-in access to async iterators.
+- Multiple async streams can be merged by scheduling `anext()` tasks and processing results as they complete.
+- Prefer async generators for simple use cases; use the full protocol for complex stateful iterators.
 
 ## Code Examples
 
@@ -120,6 +147,10 @@ class AsyncFileReader:
 ```
 
 
+## Resources
+
+- [Async Iterators](https://docs.python.org/3.14/reference/datamodel.html#async-iterators) — The __aiter__ and __anext__ protocol for asynchronous iteration
+
 ---
 
-> 📘 *This lesson is part of the [Python Concurrency: Asyncio & No-GIL](https://stanza.dev/courses/python-concurrency) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*
+> 📘 *This lesson is part of the [Python Concurrency: Asyncio & Free-Threading](https://stanza.dev/courses/python-concurrency) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*

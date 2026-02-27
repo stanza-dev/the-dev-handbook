@@ -158,48 +158,6 @@ expensiveFn(5);  // 10 (cached, no log)
 
 Scope determines variable accessibility: global, function, and block scope. Closures are functions that retain access to their outer scope's variables. They enable powerful patterns like data privacy, factories, and memoization. Always use `let`/`const` in loops to avoid closure bugs.
 
-## Code Examples
-
-**Types of Scope**
-
-```javascript
-// Global scope
-const globalVar = 'I am global';
-
-function outer() {
-  // Function scope
-  const outerVar = 'I am outer';
-  
-  if (true) {
-    // Block scope (let/const only)
-    let blockVar = 'I am block';
-    var functionVar = 'I leak to function scope';
-  }
-  
-  console.log(functionVar);  // 'I leak...'
-  // console.log(blockVar);  // ReferenceError
-}
-```
-
-**Scope Chain**
-
-```javascript
-const a = 'global';
-
-function outer() {
-  const b = 'outer';
-  
-  function inner() {
-    const c = 'inner';
-    console.log(a, b, c);  // Can access all three
-  }
-  
-  inner();
-  // console.log(c);  // ReferenceError - can't go down
-}
-```
-
-
 ## Resources
 
 - [MDN: Closures](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Closures) — In-depth guide to closures

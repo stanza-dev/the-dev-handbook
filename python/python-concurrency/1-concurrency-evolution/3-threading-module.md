@@ -3,9 +3,23 @@ source_course: "python-concurrency"
 source_lesson: "python-concurrency-threading-module"
 ---
 
-# Working with Threads
+# The threading Module
 
-## Creating Threads
+## Introduction
+Python's `threading` module is the standard way to run tasks concurrently within a single process. Whether you are handling multiple network connections, running background tasks, or building a producer-consumer pipeline, threads are a fundamental building block. This lesson walks through creating, managing, and coordinating threads.
+
+## Key Concepts
+- **Thread**: A lightweight unit of execution that shares memory with other threads in the same process.
+- **Daemon thread**: A background thread that is automatically terminated when the main program exits.
+- **Thread-local data**: Storage where each thread sees its own independent copy of a variable.
+- **join()**: A method that blocks the calling thread until the target thread finishes.
+
+## Real World Context
+A chat server needs to handle hundreds of simultaneous client connections. Each connection can be managed in its own thread, reading messages and broadcasting them. Daemon threads handle periodic tasks like logging stats, and thread-local data stores per-connection context without passing it through every function call.
+
+## Deep Dive
+
+### Creating Threads
 
 ```python
 import threading
@@ -31,7 +45,7 @@ t = MyThread("B")
 t.start()
 ```
 
-## Thread Properties and Methods
+### Thread Properties and Methods
 
 ```python
 t = threading.Thread(target=worker)
@@ -47,7 +61,7 @@ threading.active_count()    # Number of active threads
 threading.enumerate()       # List all threads
 ```
 
-## Daemon Threads
+### Daemon Threads
 
 ```python
 import threading
@@ -67,7 +81,7 @@ time.sleep(3)
 print("Main program exits, daemon dies")
 ```
 
-## Thread-Local Data
+### Thread-Local Data
 
 ```python
 import threading
@@ -83,6 +97,21 @@ threads = [threading.Thread(target=worker, args=(i,)) for i in range(3)]
 for t in threads: t.start()
 for t in threads: t.join()
 ```
+
+## Common Pitfalls
+1. **Forgetting to call join()** — If the main thread exits before worker threads finish, daemon threads are killed immediately and non-daemon threads keep the process alive unexpectedly. Always join threads you care about.
+2. **Subclassing Thread without calling super().__init__()** — Forgetting to call the parent constructor in a Thread subclass causes cryptic errors when you try to start the thread.
+3. **Sharing mutable objects without locks** — Threads share memory. Without synchronization, concurrent writes to the same data structure produce race conditions.
+
+## Best Practices
+1. **Prefer passing functions over subclassing Thread** — Using `Thread(target=fn)` is simpler and more Pythonic. Reserve subclassing for cases where you need to store complex per-thread state.
+2. **Use daemon threads for background work that can be interrupted** — Daemon threads are ideal for logging, heartbeats, or monitoring tasks that should stop when the main program ends.
+
+## Summary
+- Create threads by passing a callable to `threading.Thread(target=fn)` or by subclassing `Thread`.
+- Use `join()` to wait for a thread to complete and `daemon=True` for background threads.
+- Thread-local data gives each thread its own isolated copy of a variable.
+- Always synchronize access to shared mutable state with locks.
 
 ## Code Examples
 
@@ -117,6 +146,10 @@ c.join()
 ```
 
 
+## Resources
+
+- [threading Module](https://docs.python.org/3.14/library/threading.html) — Official documentation for Python's threading module
+
 ---
 
-> 📘 *This lesson is part of the [Python Concurrency: Asyncio & No-GIL](https://stanza.dev/courses/python-concurrency) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*
+> 📘 *This lesson is part of the [Python Concurrency: Asyncio & Free-Threading](https://stanza.dev/courses/python-concurrency) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*

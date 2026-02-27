@@ -15,8 +15,8 @@ From Type Hints to Generics.
 
 This section includes **3 interactive challenges** available on Stanza:
 
+- ✏️ Fill in the Blank: Type Alias Keyword
 - 🧩 Multiple Choice: Generic Syntax Quiz
 - 🔗 Matching: Typing Constructs
-- ✏️ Fill in the Blank: Type Alias Keyword
 
 → [Practice in your IDE](https://stanza.dev/courses/python-architecture)

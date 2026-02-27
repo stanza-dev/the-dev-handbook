@@ -1,6 +1,6 @@
 # 🔀 Control Flow & Pattern Matching
 
-> Part of [Python Fundamentals: Modern 3.15 Edition](https://stanza.dev/courses/python)
+> Part of [Python Fundamentals: Modern 3.14 Edition](https://stanza.dev/courses/python)
 
 Advanced flow control including Structural Pattern Matching.
 
@@ -15,9 +15,9 @@ Advanced flow control including Structural Pattern Matching.
 
 This section includes **4 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Match Wildcard Quiz
-- 🔗 Matching: Match Pattern Types
 - 🧩 Multiple Choice: Loop Else Behavior
 - 🧩 Challenge: Infinite Itertools
+- ✏️ Fill in the Blank: Match Wildcard Quiz
+- 🔗 Matching: Match Pattern Types
 
 → [Practice in your IDE](https://stanza.dev/courses/python)

@@ -177,48 +177,6 @@ user.createdAt;    // Works!
 
 `extends` creates a subclass. `super()` must be called first in derived constructors. Use `super.method()` to call parent methods. Static methods are also inherited. Consider mixins for sharing behavior across unrelated classes. Keep hierarchies shallow.
 
-## Code Examples
-
-**Basic Inheritance**
-
-```javascript
-class Animal {
-  constructor(name) {
-    this.name = name;
-  }
-  
-  speak() {
-    console.log(`${this.name} makes a sound.`);
-  }
-}
-
-class Dog extends Animal {
-  constructor(name, breed) {
-    super(name);  // MUST call super() first!
-    this.breed = breed;
-  }
-  
-  // Override parent method
-  speak() {
-```
-
-**Calling Parent Methods with super**
-
-```javascript
-class Cat extends Animal {
-  speak() {
-    super.speak();  // Call parent's speak()
-    console.log(`${this.name} also meows.`);
-  }
-}
-
-const cat = new Cat('Whiskers');
-cat.speak();
-// 'Whiskers makes a sound.'
-// 'Whiskers also meows.'
-```
-
-
 ## Resources
 
 - [MDN: extends](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/extends) — extends keyword reference

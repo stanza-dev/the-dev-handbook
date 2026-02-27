@@ -14,7 +14,7 @@
 | 🏛️ | [More Structural Patterns](./4-advanced-structural/) | 4 lessons |
 | 🚦 | [Advanced Behavioral Patterns](./5-more-behavioral/) | 4 lessons |
 
-**20 lessons** · **20 interactive challenges**
+**20 lessons** · **16 interactive challenges**
 
 ## Want the Interactive Experience?
 

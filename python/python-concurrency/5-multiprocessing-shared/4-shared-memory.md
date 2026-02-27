@@ -3,11 +3,23 @@ source_course: "python-concurrency"
 source_lesson: "python-concurrency-shared-memory"
 ---
 
-# High-Performance Shared Memory
+# Shared Memory (3.8+)
 
-`shared_memory` provides direct memory sharing without copying.
+## Introduction
+While queues and pipes copy data between processes (incurring serialization overhead), `shared_memory` provides direct memory sharing without copying. This is essential for high-performance workloads like sharing large NumPy arrays between processes. This lesson covers creating shared memory blocks, sharing NumPy arrays, using `ShareableList`, and the critical importance of proper cleanup.
 
-## Creating Shared Memory
+## Key Concepts
+- **SharedMemory**: An OS-level shared memory block that can be accessed by multiple processes without copying data.
+- **Buffer protocol**: SharedMemory exposes a `buf` attribute that supports Python's buffer protocol, allowing zero-copy access from NumPy and other libraries.
+- **ShareableList**: A fixed-size list stored in shared memory that supports basic types (int, float, str, bytes, None).
+- **unlink()**: Releases the shared memory block from the OS. Forgetting to call it leaks memory that persists until reboot.
+
+## Real World Context
+A multi-process image pipeline loads a 2GB dataset of images into a NumPy array. Without shared memory, each of the 8 worker processes would need its own copy, requiring 16GB of RAM. With `SharedMemory`, all processes access the same memory block, keeping total usage at 2GB. The workers modify their assigned regions in place with no serialization overhead.
+
+## Deep Dive
+
+### Creating Shared Memory
 
 ```python
 from multiprocessing import shared_memory
@@ -25,7 +37,7 @@ shm.close()
 shm.unlink()  # Remove from system
 ```
 
-## Sharing NumPy Arrays
+### Sharing NumPy Arrays
 
 ```python
 from multiprocessing import shared_memory
@@ -43,7 +55,7 @@ shared_arr2 = np.ndarray(arr.shape, dtype=arr.dtype, buffer=shm2.buf)
 # shared_arr2 now sees the same data!
 ```
 
-## ShareableList
+### ShareableList
 
 ```python
 from multiprocessing.shared_memory import ShareableList
@@ -60,7 +72,7 @@ sl.shm.close()
 sl.shm.unlink()
 ```
 
-## Memory Management
+### Memory Management
 
 ```python
 import atexit
@@ -70,6 +82,22 @@ shm = shared_memory.SharedMemory(create=True, size=1000)
 atexit.register(shm.unlink)
 atexit.register(shm.close)
 ```
+
+## Common Pitfalls
+1. **Forgetting to call `unlink()`** — Shared memory blocks persist at the OS level. If you only call `close()`, the block remains allocated until the system reboots. Always call `unlink()` from exactly one process (the creator).
+2. **Calling `unlink()` from every process** — Only the process that created the shared memory should `unlink()` it. Other processes should only call `close()`. Unlinking from a process that is still using it causes segfaults.
+3. **Not registering cleanup with `atexit`** — If your program crashes before cleanup, the shared memory leaks. Register `shm.close()` and `shm.unlink()` with `atexit` as a safety net.
+
+## Best Practices
+1. **Use `atexit.register()` for cleanup safety** — Register `close` and `unlink` immediately after creating shared memory so it is cleaned up even if the program exits unexpectedly.
+2. **Pass the `shm.name` string to child processes** — Instead of passing the SharedMemory object, pass its name string. Child processes attach to the existing block by name, which works across all start methods.
+
+## Summary
+- `shared_memory.SharedMemory` provides zero-copy data sharing between processes, ideal for large arrays.
+- NumPy arrays can be mapped directly onto shared memory buffers for high-performance parallel processing.
+- `ShareableList` stores fixed-size lists of basic types in shared memory.
+- Always call `close()` in every process and `unlink()` in exactly one process (the creator).
+- Use `atexit.register()` to prevent shared memory leaks from crashes.
 
 ## Code Examples
 
@@ -108,6 +136,10 @@ if __name__ == '__main__':
 ```
 
 
+## Resources
+
+- [Shared Memory](https://docs.python.org/3.14/library/multiprocessing.shared_memory.html) — High-performance shared memory for direct data sharing between processes
+
 ---
 
-> 📘 *This lesson is part of the [Python Concurrency: Asyncio & No-GIL](https://stanza.dev/courses/python-concurrency) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*
+> 📘 *This lesson is part of the [Python Concurrency: Asyncio & Free-Threading](https://stanza.dev/courses/python-concurrency) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*

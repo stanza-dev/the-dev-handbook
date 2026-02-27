@@ -1,6 +1,6 @@
 # 📊 Data Structures & Algorithms
 
-> Part of [Python Fundamentals: Modern 3.15 Edition](https://stanza.dev/courses/python)
+> Part of [Python Fundamentals: Modern 3.14 Edition](https://stanza.dev/courses/python)
 
 Mastering lists, dicts, sets, and tuples in Python.
 
@@ -16,8 +16,8 @@ Mastering lists, dicts, sets, and tuples in Python.
 This section includes **4 interactive challenges** available on Stanza:
 
 - 🔗 Matching: List Method Matching
-- 🧩 Multiple Choice: Set Operations Quiz
 - 🧩 Challenge: Comprehension Order
+- 🧩 Challenge: Set Operations Quiz
 - 🧩 Challenge: Safe Dict Access Methods
 
 → [Practice in your IDE](https://stanza.dev/courses/python)

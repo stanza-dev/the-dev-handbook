@@ -1,6 +1,6 @@
 # 🏭 Multiprocessing & Shared Memory
 
-> Part of [Python Concurrency: Asyncio & No-GIL](https://stanza.dev/courses/python-concurrency)
+> Part of [Python Concurrency: Asyncio & Free-Threading](https://stanza.dev/courses/python-concurrency)
 
 Parallelism with isolated processes.
 
@@ -13,10 +13,11 @@ Parallelism with isolated processes.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Multiprocessing GIL Quiz
 - 🔗 Matching: Pool Methods
 - 🧩 Challenge: IPC Methods
+- 🧩 Challenge: Pool Worker Count
 
 → [Practice in your IDE](https://stanza.dev/courses/python-concurrency)

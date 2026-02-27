@@ -93,26 +93,6 @@ user?.settings?.theme;  // undefined (no error)
 
 JavaScript operators include arithmetic (`+`, `-`, `*`, `/`, `%`, `**`), comparison (`===`, `!==`, `>`, `<`), logical (`&&`, `||`, `!`), and modern additions like nullish coalescing (`??`) and optional chaining (`?.`). Always prefer strict equality and use modern operators for safer, more expressive code.
 
-## Code Examples
-
-**Nullish coalescing (??) vs logical OR (||)**
-
-```javascript
-const value = null ?? 'default';  // 'default'
-const zero = 0 ?? 'default';      // 0 (only null/undefined trigger fallback)
-const empty = '' || 'default';    // 'default' (|| treats '' as falsy)
-const empty2 = '' ?? 'default';   // '' (?? only checks null/undefined)
-```
-
-**Optional chaining for safe property access**
-
-```javascript
-const user = { profile: { name: 'Alice' } };
-user?.profile?.name;    // 'Alice'
-user?.settings?.theme;  // undefined (no error)
-```
-
-
 ## Resources
 
 - [MDN: Expressions and Operators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Expressions_and_operators) — Complete guide to JavaScript operators

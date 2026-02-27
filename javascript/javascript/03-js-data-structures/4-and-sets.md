@@ -147,36 +147,6 @@ class User {
 }
 ```
 
-### Set Methods (ES2025)
-
-ES2025 brings native Set methods that eliminate the need for spread+filter workarounds:
-
-```javascript
-const a = new Set([1, 2, 3]);
-const b = new Set([2, 3, 4]);
-
-// Union — all elements from both sets
-a.union(b);                  // Set {1, 2, 3, 4}
-
-// Intersection — elements in both sets
-a.intersection(b);           // Set {2, 3}
-
-// Difference — elements in a but not in b
-a.difference(b);             // Set {1}
-
-// Symmetric difference — elements in either but not both
-a.symmetricDifference(b);    // Set {1, 4}
-
-// Subset/superset checks
-new Set([2, 3]).isSubsetOf(a);    // true
-a.isSupersetOf(new Set([2, 3]));  // true
-
-// Disjoint check — no common elements
-new Set([5, 6]).isDisjointFrom(a); // true
-```
-
-All Set methods return **new Set instances** and do not modify the originals. They accept any set-like object as an argument — any object with `size`, `has()`, and `keys()` (e.g., other Sets, Maps).
-
 ## Common Pitfalls
 
 1. **Using objects as Map keys and expecting equality**: `map.get({})` won't find `map.set({}, value)` (different object references).
@@ -193,54 +163,6 @@ All Set methods return **new Set instances** and do not modify the originals. Th
 ## Summary
 
 Maps store key-value pairs with any key type and maintain insertion order. Sets store unique values and are perfect for deduplication. Both are iterable and have `.size` property. Use WeakMap/WeakSet when you don't want to prevent garbage collection of keys.
-
-## Code Examples
-
-**Map Basics**
-
-```javascript
-const map = new Map();
-
-// Set and get
-map.set('name', 'Alice');
-map.set(1, 'one');           // Number as key
-map.set({ id: 1 }, 'user');  // Object as key
-
-map.get('name');  // 'Alice'
-map.get(1);       // 'one'
-
-// Size and existence
-map.size;           // 3
-map.has('name');    // true
-
-// Delete
-map.delete('name');
-map.clear();  // Remove all
-```
-
-**Map Iteration**
-
-```javascript
-const map = new Map([
-  ['a', 1],
-  ['b', 2],
-  ['c', 3]
-]);
-
-// Iterate entries
-for (const [key, value] of map) {
-  console.log(key, value);
-}
-
-// Other iterators
-map.keys();    // Iterator of keys
-map.values();  // Iterator of values
-map.entries(); // Iterator of [key, value]
-
-// forEach
-map.forEach((value, key) => console.log(key, value));
-```
-
 
 ## Resources
 

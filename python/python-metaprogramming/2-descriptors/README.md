@@ -7,12 +7,15 @@ The magic behind properties.
 ## Lessons
 
 1. [The Descriptor Protocol](./1-descriptor-protocol.md)
+2. [Data vs Non-Data Descriptors](./2-nondata-descriptors.md)
+3. [Building Practical Descriptors](./3-practical-descriptors.md)
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Descriptor Method Quiz
+- 🧩 Challenge: Descriptor Method Quiz
 - 🧩 Multiple Choice: Set Name Quiz
+- 🔗 Matching: Descriptor Lookup Order
 
 → [Practice in your IDE](https://stanza.dev/courses/python-metaprogramming)

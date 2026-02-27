@@ -142,42 +142,6 @@ elem.parentElement.removeChild(elem);
 
 Modify content with `textContent` (safe) or `innerHTML` (HTML parsing). Use `classList` for class management. Access data attributes via `dataset`. Create elements with `createElement()` and insert with `appendChild()` or modern methods like `before()`/`after()`.
 
-## Code Examples
-
-**Modifying Content**
-
-```javascript
-const elem = document.querySelector('#content');
-
-// Text content (safe, no HTML parsing)
-elem.textContent = 'Hello World';
-elem.textContent = '<b>Safe</b>';  // Shows literal '<b>Safe</b>'
-
-// HTML content (parses HTML - be careful!)
-elem.innerHTML = '<b>Bold</b> text';  // Renders bold
-// WARNING: Never use innerHTML with user input (XSS risk)
-
-// Outer HTML (includes the element itself)
-console.log(elem.outerHTML);  // '<div id="content">...</div>'
-```
-
-**Managing Classes**
-
-```javascript
-const elem = document.querySelector('.box');
-
-// classList API
-elem.classList.add('active');        // Add class
-elem.classList.remove('active');     // Remove class
-elem.classList.toggle('active');     // Toggle on/off
-elem.classList.contains('active');   // Check (returns boolean)
-elem.classList.replace('old', 'new'); // Replace
-
-// Add multiple classes
-elem.classList.add('one', 'two', 'three');
-```
-
-
 ## Resources
 
 - [MDN: Element.classList](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList) — classList API reference

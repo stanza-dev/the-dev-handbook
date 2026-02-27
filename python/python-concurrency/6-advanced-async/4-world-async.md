@@ -3,9 +3,23 @@ source_course: "python-concurrency"
 source_lesson: "python-concurrency-real-world-async"
 ---
 
-# Production Async Patterns
+# Real-World Async Patterns
 
-## Connection Pooling
+## Introduction
+Production async applications face challenges beyond basic concurrency: managing connection pools, enforcing rate limits, handling graceful shutdowns, and protecting against cascading failures. This lesson presents four battle-tested patterns that form the backbone of resilient async services: connection pooling, rate limiting, graceful shutdown, and circuit breakers.
+
+## Key Concepts
+- **Connection pool**: A fixed set of reusable connections managed by a semaphore and queue, avoiding the overhead of creating a new connection per request.
+- **Rate limiter**: A token bucket algorithm that controls how many operations are allowed per time period.
+- **Graceful shutdown**: A pattern where signal handlers set an event to stop accepting new work while allowing in-flight tasks to complete.
+- **Circuit breaker**: A pattern that stops calling a failing service after a threshold of errors, allowing it time to recover before retrying.
+
+## Real World Context
+A microservices backend calls three external APIs, a database, and a cache. Each external dependency can slow down, fail, or rate-limit you. A connection pool reuses database connections efficiently. A rate limiter prevents hitting API quotas. A circuit breaker stops hammering a failing service so it can recover. Graceful shutdown ensures all in-flight requests complete before the process exits during a deploy.
+
+## Deep Dive
+
+### Connection Pooling
 
 ```python
 class ConnectionPool:
@@ -27,7 +41,7 @@ class ConnectionPool:
                 await self.pool.put(conn)
 ```
 
-## Rate Limiting
+### Rate Limiting
 
 ```python
 class RateLimiter:
@@ -56,7 +70,7 @@ class RateLimiter:
                 self.tokens -= 1
 ```
 
-## Graceful Shutdown
+### Graceful Shutdown
 
 ```python
 async def main():
@@ -66,7 +80,7 @@ async def main():
     def handle_signal():
         shutdown.set()
     
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     loop.add_signal_handler(signal.SIGTERM, handle_signal)
     
     async with asyncio.TaskGroup() as tg:
@@ -78,7 +92,7 @@ async def main():
     # All tasks complete or cancelled here
 ```
 
-## Circuit Breaker
+### Circuit Breaker
 
 ```python
 class CircuitBreaker:
@@ -109,6 +123,23 @@ class CircuitBreaker:
             raise
 ```
 
+## Common Pitfalls
+1. **Not returning connections to the pool on error** — If an exception occurs while using a pooled connection and the `finally` block is missing, the connection is lost forever, eventually exhausting the pool.
+2. **Setting circuit breaker thresholds too low** — A threshold of 1-2 failures causes the circuit to open on transient errors. Use a threshold that distinguishes transient blips from sustained outages (typically 5-10).
+3. **Not handling SIGTERM in async services** — Container orchestrators like Kubernetes send SIGTERM before killing a process. Without a handler, in-flight requests are aborted mid-execution.
+
+## Best Practices
+1. **Compose patterns into a single client class** — Combine connection pooling, rate limiting, and circuit breaking into a unified API client that handles all resilience concerns transparently.
+2. **Use `asyncio.Event` for shutdown coordination** — It integrates cleanly with async code and can be checked in loops, used with `asyncio.wait()`, or awaited directly.
+3. **Monitor your circuit breaker state** — Log state transitions (closed -> open -> half-open) so you can correlate them with downstream service incidents.
+
+## Summary
+- Connection pools reuse connections via a semaphore and queue, reducing connection setup overhead.
+- Token-bucket rate limiters control throughput to stay within API quotas.
+- Graceful shutdown uses signal handlers and `asyncio.Event` to drain in-flight work before exiting.
+- Circuit breakers protect against cascading failures by stopping calls to failing services.
+- These patterns compose together to build resilient, production-grade async services.
+
 ## Code Examples
 
 **Production-ready API client**
@@ -138,6 +169,10 @@ async def main():
 ```
 
 
+## Resources
+
+- [asyncio Module](https://docs.python.org/3.14/library/asyncio.html) — Comprehensive asyncio reference for production async patterns
+
 ---
 
-> 📘 *This lesson is part of the [Python Concurrency: Asyncio & No-GIL](https://stanza.dev/courses/python-concurrency) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*
+> 📘 *This lesson is part of the [Python Concurrency: Asyncio & Free-Threading](https://stanza.dev/courses/python-concurrency) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*

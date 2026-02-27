@@ -5,9 +5,21 @@ source_lesson: "python-context-managers"
 
 # Context Managers
 
-Context managers ensure proper acquisition and release of resources using the `with` statement.
+## Introduction
+Context managers automate resource acquisition and release -- opening and closing files, acquiring and releasing locks, connecting and disconnecting from databases. The `with` statement guarantees cleanup even when exceptions occur.
 
-## Using Context Managers
+## Key Concepts
+- **`with` statement**: Enters a context manager on entry and calls its cleanup on exit, regardless of exceptions.
+- **`__enter__` / `__exit__`**: The two methods a class must implement to work as a context manager.
+- **`@contextmanager`**: A decorator from `contextlib` that lets you write context managers as generator functions.
+- **`suppress()` / `nullcontext()`**: Utility context managers for common patterns.
+
+## Real World Context
+Almost every resource in professional Python code should be managed with a context manager: file handles, database connections, network sockets, locks, and temporary directories. Without them, resource leaks accumulate under error conditions, leading to file descriptor exhaustion, connection pool starvation, and hard-to-reproduce production failures.
+
+## Deep Dive
+
+### Using Context Managers
 
 ```python
 # File handling
@@ -20,7 +32,7 @@ with open('in.txt') as src, open('out.txt', 'w') as dst:
     dst.write(src.read())
 ```
 
-## Creating Context Managers (Class-based)
+### Creating Context Managers (Class-based)
 
 ```python
 class DatabaseConnection:
@@ -40,7 +52,7 @@ with DatabaseConnection('localhost') as conn:
     conn.query('SELECT * FROM users')
 ```
 
-## Creating Context Managers (Decorator-based)
+### Creating Context Managers (Decorator-based)
 
 ```python
 from contextlib import contextmanager
@@ -58,7 +70,7 @@ with timer("Processing"):
     heavy_computation()
 ```
 
-## contextlib Utilities
+### contextlib Utilities
 
 ```python
 from contextlib import suppress, nullcontext
@@ -71,6 +83,22 @@ with suppress(FileNotFoundError):
 with (lock if threaded else nullcontext()):
     process()
 ```
+
+## Common Pitfalls
+1. **Returning `True` from `__exit__` accidentally** -- Returning `True` suppresses exceptions. Unless you intentionally want to swallow errors, always return `False` or `None`.
+2. **Forgetting the `try/finally` in a `@contextmanager` function** -- Without it, cleanup code after `yield` will not run if the body of the `with` block raises an exception.
+3. **Using context managers for objects that need to outlive the `with` block** -- If you need a database connection across multiple functions, pass it explicitly rather than reopening it in each `with` block.
+
+## Best Practices
+1. **Use `with` for every resource that needs cleanup** -- Files, sockets, locks, and temporary directories should all be context-managed.
+2. **Prefer `@contextmanager` for simple cases** -- It is less boilerplate than writing a full class with `__enter__` and `__exit__`.
+
+## Summary
+- The `with` statement guarantees resource cleanup even when exceptions occur.
+- Class-based context managers implement `__enter__` and `__exit__`.
+- `@contextmanager` from `contextlib` turns generator functions into context managers with less boilerplate.
+- `suppress()` silences specific exceptions; `nullcontext()` is a no-op placeholder.
+- Always wrap cleanup in `try/finally` when using `@contextmanager`.
 
 ## Code Examples
 
@@ -95,6 +123,10 @@ print(os.getcwd())  # Back to original
 ```
 
 
+## Resources
+
+- [contextlib Module](https://docs.python.org/3.14/library/contextlib.html) — Official Python 3.14 reference for context manager utilities and the contextmanager decorator
+
 ---
 
-> 📘 *This lesson is part of the [Python Fundamentals: Modern 3.15 Edition](https://stanza.dev/courses/python) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*
+> 📘 *This lesson is part of the [Python Fundamentals: Modern 3.14 Edition](https://stanza.dev/courses/python) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*

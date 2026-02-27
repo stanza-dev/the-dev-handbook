@@ -3,9 +3,24 @@ source_course: "python"
 source_lesson: "python-standard-library"
 ---
 
-# Essential Standard Library
+# Essential Standard Library Modules
 
-## os and shutil - System Operations
+## Introduction
+Python's standard library is one of its greatest strengths -- often called "batteries included." This lesson tours the modules you will reach for most often: `os`/`shutil` for system operations, `json` for data serialization, `datetime` for time handling, `logging` for diagnostics, and `argparse` for CLI tools.
+
+## Key Concepts
+- **`os` / `shutil`**: System-level file and directory operations.
+- **`json`**: Serialize Python objects to JSON strings and parse them back.
+- **`datetime`**: Work with dates, times, and durations.
+- **`logging`**: Structured, leveled diagnostic output (INFO, WARNING, ERROR).
+- **`argparse`**: Parse command-line arguments into a typed namespace.
+
+## Real World Context
+These modules appear in virtually every Python project. Web APIs use `json` to parse request bodies, deployment scripts use `shutil` to copy artifacts, backend services use `logging` instead of `print()` for production diagnostics, and CLI tools use `argparse` to provide a polished user interface. Knowing them well means you rarely need third-party packages for basic tasks.
+
+## Deep Dive
+
+### os and shutil -- System Operations
 
 ```python
 import os
@@ -21,7 +36,7 @@ shutil.copytree('src', 'dst')  # Copy directory
 shutil.rmtree('dir')           # Remove directory tree
 ```
 
-## json - Data Serialization
+### json -- Data Serialization
 
 ```python
 import json
@@ -41,7 +56,7 @@ with open('data.json') as f:
     data = json.load(f)
 ```
 
-## datetime - Date and Time
+### datetime -- Date and Time
 
 ```python
 from datetime import datetime, date, timedelta
@@ -59,7 +74,7 @@ datetime.strptime('2024-01-15', '%Y-%m-%d')
 tomorrow = today + timedelta(days=1)
 ```
 
-## logging - Application Logging
+### logging -- Application Logging
 
 ```python
 import logging
@@ -75,7 +90,7 @@ logger.warning('Low memory')
 logger.error('Connection failed')
 ```
 
-## argparse - CLI Arguments
+### argparse -- CLI Arguments
 
 ```python
 import argparse
@@ -88,6 +103,22 @@ parser.add_argument('-n', '--count', type=int, default=1)
 args = parser.parse_args()
 print(args.filename, args.verbose, args.count)
 ```
+
+## Common Pitfalls
+1. **Using `print()` instead of `logging` in production** -- `print()` goes to stdout with no timestamp, level, or source. Switch to `logging` for any code that runs in production.
+2. **Using naive datetimes across time zones** -- `datetime.now()` returns a naive (timezone-unaware) object. Use `datetime.now(timezone.utc)` to avoid bugs when your code runs in different time zones.
+3. **Serializing non-JSON types with `json.dumps`** -- Passing a `datetime` or `set` to `json.dumps` raises `TypeError`. Use the `default` parameter or convert to a serializable type first.
+
+## Best Practices
+1. **Use `pathlib` alongside `os`/`shutil`** -- Pathlib handles path construction; shutil handles higher-level operations like `copytree` and `rmtree`.
+2. **Create a logger per module with `logging.getLogger(__name__)`** -- This gives you hierarchical, filterable log output without polluting the root logger.
+
+## Summary
+- `os` and `shutil` handle system-level file operations; combine them with `pathlib` for clean path handling.
+- `json` serializes and parses data; always handle non-serializable types with `default`.
+- `datetime` handles dates and durations; always use timezone-aware objects in production.
+- `logging` replaces `print()` with structured, leveled output for production diagnostics.
+- `argparse` builds professional CLI interfaces with typed arguments and help text.
 
 ## Code Examples
 
@@ -108,6 +139,10 @@ import functools    # Function tools (lru_cache, partial)
 ```
 
 
+## Resources
+
+- [Python Standard Library](https://docs.python.org/3.14/library/index.html) — Official Python 3.14 standard library reference index
+
 ---
 
-> 📘 *This lesson is part of the [Python Fundamentals: Modern 3.15 Edition](https://stanza.dev/courses/python) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*
+> 📘 *This lesson is part of the [Python Fundamentals: Modern 3.14 Edition](https://stanza.dev/courses/python) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*

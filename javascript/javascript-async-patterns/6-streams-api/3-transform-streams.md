@@ -114,46 +114,6 @@ for await (const event of events) {
 
 TransformStream processes data as it passes through. Use pipeThrough for transforms, pipeTo for destinations. Built-in: TextDecoderStream, CompressionStream. Create custom transforms for parsing, filtering, mapping. Backpressure is handled automatically.
 
-## Code Examples
-
-**Basic Transform**
-
-```javascript
-const uppercaseTransform = new TransformStream({
-  transform(chunk, controller) {
-    controller.enqueue(chunk.toUpperCase());
-  }
-});
-
-// Using with text
-const response = await fetch('/text-data');
-const uppercased = response.body
-  .pipeThrough(new TextDecoderStream())
-  .pipeThrough(uppercaseTransform);
-
-for await (const chunk of uppercased) {
-  console.log(chunk);
-}
-```
-
-**Built-in Transform Streams**
-
-```javascript
-// Text encoding/decoding
-const textDecoder = new TextDecoderStream('utf-8');
-const textEncoder = new TextEncoderStream();
-
-// Compression (Chrome)
-const compressor = new CompressionStream('gzip');
-const decompressor = new DecompressionStream('gzip');
-
-// Example: compress and download
-const response = await fetch('/large-data');
-const compressed = response.body.pipeThrough(new CompressionStream('gzip'));
-// Save compressed stream...
-```
-
-
 ## Resources
 
 - [MDN: TransformStream](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream) — TransformStream reference

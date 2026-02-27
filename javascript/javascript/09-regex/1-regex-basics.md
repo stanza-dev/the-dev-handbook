@@ -115,40 +115,6 @@ const result = /(?<name>\w+)/.exec('hello');
 
 Regex patterns match text using literals and metacharacters. Use `/pattern/flags` syntax. `test()` returns boolean, `match()` returns matches. Flags modify behavior: `g` for global, `i` for case-insensitive, `m` for multiline. Always escape special characters in literal strings.
 
-## Code Examples
-
-**Creating Regular Expressions**
-
-```javascript
-// Literal syntax (preferred for static patterns)
-const regex1 = /hello/;
-
-// Constructor syntax (for dynamic patterns)
-const pattern = 'hello';
-const regex2 = new RegExp(pattern);
-
-// With flags
-const regex3 = /hello/gi;  // g=global, i=case-insensitive
-const regex4 = new RegExp('hello', 'gi');
-```
-
-**Testing and Matching**
-
-```javascript
-const regex = /world/i;
-
-// test() - returns boolean
-regex.test('Hello World');  // true
-
-// match() - returns matches
-'Hello World'.match(regex);  // ['World']
-'Hello World World'.match(/world/gi);  // ['World', 'World']
-
-// exec() - detailed info (use in loop for global)
-regex.exec('Hello World');  // ['World', index: 6, input: '...']
-```
-
-
 ## Resources
 
 - [MDN: Regular Expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_expressions) — Complete regex guide

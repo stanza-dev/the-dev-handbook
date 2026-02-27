@@ -25,8 +25,6 @@ Database connections, application configuration, logging services, caches—Sing
 
 ### Classic Implementation (IIFE)
 
-The IIFE approach wraps a private `instance` variable inside a closure, exposing only a `getInstance()` method that creates the instance lazily on first call:
-
 ```javascript
 const Singleton = (function() {
   let instance;
@@ -58,11 +56,7 @@ const b = Singleton.getInstance();
 a === b;  // true - same instance!
 ```
 
-Both calls to `getInstance()` return the exact same object reference, proving that only one instance is ever created.
-
 ### ES6 Class Implementation
-
-Using a private static field (`#instance`), this class-based approach stores the single instance and short-circuits construction if one already exists:
 
 ```javascript
 class Database {
@@ -96,11 +90,7 @@ const db2 = Database.getInstance();
 db1 === db2;  // true
 ```
 
-The private static field `#instance` ensures that even calling `new Database()` directly returns the existing instance, making the pattern bulletproof.
-
 ### Module Pattern (Simplest)
-
-ES modules are inherently singletons because the module is evaluated once and every `import` receives the same reference:
 
 ```javascript
 // config.js
@@ -114,8 +104,6 @@ export default config;
 // ES modules are singletons by nature!
 // Every import gets the same object
 ```
-
-This is the simplest Singleton in JavaScript. No factory method is needed because the module system guarantees a single evaluation.
 
 ## Common Pitfalls
 
@@ -133,32 +121,6 @@ This is the simplest Singleton in JavaScript. No factory method is needed becaus
 ## Summary
 
 Singletons ensure one instance exists globally. ES modules are natural singletons. Use for shared resources like config, logging, and connection pools. Be aware of testing challenges with global state.
-
-## Code Examples
-
-**ES6 class-based Singleton with private static field — getInstance() always returns the same object**
-
-```javascript
-class Database {
-  static #instance = null;
-
-  constructor() {
-    if (Database.#instance) return Database.#instance;
-    this.connection = null;
-    Database.#instance = this;
-  }
-
-  static getInstance() {
-    if (!Database.#instance) Database.#instance = new Database();
-    return Database.#instance;
-  }
-}
-
-const db1 = Database.getInstance();
-const db2 = Database.getInstance();
-console.log(db1 === db2); // true
-```
-
 
 ## Resources
 

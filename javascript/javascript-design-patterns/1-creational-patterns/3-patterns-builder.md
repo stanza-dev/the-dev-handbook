@@ -25,8 +25,6 @@ Query builders (Knex), test data builders, configuration objects, HTTP request b
 
 ### Basic Builder
 
-This builder accumulates user properties step by step, with each setter returning `this` to enable fluent chaining:
-
 ```javascript
 class UserBuilder {
   #user = {};
@@ -68,11 +66,7 @@ const user = new UserBuilder()
   .build();
 ```
 
-The `build()` method validates required fields and returns a frozen copy of the accumulated data, ensuring the builder cannot produce an invalid object.
-
 ### Query Builder Example
-
-Query builders are one of the most common real-world uses of this pattern. Each method appends a clause to the SQL query being constructed:
 
 ```javascript
 class QueryBuilder {
@@ -124,27 +118,20 @@ const query = new QueryBuilder()
   .build();
 ```
 
-Notice how multiple `.where()` calls accumulate conditions joined by `AND`. The builder makes complex query construction readable and safe.
-
 ### Functional Builder
-
-You can also build without classes using closures. Note: use regular methods (shorthand syntax) so that `this` refers to the returned object, enabling chaining.
 
 ```javascript
 const createRequest = () => {
   const config = { method: 'GET', headers: {} };
   
-  const builder = {
-    method(m) { config.method = m; return builder; },
-    header(k, v) { config.headers[k] = v; return builder; },
-    body(b) { config.body = b; return builder; },
-    build() { return { ...config }; }
+  return {
+    method: (m) => { config.method = m; return this; },
+    header: (k, v) => { config.headers[k] = v; return this; },
+    body: (b) => { config.body = b; return this; },
+    build: () => ({ ...config })
   };
-  return builder;
 };
 ```
-
-Each method returns the `builder` object explicitly rather than `this`, since arrow functions do not have their own `this` binding. By returning the `builder` reference explicitly, we avoid the `this` pitfall of arrow functions (which don't have their own `this`).
 
 ## Common Pitfalls
 
@@ -162,38 +149,6 @@ Each method returns the `builder` object explicitly rather than `this`, since ar
 ## Summary
 
 Builders construct complex objects step by step through method chaining. Always return `this` for fluent interface. Validate in build(). Use for objects with many configuration options.
-
-## Code Examples
-
-**Builder pattern for SQL queries — each method returns `this` for fluent chaining, build() produces the final result**
-
-```javascript
-class QueryBuilder {
-  #table = '';
-  #conditions = [];
-  #orderBy = '';
-
-  from(table) { this.#table = table; return this; }
-  where(condition) { this.#conditions.push(condition); return this; }
-  order(field) { this.#orderBy = field; return this; }
-
-  build() {
-    let query = `SELECT * FROM ${this.#table}`;
-    if (this.#conditions.length) query += ` WHERE ${this.#conditions.join(' AND ')}`;
-    if (this.#orderBy) query += ` ORDER BY ${this.#orderBy}`;
-    return query;
-  }
-}
-
-const sql = new QueryBuilder()
-  .from('users')
-  .where('age > 18')
-  .where('active = true')
-  .order('name')
-  .build();
-// "SELECT * FROM users WHERE age > 18 AND active = true ORDER BY name"
-```
-
 
 ## Resources
 

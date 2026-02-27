@@ -128,51 +128,6 @@ client.shutdown();  // Cancels all pending requests
 
 AbortController works with addEventListener (signal option removes listeners). Use for stream cancellation. throwIfAborted() for immediate check. Create shutdown controllers for batch operations. AbortSignal.any() combines user and system cancellation.
 
-## Code Examples
-
-**Event Listeners with Signal**
-
-```javascript
-const controller = new AbortController();
-
-window.addEventListener('resize', handleResize, {
-  signal: controller.signal
-});
-
-window.addEventListener('scroll', handleScroll, {
-  signal: controller.signal  
-});
-
-// Remove ALL listeners with one call
-controller.abort();
-// No need for removeEventListener!
-```
-
-**Stream Cancellation**
-
-```javascript
-const controller = new AbortController();
-
-async function processStream(url) {
-  const response = await fetch(url, { signal: controller.signal });
-  const reader = response.body.getReader();
-  
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      processChunk(value);
-    }
-  } finally {
-    reader.releaseLock();
-  }
-}
-
-// Cancel mid-stream
-controller.abort();
-```
-
-
 ## Resources
 
 - [MDN: EventTarget.addEventListener() signal](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#signal) — Using signal with event listeners

@@ -81,11 +81,11 @@ Maintained by [Stanza](https://stanza.dev) — Learn coding faster right in your
 
 ### 🐍 Python
 
-- 🏛️ [Python Architecture: Patterns & Type System](./python/python-architecture/) — 12 lessons
-- ⚡ [Python Concurrency: Asyncio & No-GIL](./python/python-concurrency/) — 24 lessons
-- 🔮 [Python Metaprogramming & Introspection](./python/python-metaprogramming/) — 9 lessons
+- 🏛️ [Python Architecture: Patterns & Type System](./python/python-architecture/) — 20 lessons
+- ⚡ [Python Concurrency: Asyncio & Free-Threading](./python/python-concurrency/) — 24 lessons
+- 🔮 [Python Metaprogramming & Introspection](./python/python-metaprogramming/) — 19 lessons
 - 🏎️ [Python Performance: JIT & Internals](./python/python-performance/) — 24 lessons
-- 🐍 [Python Fundamentals: Modern 3.15 Edition](./python/python/) — 28 lessons
+- 🐍 [Python Fundamentals: Modern 3.14 Edition](./python/python/) — 28 lessons
 
 ### 🎸 Django
 

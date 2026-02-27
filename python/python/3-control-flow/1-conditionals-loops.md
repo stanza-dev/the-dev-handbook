@@ -3,9 +3,24 @@ source_course: "python"
 source_lesson: "python-conditionals-loops"
 ---
 
-# Control Flow Basics
+# Conditionals and Loops
 
-## Conditional Statements
+## Introduction
+Conditionals and loops are the building blocks of any program's logic. Python's versions are clean and readable by design, and they include a few unique features -- like the loop `else` clause -- that you will not find in most other languages.
+
+## Key Concepts
+- **`if` / `elif` / `else`**: Branch execution based on boolean conditions.
+- **Ternary expression**: `value_if_true if condition else value_if_false` -- a one-line conditional.
+- **`for` loop**: Iterates directly over any iterable (list, range, dict, file, etc.).
+- **`while` loop**: Repeats as long as a condition is truthy.
+- **Loop `else` clause**: Runs when a loop finishes without hitting `break`.
+
+## Real World Context
+Every request handler, data pipeline, and CLI tool relies on conditionals and loops. The loop `else` clause is a Python-specific pattern that simplifies search-and-not-found logic without extra boolean flags. Mastering `break`, `continue`, and `else` lets you write control flow that is both concise and immediately clear to other developers.
+
+## Deep Dive
+
+### Conditional Statements
 
 ```python
 if condition:
@@ -16,7 +31,7 @@ else:
     # runs if all above were false
 ```
 
-### Ternary Expression
+#### Ternary Expression
 
 ```python
 result = "yes" if condition else "no"
@@ -25,7 +40,7 @@ result = "yes" if condition else "no"
 grade = "A" if score >= 90 else "B" if score >= 80 else "C"
 ```
 
-## For Loops
+### For Loops
 
 Iterate over any iterable:
 
@@ -47,7 +62,7 @@ for key, value in d.items():
     print(f"{key}: {value}")
 ```
 
-## While Loops
+### While Loops
 
 ```python
 while condition:
@@ -58,7 +73,7 @@ while condition:
         continue
 ```
 
-## Loop Else Clause
+### Loop Else Clause
 
 The `else` block runs if the loop completes without `break`:
 
@@ -70,6 +85,22 @@ for item in items:
 else:
     print("Not found")  # Only if loop didn't break
 ```
+
+## Common Pitfalls
+1. **Chaining too many ternary expressions** -- `a if x else b if y else c` is hard to read. Use a regular `if/elif/else` block when you have more than two branches.
+2. **Modifying a collection during iteration** -- Deleting or inserting items while looping over a list causes skipped elements or `RuntimeError` with dicts. Iterate over a copy or build a new collection.
+3. **Confusing loop `else` with conditional `else`** -- The loop `else` runs when the loop exits normally (no `break`), not when the loop body is "false." Think of it as "no break."
+
+## Best Practices
+1. **Use `for` loops over `while` loops when the iterable is known** -- `for item in items` is clearer and less error-prone than manually managing an index with `while`.
+2. **Use `enumerate` instead of `range(len(...))`** -- It pairs each element with its index, eliminating off-by-one errors.
+
+## Summary
+- Python's `if/elif/else` and ternary expressions handle all branching needs.
+- `for` loops iterate directly over iterables; `while` loops repeat until a condition is false.
+- The loop `else` clause runs only when the loop completes without `break` -- useful for search patterns.
+- Avoid modifying collections during iteration and keep ternary chains short.
+- Prefer `for` with `enumerate` over `while` with manual index tracking.
 
 ## Code Examples
 
@@ -93,6 +124,10 @@ for rank, player in enumerate(players, start=1):
 ```
 
 
+## Resources
+
+- [Control Flow](https://docs.python.org/3.14/tutorial/controlflow.html) — Official Python 3.14 tutorial on if statements, for loops, and control flow tools
+
 ---
 
-> 📘 *This lesson is part of the [Python Fundamentals: Modern 3.15 Edition](https://stanza.dev/courses/python) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*
+> 📘 *This lesson is part of the [Python Fundamentals: Modern 3.14 Edition](https://stanza.dev/courses/python) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*

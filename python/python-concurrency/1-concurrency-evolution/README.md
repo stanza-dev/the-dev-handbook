@@ -1,6 +1,6 @@
 # 📜 The Evolution of Concurrency
 
-> Part of [Python Concurrency: Asyncio & No-GIL](https://stanza.dev/courses/python-concurrency)
+> Part of [Python Concurrency: Asyncio & Free-Threading](https://stanza.dev/courses/python-concurrency)
 
 From Threads and the GIL to the Free-threaded future.
 

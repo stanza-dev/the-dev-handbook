@@ -16,7 +16,7 @@ Patterns for object creation mechanisms.
 This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Singleton Identity
-- 🧩 Challenge: Factory Output Count
+- 🧩 Multiple Choice: Factory Pattern Use Case
 - ✏️ Fill in the Blank: Builder Pattern Chaining
 - 🔗 Matching: Creational Pattern Matching
 

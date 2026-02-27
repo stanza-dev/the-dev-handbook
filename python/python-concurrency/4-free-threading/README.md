@@ -1,6 +1,6 @@
 # 🚀 Free-Threaded Python
 
-> Part of [Python Concurrency: Asyncio & No-GIL](https://stanza.dev/courses/python-concurrency)
+> Part of [Python Concurrency: Asyncio & Free-Threading](https://stanza.dev/courses/python-concurrency)
 
 Running Python without the GIL (PEP 703).
 
@@ -16,7 +16,7 @@ Running Python without the GIL (PEP 703).
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Free-Threading Safety
-- 🧩 Challenge: Thread-Safe Patterns
 - ✏️ Fill in the Blank: Check GIL Status
+- 🧩 Challenge: Thread-Safe Patterns
 
 → [Practice in your IDE](https://stanza.dev/courses/python-concurrency)

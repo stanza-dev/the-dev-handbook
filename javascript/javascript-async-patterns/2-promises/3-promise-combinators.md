@@ -160,52 +160,6 @@ async function loadPage() {
 
 Promise.all() fails fast on first rejection. Promise.race() returns first to settle. Promise.allSettled() never rejects, reports all outcomes. Promise.any() returns first success. Choose based on whether operations are dependent or independent.
 
-## Code Examples
-
-**Promise.all()**
-
-```javascript
-// All succeed - get array of results
-const [user, posts, comments] = await Promise.all([
-  fetchUser(),
-  fetchPosts(),
-  fetchComments()
-]);
-
-// One fails - entire Promise.all rejects
-Promise.all([
-  Promise.resolve(1),
-  Promise.reject('error'),  // This fails
-  Promise.resolve(3)        // Never awaited!
-]).catch(e => console.log(e));  // 'error'
-
-// Empty array resolves immediately
-Promise.all([]);  // Promise.resolve([])
-```
-
-**Promise.race()**
-
-```javascript
-// First to settle wins (success OR failure)
-const first = await Promise.race([
-  fetch('/api/server1'),
-  fetch('/api/server2')
-]);
-
-// Timeout pattern
-function fetchWithTimeout(url, ms) {
-  return Promise.race([
-    fetch(url),
-    new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Timeout')), ms)
-    )
-  ]);
-}
-
-await fetchWithTimeout('/api/data', 5000);
-```
-
-
 ## Resources
 
 - [MDN: Promise.all()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all) — Promise.all reference

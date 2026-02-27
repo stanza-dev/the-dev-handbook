@@ -127,48 +127,6 @@ Promise.resolve('start')
 
 Promises represent async operation results with three states: pending, fulfilled, rejected. Chain with .then(), handle errors with .catch(), clean up with .finally(). Always return values in .then() handlers. Errors propagate down the chain until caught.
 
-## Code Examples
-
-**Promise States**
-
-```javascript
-// Pending -> Fulfilled
-const fulfilled = new Promise((resolve, reject) => {
-  setTimeout(() => resolve('Success!'), 1000);
-});
-
-// Pending -> Rejected
-const rejected = new Promise((resolve, reject) => {
-  setTimeout(() => reject(new Error('Failed!')), 1000);
-});
-
-// State is permanent once settled
-const promise = new Promise((resolve) => {
-  resolve('first');   // This wins
-  resolve('second');  // Ignored
-  reject('error');    // Ignored
-});
-```
-
-**Creating Promises**
-
-```javascript
-// Constructor
-const promise = new Promise((resolve, reject) => {
-  const success = doAsyncWork();
-  if (success) {
-    resolve(result);
-  } else {
-    reject(new Error('Failed'));
-  }
-});
-
-// Static methods for immediate values
-Promise.resolve('immediate value');
-Promise.reject(new Error('immediate error'));
-```
-
-
 ## Resources
 
 - [MDN: Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) — Promise reference

@@ -176,50 +176,6 @@ const data = await retry(() => fetch('/flaky-api'), 3, 1000);
 
 Use try/catch with async/await. Handle errors specifically when possible. Set up global handlers for safety. Consider Result pattern for expected failures. Use Promise.allSettled when partial success is acceptable. Always add context to error messages.
 
-## Code Examples
-
-**Try/Catch with Async/Await**
-
-```javascript
-async function fetchUser(id) {
-  try {
-    const response = await fetch(`/api/users/${id}`);
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    // Handles fetch errors AND thrown errors
-    console.error('Failed to fetch user:', error);
-    throw error;  // Re-throw for caller to handle
-  }
-}
-```
-
-**Handling Multiple Awaits**
-
-```javascript
-// Each await needs consideration
-async function processOrder(orderId) {
-  try {
-    const order = await fetchOrder(orderId);
-    const user = await fetchUser(order.userId);
-    const result = await chargeUser(user, order.total);
-    return result;
-  } catch (error) {
-    // Which operation failed? Hard to tell!
-    throw error;
-  }
-}
-
-// Better: specific error handling
-async function processOrderBetter(orderId) {
-  let order, user;
-  
-  try {
-```
-
-
 ## Resources
 
 - [MDN: Handling Rejected Promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/catch) — Promise.catch() reference

@@ -163,50 +163,6 @@ function getStorageUsage() {
 
 localStorage stores strings, so JSON serialization is required. Create utility functions for safe get/set. Handle parse errors and storage quota limits. Listen to 'storage' event for cross-tab sync. Never store sensitive data in localStorage.
 
-## Code Examples
-
-**Basic Pattern**
-
-```javascript
-// Storing objects
-const user = { name: 'Alice', preferences: { theme: 'dark' } };
-localStorage.setItem('user', JSON.stringify(user));
-
-// Retrieving objects
-const stored = localStorage.getItem('user');
-const userData = stored ? JSON.parse(stored) : null;
-
-// Removing
-localStorage.removeItem('user');
-
-// Clear all
-localStorage.clear();
-```
-
-**Safe Storage Utility**
-
-```javascript
-const storage = {
-  get(key, fallback = null) {
-    try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : fallback;
-    } catch {
-      return fallback;
-    }
-  },
-  
-  set(key, value) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-      return true;
-    } catch (e) {
-      // QuotaExceededError or SecurityError
-      console.error('Storage failed:', e);
-      return false;
-```
-
-
 ## Resources
 
 - [MDN: Window.localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) — localStorage reference

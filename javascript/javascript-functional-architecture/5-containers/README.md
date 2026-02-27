@@ -18,6 +18,6 @@ This section includes **4 interactive challenges** available on Stanza:
 - 🧩 Multiple Choice: Functor Required Method
 - ✏️ Fill in the Blank: Maybe Fold Output
 - 🧩 Multiple Choice: Why flatMap?
-- ✏️ Fill in the Blank: Either Left Behavior
+- 🧩 Multiple Choice: Either Left Behavior
 
 → [Practice in your IDE](https://stanza.dev/courses/javascript-functional-architecture)

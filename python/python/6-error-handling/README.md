@@ -1,6 +1,6 @@
 # 🛡️ Error Handling & Context Managers
 
-> Part of [Python Fundamentals: Modern 3.15 Edition](https://stanza.dev/courses/python)
+> Part of [Python Fundamentals: Modern 3.14 Edition](https://stanza.dev/courses/python)
 
 Managing exceptions and resources safely.
 
@@ -16,8 +16,8 @@ Managing exceptions and resources safely.
 This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Exception Else Quiz
-- 🧩 Challenge: Context Manager Methods
 - 🧩 Challenge: Try Statement Order
+- 🧩 Challenge: Context Manager Methods
 - ✏️ Fill in the Blank: Exception Group Syntax
 
 → [Practice in your IDE](https://stanza.dev/courses/python)

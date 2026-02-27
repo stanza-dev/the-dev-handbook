@@ -2,20 +2,20 @@
 
 > Master the dynamic nature of Python to write frameworks and libraries that generate code at runtime.
 
-**Python 3.15** · Advanced
+**Python 3.14** · Advanced
 
 ## Sections
 
 | | Section | Lessons |
 |---|---------|---------|
 | 🎁 | [Decorators & Wrappers](./1-decorators/) | 4 lessons |
-| 🏷️ | [Descriptors](./2-descriptors/) | 1 lesson |
-| 🧬 | [Metaclasses](./3-metaclasses/) | 1 lesson |
-| 🔍 | [Runtime Introspection](./4-introspection/) | 1 lesson |
-| 🌳 | [Abstract Syntax Trees (AST)](./5-ast/) | 1 lesson |
-| ⚡ | [Code Generation](./6-code-generation/) | 1 lesson |
+| 🏷️ | [Descriptors](./2-descriptors/) | 3 lessons |
+| 🧬 | [Metaclasses](./3-metaclasses/) | 3 lessons |
+| 🔍 | [Runtime Introspection](./4-introspection/) | 3 lessons |
+| 🌳 | [Abstract Syntax Trees (AST)](./5-ast/) | 3 lessons |
+| ⚡ | [Code Generation](./6-code-generation/) | 3 lessons |
 
-**9 lessons** · **13 interactive challenges**
+**19 lessons** · **18 interactive challenges**
 
 ## Want the Interactive Experience?
 

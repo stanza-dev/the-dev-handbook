@@ -148,55 +148,6 @@ JSON.stringify(big, (key, value) => {
 
 Replacer filters/transforms during stringify. Reviver transforms during parse. Classes can implement `toJSON()` for custom serialization. Use revivers to restore dates and custom types. Prefer `structuredClone()` for deep cloning in modern code.
 
-## Code Examples
-
-**The Replacer Parameter**
-
-```javascript
-const user = {
-  name: 'Alice',
-  password: 'secret123',
-  email: 'alice@example.com',
-  age: 30
-};
-
-// Array replacer - whitelist properties
-JSON.stringify(user, ['name', 'email']);
-// '{"name":"Alice","email":"alice@example.com"}'
-
-// Function replacer - transform values
-JSON.stringify(user, (key, value) => {
-  if (key === 'password') return undefined;  // Skip
-  if (typeof value === 'string') return value.toUpperCase();
-  return value;
-});
-// '{"name":"ALICE","email":"ALICE@EXAMPLE.COM","age":30}'
-```
-
-**The Reviver Parameter**
-
-```javascript
-// Problem: Dates become strings
-const json = '{"created":"2024-12-25T00:00:00.000Z"}';
-const obj1 = JSON.parse(json);
-typeof obj1.created;  // 'string' - not a Date!
-
-// Solution: Use reviver
-const obj2 = JSON.parse(json, (key, value) => {
-  if (key === 'created') return new Date(value);
-  return value;
-});
-obj2.created instanceof Date;  // true!
-
-// Generic ISO date reviver
-const isoDatePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
-function dateReviver(key, value) {
-  if (typeof value === 'string' && isoDatePattern.test(value)) {
-    return new Date(value);
-  }
-```
-
-
 ## Resources
 
 - [MDN: JSON.parse() reviver](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse#using_the_reviver_parameter) — Reviver parameter usage

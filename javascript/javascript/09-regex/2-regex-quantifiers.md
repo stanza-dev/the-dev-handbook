@@ -113,46 +113,6 @@ html.match(/<.*?>/);    // ['<div>'] (just first tag)
 
 Quantifiers (`+`, `*`, `?`, `{n}`) specify repetition count. Anchors (`^`, `$`, `\b`) match positions. Add `?` after quantifiers for lazy (minimal) matching. Always use anchors for input validation to ensure the entire string matches.
 
-## Code Examples
-
-**Quantifiers**
-
-```javascript
-// ? - zero or one (optional)
-/colou?r/.test('color');   // true
-/colou?r/.test('colour');  // true
-
-// * - zero or more
-/go*gle/.test('ggle');     // true
-/go*gle/.test('google');   // true
-/go*gle/.test('gooooogle'); // true
-
-// + - one or more
-/go+gle/.test('ggle');     // false (needs at least one 'o')
-/go+gle/.test('google');   // true
-
-// {n} - exactly n times
-/\d{3}/.test('123');       // true
-/\d{3}/.test('12');        // false
-
-// {n,m} - n to m times
-```
-
-**Greedy vs Lazy**
-
-```javascript
-const html = '<div>content</div>';
-
-// Greedy (default) - matches as much as possible
-html.match(/<.*>/);     // ['<div>content</div>'] (whole thing!)
-
-// Lazy (add ?) - matches as little as possible  
-html.match(/<.*?>/);    // ['<div>'] (just first tag)
-
-// Lazy versions: *?, +?, ??, {n,m}?
-```
-
-
 ## Resources
 
 - [MDN: Quantifiers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_expressions/Quantifiers) — Quantifier reference

@@ -1,6 +1,6 @@
 # 🔄 Mastering Asyncio
 
-> Part of [Python Concurrency: Asyncio & No-GIL](https://stanza.dev/courses/python-concurrency)
+> Part of [Python Concurrency: Asyncio & Free-Threading](https://stanza.dev/courses/python-concurrency)
 
 Deep dive into the Event Loop and Coroutines.
 
@@ -13,11 +13,12 @@ Deep dive into the Event Loop and Coroutines.
 
 ## Practice Challenges
 
-This section includes **4 interactive challenges** available on Stanza:
+This section includes **5 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Async Def Return Type
-- 🧩 Multiple Choice: Blocking Loop Quiz
 - 🔗 Matching: Asyncio Functions
+- 🧩 Multiple Choice: Blocking Loop Quiz
 - 🧩 Challenge: Async Code Mistakes
+- 🧩 Challenge: Asyncio Task Lifecycle
 
 → [Practice in your IDE](https://stanza.dev/courses/python-concurrency)

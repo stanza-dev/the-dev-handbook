@@ -145,54 +145,6 @@ const AnonClass = class {
 
 Classes provide a clean syntax for object-oriented JavaScript. Use `constructor` for initialization, define methods in the class body, and use `static` for class-level members. ES2022's private fields (`#`) enable true encapsulation. Always use `new` when instantiating classes.
 
-## Code Examples
-
-**Basic Class Syntax**
-
-```javascript
-class User {
-  // Constructor - called when using 'new'
-  constructor(name, email) {
-    this.name = name;
-    this.email = email;
-    this.createdAt = new Date();
-  }
-  
-  // Instance method
-  greet() {
-    return `Hello, I'm ${this.name}`;
-  }
-  
-  // Getter
-  get displayName() {
-    return `${this.name} <${this.email}>`;
-  }
-```
-
-**Static Members**
-
-```javascript
-class MathUtils {
-  static PI = 3.14159;
-  
-  static square(n) {
-    return n * n;
-  }
-  
-  static cube(n) {
-    return n * n * n;
-  }
-}
-
-// Called on class, not instances
-MathUtils.PI;        // 3.14159
-MathUtils.square(4); // 16
-
-const m = new MathUtils();
-// m.square(4);  // Error - static methods aren't on instances
-```
-
-
 ## Resources
 
 - [MDN: Classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes) — Complete class reference

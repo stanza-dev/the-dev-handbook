@@ -17,7 +17,7 @@ This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Promise.all Behavior
 - 🧩 Multiple Choice: Async Error Handling
-- 🔗 Matching: Promise Combinator Behaviors
+- 🧩 Multiple Choice: Promise.race Behavior
 - ✏️ Fill in the Blank: Promise.allSettled Output
 
 → [Practice in your IDE](https://stanza.dev/courses/javascript-async-patterns)

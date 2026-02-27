@@ -139,54 +139,6 @@ await api.increment();
 
 Promisify worker communication for cleaner code. Use worker pools for parallel batch processing. Consider Comlink for RPC-style worker communication. Always pool workers for repeated tasks.
 
-## Code Examples
-
-**Promisified Worker Communication**
-
-```javascript
-// worker-utils.js
-function createWorker(workerFn) {
-  let id = 0;
-  const pending = new Map();
-  
-  const blob = new Blob(
-    [`onmessage = async (e) => {
-      const { id, args } = e.data;
-      try {
-        const result = await (${workerFn.toString()})(...args);
-        postMessage({ id, result });
-      } catch (error) {
-        postMessage({ id, error: error.message });
-      }
-    }`],
-    { type: 'application/javascript' }
-  );
-```
-
-**Worker Pool**
-
-```javascript
-class WorkerPool {
-  constructor(workerScript, size = navigator.hardwareConcurrency) {
-    this.workers = Array.from({ length: size }, () => ({
-      worker: new Worker(workerScript),
-      busy: false
-    }));
-    this.queue = [];
-  }
-  
-  exec(data) {
-    return new Promise((resolve, reject) => {
-      const task = { data, resolve, reject };
-      const available = this.workers.find(w => !w.busy);
-      
-      if (available) {
-        this.runTask(available, task);
-      } else {
-        this.queue.push(task);
-```
-
-
 ## Resources
 
 - [Comlink](https://github.com/GoogleChromeLabs/comlink) — Comlink library for worker RPC

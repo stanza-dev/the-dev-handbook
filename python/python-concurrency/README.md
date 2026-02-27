@@ -1,8 +1,8 @@
-# ⚡ Python Concurrency: Asyncio & No-GIL
+# ⚡ Python Concurrency: Asyncio & Free-Threading
 
 > Explore the revolution in Python concurrency with the new Free-threaded execution model, TaskGroups, and advanced asyncio patterns.
 
-**Python 3.15** · Advanced
+**Python 3.14** · Advanced
 
 ## Sections
 
@@ -15,7 +15,7 @@
 | 🏭 | [Multiprocessing & Shared Memory](./5-multiprocessing-shared/) | 4 lessons |
 | 🌊 | [Advanced Async Patterns](./6-advanced-async/) | 4 lessons |
 
-**24 lessons** · **19 interactive challenges**
+**24 lessons** · **21 interactive challenges**
 
 ## Want the Interactive Experience?
 

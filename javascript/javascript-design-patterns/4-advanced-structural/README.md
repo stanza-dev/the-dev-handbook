@@ -13,12 +13,10 @@ Adapter, Composite, and Flyweight patterns.
 
 ## Practice Challenges
 
-This section includes **5 interactive challenges** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Purpose of Adapter
-- 🧩 Challenge: Composite Tree Size
+- 🧩 Multiple Choice: Composite Pattern Use Case
 - 🧩 Multiple Choice: Flyweight Benefit
-- 🧩 Challenge: Structural Pattern Concepts
-- 🧩 Challenge: Adapter Pattern Implementation
 
 → [Practice in your IDE](https://stanza.dev/courses/javascript-design-patterns)

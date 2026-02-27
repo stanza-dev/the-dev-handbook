@@ -163,46 +163,6 @@ Animal.prototype.isPrototypeOf(dog);  // true
 
 Every object has a prototype forming a chain. Property lookup traverses this chain. Classes are syntactic sugar over prototypes. `Object.create()` creates objects with custom prototypes. Avoid modifying built-in prototypes. Use `Object.hasOwn()` to check for own properties.
 
-## Code Examples
-
-**The Prototype Chain**
-
-```javascript
-const obj = { a: 1 };
-
-// obj -> Object.prototype -> null
-obj.toString();  // Works! Inherited from Object.prototype
-
-const arr = [1, 2, 3];
-// arr -> Array.prototype -> Object.prototype -> null
-arr.push(4);     // From Array.prototype
-arr.toString();  // From Object.prototype
-
-// Check prototype
-Object.getPrototypeOf(arr) === Array.prototype;  // true
-Array.prototype.isPrototypeOf(arr);              // true
-```
-
-**How Property Lookup Works**
-
-```javascript
-const parent = { a: 1, b: 2 };
-const child = Object.create(parent);
-child.b = 20;  // Shadow parent's b
-child.c = 3;
-
-child.a;  // 1 (from parent)
-child.b;  // 20 (own property, shadows parent's b)
-child.c;  // 3 (own property)
-child.d;  // undefined (not in chain)
-
-// Check own property
-child.hasOwnProperty('a');  // false
-child.hasOwnProperty('b');  // true
-Object.hasOwn(child, 'b');  // true (ES2022)
-```
-
-
 ## Resources
 
 - [MDN: Inheritance and the prototype chain](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Inheritance_and_the_prototype_chain) — Deep dive into prototypes

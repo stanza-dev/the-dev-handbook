@@ -111,43 +111,6 @@ async function staleWhileRevalidate(request) {
 
 Service Workers enable offline support and network interception. They have a lifecycle: install → activate → fetch. Cache API stores responses. Different strategies suit different content types. HTTPS is required.
 
-## Code Examples
-
-**Registration**
-
-```javascript
-// main.js
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js')
-    .then(reg => console.log('SW registered:', reg.scope))
-    .catch(err => console.error('SW failed:', err));
-}
-```
-
-**Basic Service Worker**
-
-```javascript
-// sw.js
-const CACHE_NAME = 'v1';
-const ASSETS = ['/', '/index.html', '/styles.css', '/app.js'];
-
-// Install - cache assets
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(ASSETS))
-  );
-});
-
-// Activate - clean old caches
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then(keys => 
-      Promise.all(
-        keys.filter(key => key !== CACHE_NAME)
-```
-
-
 ## Resources
 
 - [MDN: Service Worker API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API) — Service Worker API reference

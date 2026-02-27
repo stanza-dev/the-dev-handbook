@@ -143,39 +143,6 @@ export { config };
 
 Async functions implicitly return Promises. await pauses until a Promise settles. Use try/catch for error handling. Parallelize independent operations with Promise.all. Top-level await works in ES modules.
 
-## Code Examples
-
-**Basic Syntax**
-
-```javascript
-async function fetchUser(id) {
-  const response = await fetch(`/api/users/${id}`);
-  const user = await response.json();
-  return user;  // Implicitly wrapped in Promise.resolve()
-}
-
-// Usage
-fetchUser(1).then(user => console.log(user));
-// Or
-const user = await fetchUser(1);  // In async context
-```
-
-**Async Functions Always Return Promises**
-
-```javascript
-async function returnValue() {
-  return 42;  // Same as Promise.resolve(42)
-}
-
-async function throwError() {
-  throw new Error('Oops');  // Same as Promise.reject()
-}
-
-returnValue().then(console.log);  // 42
-throwError().catch(console.error);  // Error: Oops
-```
-
-
 ## Resources
 
 - [MDN: async function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function) — async function reference

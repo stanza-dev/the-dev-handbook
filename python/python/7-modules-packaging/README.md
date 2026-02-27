@@ -1,6 +1,6 @@
 # 📦 Modules & Packaging
 
-> Part of [Python Fundamentals: Modern 3.15 Edition](https://stanza.dev/courses/python)
+> Part of [Python Fundamentals: Modern 3.14 Edition](https://stanza.dev/courses/python)
 
 Organizing code with modern tools.
 
@@ -16,8 +16,8 @@ Organizing code with modern tools.
 This section includes **4 interactive challenges** available on Stanza:
 
 - 🔗 Matching: Import Syntax Matching
-- 🧩 Multiple Choice: Project Config Standard
-- 🧩 Challenge: Pathlib Read Methods
 - 🧩 Multiple Choice: Name Main Purpose
+- ✏️ Fill in the Blank: Project Config Standard
+- 🧩 Challenge: Pathlib Read Methods
 
 → [Practice in your IDE](https://stanza.dev/courses/python)

@@ -3,9 +3,23 @@ source_course: "python-concurrency"
 source_lesson: "python-concurrency-ipc"
 ---
 
-# Sharing Data Between Processes
+# Inter-Process Communication
 
-## Queues
+## Introduction
+Since processes have isolated memory spaces, you cannot simply share variables between them. Data must be explicitly sent via inter-process communication (IPC) mechanisms. Python's `multiprocessing` module provides several options, from high-level queues and managers to low-level pipes and shared memory. This lesson covers each IPC mechanism and when to use it.
+
+## Key Concepts
+- **Queue**: A process-safe FIFO queue for sending picklable objects between processes.
+- **Pipe**: A two-way communication channel between exactly two processes, faster than Queue for point-to-point communication.
+- **Value / Array**: Shared memory wrappers for single values or arrays of a fixed C type.
+- **Manager**: A server process that hosts Python objects (lists, dicts, namespaces) and proxies access from other processes.
+
+## Real World Context
+A real-time data processing system has producer processes reading from sensors and consumer processes running analytics. A `multiprocessing.Queue` connects them, decoupling the producers from the consumers. For high-performance numerical work, `Value` and `Array` share counters and buffers directly in shared memory without the overhead of pickling.
+
+## Deep Dive
+
+### Queues
 
 ```python
 from multiprocessing import Process, Queue
@@ -30,7 +44,7 @@ if __name__ == '__main__':
     p1.join(); p2.join()
 ```
 
-## Pipes
+### Pipes
 
 ```python
 from multiprocessing import Pipe
@@ -46,7 +60,7 @@ def receiver(conn):
 parent_conn, child_conn = Pipe()
 ```
 
-## Shared Values and Arrays
+### Shared Values and Arrays
 
 ```python
 from multiprocessing import Value, Array
@@ -62,7 +76,7 @@ arr = Array('d', [1.0, 2.0, 3.0])  # 'd' = double
 arr[0] = 99.0
 ```
 
-## Managers for Complex Objects
+### Managers for Complex Objects
 
 ```python
 from multiprocessing import Manager
@@ -76,6 +90,22 @@ if __name__ == '__main__':
         # Pass to processes
         p = Process(target=worker, args=(shared_list,))
 ```
+
+## Common Pitfalls
+1. **Using Value without its lock** — `Value` objects have a built-in lock, but compound operations still require `with counter.get_lock():`. Without it, read-modify-write operations are racy.
+2. **Deadlocking with Pipes** — If both ends of a Pipe try to send without anyone receiving, the internal buffer fills up and both processes block forever. Always pair sends with receives.
+3. **Overusing Managers for performance-critical data** — Manager proxies route every access through a server process, adding significant latency. Use `shared_memory` or `Value/Array` for high-throughput numerical data.
+
+## Best Practices
+1. **Use Queue for most IPC needs** — It handles serialization, synchronization, and buffering. It is the safest and most flexible IPC mechanism for general use.
+2. **Use Value/Array for simple shared counters and buffers** — They avoid pickling overhead and provide direct shared memory access, but require careful locking for compound operations.
+
+## Summary
+- Processes have isolated memory; data sharing requires explicit IPC mechanisms.
+- `Queue` is the most versatile option: process-safe, supports multiple producers and consumers, and handles serialization automatically.
+- `Pipe` is faster for two-process communication but does not scale to multiple processes.
+- `Value` and `Array` provide shared memory for simple C types, requiring manual locking for safety.
+- `Manager` proxies complex Python objects across processes at the cost of performance.
 
 ## Code Examples
 
@@ -119,6 +149,10 @@ if __name__ == '__main__':
 ```
 
 
+## Resources
+
+- [Pipes and Queues](https://docs.python.org/3.14/library/multiprocessing.html#pipes-and-queues) — Inter-process communication using pipes and queues
+
 ---
 
-> 📘 *This lesson is part of the [Python Concurrency: Asyncio & No-GIL](https://stanza.dev/courses/python-concurrency) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*
+> 📘 *This lesson is part of the [Python Concurrency: Asyncio & Free-Threading](https://stanza.dev/courses/python-concurrency) course on [Stanza](https://stanza.dev) — the IDE-native learning platform for developers.*

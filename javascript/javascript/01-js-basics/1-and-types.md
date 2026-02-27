@@ -74,31 +74,6 @@ typeof [];         // 'object'
 
 JavaScript variables are declared with `const` (immutable binding) or `let` (mutable binding). The language has 7 primitive types and objects. Understanding the difference between primitives (passed by value) and objects (passed by reference) is fundamental to avoiding bugs.
 
-## Code Examples
-
-**Variable declaration with const and let**
-
-```javascript
-const API_URL = 'https://api.example.com'; // Cannot be reassigned
-let retryCount = 0; // Can be reassigned
-retryCount = 1; // OK
-// API_URL = 'new-url'; // TypeError!
-```
-
-**The typeof operator and JavaScript's 7 primitive types**
-
-```javascript
-typeof 'hello';    // 'string'
-typeof 42;         // 'number'
-typeof true;       // 'boolean'
-typeof undefined;  // 'undefined'
-typeof Symbol();   // 'symbol'
-typeof null;       // 'object' (historical bug!)
-typeof {};         // 'object'
-typeof [];         // 'object'
-```
-
-
 ## Resources
 
 - [MDN: Grammar and Types](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Grammar_and_types) — Official guide to JavaScript syntax and data types
