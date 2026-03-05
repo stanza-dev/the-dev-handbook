@@ -125,6 +125,43 @@ fib.next().value;  // 3
 
 Generators (function*) yield values on demand. The generator object has next() and is iterable. yield* delegates to other iterables. Generators are great for lazy sequences and maintaining state. Be careful with infinite generators.
 
+## Code Examples
+
+**Basic Syntax**
+
+```javascript
+function* generateSequence() {
+  yield 1;
+  yield 2;
+  yield 3;
+  return 'done';  // Final value, done: true
+}
+
+const gen = generateSequence();
+gen.next();  // { value: 1, done: false }
+gen.next();  // { value: 2, done: false }
+gen.next();  // { value: 3, done: false }
+gen.next();  // { value: 'done', done: true }
+gen.next();  // { value: undefined, done: true }
+```
+
+**Generators are Iterable**
+
+```javascript
+function* range(start, end) {
+  for (let i = start; i <= end; i++) {
+    yield i;
+  }
+}
+
+for (const n of range(1, 5)) {
+  console.log(n);  // 1, 2, 3, 4, 5
+}
+
+[...range(1, 5)];  // [1, 2, 3, 4, 5]
+```
+
+
 ## Resources
 
 - [MDN: function*](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*) — Generator function reference

@@ -156,7 +156,7 @@ print(namespace["factorial"](5))  # 120
 
 ## Resources
 
-- [undefined](https://docs.python.org/3.14/library/functions.html#compile) — undefined
+- [compile() -- Python docs](https://docs.python.org/3.14/library/functions.html#compile) — undefined
 
 ---
 

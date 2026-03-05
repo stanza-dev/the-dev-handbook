@@ -25,6 +25,8 @@ While ES modules are preferred today, the Module pattern still appears in legacy
 
 ### Classic Module Pattern
 
+The IIFE creates a closure that keeps `count` and `validateCount` private. Only the returned object is accessible from outside:
+
 ```javascript
 const CounterModule = (function() {
   // Private members
@@ -57,7 +59,11 @@ CounterModule.increment();  // 1
 CounterModule.count;        // undefined (private!)
 ```
 
+Accessing `CounterModule.count` returns `undefined` because `count` is a closure variable, not a property of the returned object. The only way to read it is through `getCount()`.
+
 ### Revealing Module Pattern
+
+The Revealing Module variation defines all functions inside the closure and then returns an object that maps public names to those private functions:
 
 ```javascript
 const Calculator = (function() {
@@ -91,7 +97,26 @@ const Calculator = (function() {
 })();
 ```
 
+The returned object has short-hand property names that point to the private functions. This makes the public API explicit and easy to scan at a glance.
+
+### ES2025 Import Attributes
+
+Import attributes (ES2025) let you specify the expected module type, preventing security issues where a server might serve unexpected content:
+
+```javascript
+// Import JSON with type assertion (ES2025)
+import config from './config.json' with { type: 'json' };
+import styles from './theme.css' with { type: 'css' };
+
+// Dynamic import with attributes
+const data = await import('./data.json', { with: { type: 'json' } });
+```
+
+The `with { type: 'json' }` syntax works with both static and dynamic imports. Import attributes tell the engine how to interpret a module, preventing security issues where a server might serve unexpected content types.
+
 ### Modern ES Modules
+
+ES modules provide built-in encapsulation. Variables declared at module scope are private by default, and only explicitly `export`ed members are accessible:
 
 ```javascript
 // counter.js
@@ -110,6 +135,8 @@ import { increment, getCount } from './counter.js';
 increment();  // 1
 ```
 
+The `count` variable is module-scoped and cannot be accessed by importers. This is the modern equivalent of the IIFE module pattern, with static analysis and tree-shaking support.
+
 ## Common Pitfalls
 
 1. **Memory leaks**: Closures hold references to outer scope.
@@ -126,6 +153,32 @@ increment();  // 1
 ## Summary
 
 The Module pattern uses closures to create private state. ES modules are the modern replacement with native `import`/`export`. Use the pattern when modules aren't available or for understanding closure-based privacy.
+
+## Code Examples
+
+**ES module pattern with private state — import attributes (ES2025) enable typed imports like JSON with { type: 'json' }**
+
+```javascript
+// ES module with import attributes (ES2025)
+import config from './config.json' with { type: 'json' };
+
+// Private to module scope
+let count = 0;
+
+export function increment() {
+  return ++count;
+}
+
+export function getCount() {
+  return count;
+}
+
+// Usage in another file:
+// import { increment, getCount } from './counter.js';
+// increment(); // 1
+// count; // ReferenceError — private to module
+```
+
 
 ## Resources
 

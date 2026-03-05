@@ -122,6 +122,39 @@ for (const match of text.matchAll(regex)) {
 
 Capturing groups `()` extract matched text. Named groups `(?<name>)` add clarity. Non-capturing groups `(?:)` group without overhead. Backreferences (`\1`, `\k<name>`) match earlier captures. Use `$1` or `$<name>` in replacements.
 
+## Code Examples
+
+**Basic Groups**
+
+```javascript
+// Capturing groups
+const match = 'John Smith'.match(/(\w+) (\w+)/);
+match[0];  // 'John Smith' (full match)
+match[1];  // 'John' (first group)
+match[2];  // 'Smith' (second group)
+
+// Group quantifiers
+/(ab)+/.test('ababab');  // true (matches 'ab' one or more times)
+
+// Alternation within groups
+/(cat|dog)/.test('I have a cat');  // true
+```
+
+**Named Groups (ES2018)**
+
+```javascript
+const dateRegex = /(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})/;
+const match = '2024-12-25'.match(dateRegex);
+
+match.groups.year;   // '2024'
+match.groups.month;  // '12'
+match.groups.day;    // '25'
+
+// Destructuring
+const { groups: { year, month, day } } = '2024-12-25'.match(dateRegex);
+```
+
+
 ## Resources
 
 - [MDN: Groups and backreferences](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_expressions/Groups_and_backreferences) — Groups reference

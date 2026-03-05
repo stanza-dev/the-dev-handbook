@@ -204,7 +204,7 @@ for val in [0, 1, 2, 3]:
 
 ## Resources
 
-- [undefined](https://docs.python.org/3.14/library/functions.html#compile) — undefined
+- [compile() -- Python docs](https://docs.python.org/3.14/library/functions.html#compile) — undefined
 
 ---
 

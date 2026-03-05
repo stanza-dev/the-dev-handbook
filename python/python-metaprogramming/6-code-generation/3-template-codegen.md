@@ -234,7 +234,7 @@ print(p == Point(3, 4))  # True
 
 ## Resources
 
-- [undefined](https://docs.python.org/3.14/library/functions.html#compile) — undefined
+- [compile() -- Python docs](https://docs.python.org/3.14/library/functions.html#compile) — undefined
 
 ---
 

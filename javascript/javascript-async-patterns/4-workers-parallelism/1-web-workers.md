@@ -125,6 +125,46 @@ self.onmessage = (e) => {
 
 Web Workers run JavaScript in background threads. Communication uses postMessage(). Workers cannot access DOM but can use fetch, IndexedDB, etc. Use for CPU-intensive tasks. Consider Transferable Objects for large data.
 
+## Code Examples
+
+**Basic Setup**
+
+```javascript
+// main.js
+const worker = new Worker('worker.js');
+
+// Send data to worker
+worker.postMessage({ type: 'process', data: [1, 2, 3] });
+
+// Receive results
+worker.onmessage = (event) => {
+  console.log('Result:', event.data);
+};
+
+// Handle errors
+worker.onerror = (error) => {
+  console.error('Worker error:', error.message);
+};
+
+// Terminate when done
+worker.terminate();
+```
+
+**Basic Setup**
+
+```javascript
+// worker.js
+self.onmessage = (event) => {
+  const { type, data } = event.data;
+  
+  if (type === 'process') {
+    const result = data.map(n => n * 2);
+    self.postMessage(result);
+  }
+};
+```
+
+
 ## Resources
 
 - [MDN: Web Workers API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API) — Web Workers API reference

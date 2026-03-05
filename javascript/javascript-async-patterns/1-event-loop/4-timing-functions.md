@@ -157,6 +157,50 @@ requestIdleCallback((deadline) => {
 
 setTimeout runs once after delay; setInterval repeats. requestAnimationFrame syncs with display refresh for smooth animations. requestIdleCallback runs during idle time for non-critical work. Always clear timers to prevent memory leaks.
 
+## Code Examples
+
+**setTimeout**
+
+```javascript
+// Basic usage
+const timeoutId = setTimeout(() => {
+  console.log('Executed after 1 second');
+}, 1000);
+
+// Cancel before execution
+clearTimeout(timeoutId);
+
+// With arguments
+setTimeout((a, b) => console.log(a + b), 1000, 5, 3);  // 8
+
+// Minimum delay is ~4ms (nested timeouts)
+// 0ms doesn't mean immediate!
+```
+
+**setInterval**
+
+```javascript
+let count = 0;
+const intervalId = setInterval(() => {
+  count++;
+  console.log('Tick:', count);
+  if (count >= 5) {
+    clearInterval(intervalId);  // Stop after 5
+  }
+}, 1000);
+
+// Problem: drift over time
+// If callback takes 50ms, interval is really 1050ms
+
+// Better: self-correcting timer
+function preciseInterval(callback, interval) {
+  let expected = Date.now() + interval;
+  
+  function step() {
+    const drift = Date.now() - expected;
+```
+
+
 ## Resources
 
 - [MDN: setTimeout()](https://developer.mozilla.org/en-US/docs/Web/API/setTimeout) — setTimeout reference

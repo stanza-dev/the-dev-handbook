@@ -138,6 +138,49 @@ const { name: n, ...rest } = user;  // rest = { age: 30, city: 'NYC' }
 
 Objects store key-value pairs accessed via dot or bracket notation. Use `Object.keys/values/entries()` for iteration. Spread syntax (`...`) merges and copies objects. Destructuring extracts properties into variables. Remember objects are passed by reference.
 
+## Code Examples
+
+**Creating Objects**
+
+```javascript
+// Object literal
+const user = {
+  name: 'Alice',
+  age: 30,
+  email: 'alice@example.com'
+};
+
+// Shorthand property names
+const name = 'Bob';
+const age = 25;
+const bob = { name, age };  // { name: 'Bob', age: 25 }
+
+// Computed property names
+const key = 'dynamicKey';
+const obj = { [key]: 'value' };  // { dynamicKey: 'value' }
+```
+
+**Accessing Properties**
+
+```javascript
+const user = { name: 'Alice', 'full-name': 'Alice Smith' };
+
+// Dot notation
+user.name;  // 'Alice'
+
+// Bracket notation (required for special keys)
+user['full-name'];  // 'Alice Smith'
+user['name'];       // 'Alice'
+
+// Dynamic access
+const key = 'name';
+user[key];  // 'Alice'
+
+// Optional chaining
+user?.address?.city;  // undefined (no error)
+```
+
+
 ## Resources
 
 - [MDN: Working with Objects](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Working_with_objects) — Comprehensive guide to JavaScript objects

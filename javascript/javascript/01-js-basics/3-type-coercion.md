@@ -101,6 +101,31 @@ null == undefined;  // true (special case)
 
 JavaScript has 8 falsy values; everything else is truthy. Use explicit conversion functions and strict equality to avoid coercion surprises. The `+` operator concatenates strings, while `-`, `*`, `/` convert to numbers. Understanding these rules is essential for writing predictable code.
 
+## Code Examples
+
+**Explicit type conversion to Number**
+
+```javascript
+Number('42');       // 42
+Number('42px');     // NaN
+Number(true);       // 1
+Number(null);       // 0
+Number(undefined);  // NaN
+parseInt('42px');   // 42 (parses until non-digit)
+parseFloat('3.14'); // 3.14
+```
+
+**Implicit coercion gotchas with different operators**
+
+```javascript
+'5' + 3;        // '53' (string concatenation)
+'5' - 3;        // 2 (numeric subtraction)
+'5' * '2';      // 10 (both converted to numbers)
+[] + [];        // '' (empty string)
+[] + {};        // '[object Object]'
+```
+
+
 ## Resources
 
 - [MDN: Type Coercion](https://developer.mozilla.org/en-US/docs/Glossary/Type_coercion) — Understanding implicit type conversion

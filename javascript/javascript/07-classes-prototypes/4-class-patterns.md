@@ -220,6 +220,55 @@ p2.x;  // 4
 
 Use arrow function properties to auto-bind methods. Factory methods provide flexible construction. Builder pattern enables fluent APIs. Singleton ensures single instances. Immutable classes return new instances instead of mutating. These patterns make classes more practical and maintainable.
 
+## Code Examples
+
+**Binding Methods for Callbacks**
+
+```javascript
+class Counter {
+  count = 0;
+  
+  // Problem: 'this' is lost in callbacks
+  increment() {
+    this.count++;
+  }
+  
+  // Solution 1: Arrow function property (most common)
+  decrement = () => {
+    this.count--;
+  };
+}
+
+const counter = new Counter();
+
+// increment loses 'this'
+setTimeout(counter.increment, 100);  // Error!
+```
+
+**Factory Pattern**
+
+```javascript
+class User {
+  constructor(data) {
+    this.name = data.name;
+    this.email = data.email;
+    this.role = data.role;
+  }
+  
+  // Factory methods
+  static createAdmin(name, email) {
+    return new User({ name, email, role: 'admin' });
+  }
+  
+  static createGuest() {
+    return new User({ name: 'Guest', email: '', role: 'guest' });
+  }
+  
+  static async fromAPI(id) {
+    const response = await fetch(`/api/users/${id}`);
+```
+
+
 ## Resources
 
 - [MDN: Using classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_classes) — Practical guide to using classes

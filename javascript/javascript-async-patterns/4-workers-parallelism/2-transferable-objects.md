@@ -80,6 +80,31 @@ if (typeof SharedArrayBuffer !== 'undefined') {
 }
 ```
 
+### Atomics.waitAsync() (ES2024+)
+
+`Atomics.wait()` blocks the calling thread — unusable on the main thread. `Atomics.waitAsync()` returns a promise instead:
+
+```javascript
+// Main thread — non-blocking wait
+const sharedArray = new Int32Array(sharedBuffer);
+const result = Atomics.waitAsync(sharedArray, 0, 0);
+
+if (result.async) {
+  result.value.then(() => {
+    console.log('Worker updated the value!');
+    console.log('New value:', Atomics.load(sharedArray, 0));
+  });
+} else {
+  console.log('Already changed:', result.value);
+}
+
+// Worker thread — notify main thread
+Atomics.store(sharedArray, 0, 42);
+Atomics.notify(sharedArray, 0);
+```
+
+`Atomics.waitAsync()` enables main-thread coordination with workers without blocking the event loop. The returned object has `{ async: true, value: Promise }` for async waits or `{ async: false, value: 'not-equal'|'timed-out' }` for immediate results.
+
 ## Common Pitfalls
 
 1. **Using transferred buffer after transfer**: It's empty!
@@ -89,6 +114,41 @@ if (typeof SharedArrayBuffer !== 'undefined') {
 ## Summary
 
 Transferable objects enable zero-copy data transfer. SharedArrayBuffer provides true shared memory. Use Atomics for thread-safe operations. Ensure proper security headers for SharedArrayBuffer.
+
+## Code Examples
+
+**Transferable Objects**
+
+```javascript
+// Without transfer - data is COPIED (slow for large data)
+const buffer = new ArrayBuffer(100_000_000);  // 100MB
+worker.postMessage(buffer);  // Copied! 200MB total now
+
+// With transfer - data is MOVED (fast, zero-copy)
+worker.postMessage(buffer, [buffer]);
+buffer.byteLength;  // 0 - it's been transferred!
+```
+
+**SharedArrayBuffer**
+
+```javascript
+// main.js
+const sharedBuffer = new SharedArrayBuffer(1024);
+const sharedArray = new Int32Array(sharedBuffer);
+
+worker.postMessage({ buffer: sharedBuffer });
+
+// Both threads can read/write sharedArray
+sharedArray[0] = 42;
+
+// worker.js
+self.onmessage = (e) => {
+  const sharedArray = new Int32Array(e.data.buffer);
+  console.log(sharedArray[0]);  // 42
+  sharedArray[0] = 100;  // Main thread sees this!
+};
+```
+
 
 ## Resources
 

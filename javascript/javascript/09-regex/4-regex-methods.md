@@ -127,6 +127,54 @@ while ((match = regex.exec('a1b22c333')) !== null) {
 
 `match()` finds matches, `replace()`/`replaceAll()` substitutes text, `split()` divides strings, `search()` finds index. Use `g` flag for global operations. `matchAll()` is best for extraction with groups. Always handle null returns from `match()`.
 
+## Code Examples
+
+**match()**
+
+```javascript
+const str = 'The rain in Spain';
+
+// Without global flag - returns first match with details
+str.match(/ain/);
+// ['ain', index: 5, input: '...', groups: undefined]
+
+// With global flag - returns all matches
+str.match(/ain/g);
+// ['ain', 'ain', 'ain']
+
+// No match returns null
+str.match(/xyz/);  // null
+
+// Safe pattern: use optional chaining
+const matches = str.match(/xyz/g) ?? [];
+```
+
+**replace() and replaceAll()**
+
+```javascript
+// replace() - first occurrence only (without g flag)
+'hello hello'.replace('hello', 'hi');   // 'hi hello'
+'hello hello'.replace(/hello/, 'hi');   // 'hi hello'
+
+// replace() with global flag - all occurrences
+'hello hello'.replace(/hello/g, 'hi');  // 'hi hi'
+
+// replaceAll() - all occurrences (ES2021)
+'hello hello'.replaceAll('hello', 'hi'); // 'hi hi'
+'hello hello'.replaceAll(/hello/g, 'hi'); // 'hi hi' (g flag required!)
+
+// With callback function
+'hello world'.replace(/\w+/g, (match) => match.toUpperCase());
+// 'HELLO WORLD'
+
+// Callback with groups
+'John Smith'.replace(/(\w+) (\w+)/, (match, first, last) => {
+  return `${last}, ${first}`;
+});
+// 'Smith, John'
+```
+
+
 ## Resources
 
 - [MDN: String.prototype.match()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/match) — match() reference

@@ -109,6 +109,52 @@ arr.entries();  // Iterator of [index, value]
 
 Iterators have next() returning {value, done}. Iterables have [Symbol.iterator] returning an iterator. Built-in types like Array, String, Map, Set are iterable. Custom iterables work with for...of, spread, and destructuring.
 
+## Code Examples
+
+**Iterator Protocol**
+
+```javascript
+// Manual iterator
+const iterator = {
+  current: 0,
+  last: 5,
+  next() {
+    if (this.current <= this.last) {
+      return { value: this.current++, done: false };
+    }
+    return { value: undefined, done: true };
+  }
+};
+
+iterator.next(); // { value: 0, done: false }
+iterator.next(); // { value: 1, done: false }
+// ... until { value: undefined, done: true }
+```
+
+**Iterable Protocol**
+
+```javascript
+const range = {
+  start: 1,
+  end: 5,
+  [Symbol.iterator]() {
+    let current = this.start;
+    const end = this.end;
+    return {
+      next() {
+        if (current <= end) {
+          return { value: current++, done: false };
+        }
+        return { done: true };
+      }
+    };
+  }
+};
+
+for (const num of range) {
+```
+
+
 ## Resources
 
 - [MDN: Iteration protocols](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols) — Iterator and iterable protocols

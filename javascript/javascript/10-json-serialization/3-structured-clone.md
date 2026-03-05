@@ -151,6 +151,48 @@ clone.data.byteLength;  // 1024
 
 `structuredClone()` is the modern way to deep clone objects. It handles Dates, Maps, Sets, circular references, and more. Functions, symbols, and DOM nodes cannot be cloned. Prototypes are not preserved. Use transfer option for large ArrayBuffers.
 
+## Code Examples
+
+**Basic Usage**
+
+```javascript
+const original = {
+  name: 'Alice',
+  scores: [95, 87, 92],
+  metadata: { created: new Date() }
+};
+
+const clone = structuredClone(original);
+
+// Changes don't affect original
+clone.scores.push(100);
+clone.metadata.created.setFullYear(2000);
+
+original.scores;  // [95, 87, 92] (unchanged)
+original.metadata.created.getFullYear();  // Original year
+```
+
+**What structuredClone Supports**
+
+```javascript
+// All these are cloned properly:
+const complex = {
+  date: new Date(),
+  regex: /hello/gi,
+  map: new Map([['a', 1]]),
+  set: new Set([1, 2, 3]),
+  arrayBuffer: new ArrayBuffer(8),
+  typedArray: new Uint8Array([1, 2, 3]),
+  blob: new Blob(['hello']),
+  error: new Error('oops')
+};
+
+const cloned = structuredClone(complex);
+cloned.date instanceof Date;  // true!
+cloned.map instanceof Map;    // true!
+```
+
+
 ## Resources
 
 - [MDN: structuredClone()](https://developer.mozilla.org/en-US/docs/Web/API/structuredClone) — structuredClone reference

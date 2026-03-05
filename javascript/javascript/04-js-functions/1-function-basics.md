@@ -119,6 +119,33 @@ function divide(a, b) {
 
 Function declarations are hoisted and can be called anywhere in their scope. Function expressions are not hoisted and must be defined before use. Use default parameters and rest parameters for flexible APIs. Functions without an explicit return statement return `undefined`.
 
+## Code Examples
+
+**Function Declaration**
+
+```javascript
+// Hoisted - can be called before definition
+greet('Alice');  // Works!
+
+function greet(name) {
+  return `Hello, ${name}!`;
+}
+```
+
+**Function Expression**
+
+```javascript
+// Not hoisted - must be defined before use
+// sayHi('Bob');  // ReferenceError!
+
+const sayHi = function(name) {
+  return `Hi, ${name}!`;
+};
+
+sayHi('Bob');  // Works!
+```
+
+
 ## Resources
 
 - [MDN: Functions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Functions) — Comprehensive guide to JavaScript functions

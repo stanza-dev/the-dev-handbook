@@ -2,7 +2,7 @@
 
 > Part of [Python Performance: JIT & Internals](https://stanza.dev/courses/python-performance)
 
-Understanding Python's JIT (PEP 744).
+Understanding Python's JIT compiler, adaptive interpreter, and the optimization pipeline from bytecode to machine code.
 
 ## Lessons
 
@@ -15,8 +15,8 @@ Understanding Python's JIT (PEP 744).
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: JIT Hot Code Quiz
-- 🧩 Multiple Choice: JIT Architecture Quiz
+- 🧩 Multiple Choice: What Triggers JIT Optimization?
+- ✏️ Fill in the Blank: JIT Code Generation Technique
 - 🔗 Matching: Optimization Tiers
 
 → [Practice in your IDE](https://stanza.dev/courses/python-performance)

@@ -133,6 +133,51 @@ obj.self = obj;  // Circular reference
 
 JSON is text-based data format with strict syntax (double quotes, no trailing commas). `JSON.stringify()` converts to string, `JSON.parse()` converts back. undefined, functions, and symbols are skipped. Circular references throw errors. Always wrap `parse()` in try/catch.
 
+## Code Examples
+
+**JSON Syntax Rules**
+
+```javascript
+// Valid JSON
+{
+  "name": "Alice",          // Keys MUST be double-quoted
+  "age": 30,                // Numbers
+  "active": true,           // Booleans
+  "address": null,          // null
+  "tags": ["admin", "user"], // Arrays
+  "profile": {              // Nested objects
+    "bio": "Developer"
+  }
+}
+
+// NOT valid in JSON (but valid in JS):
+// - Single quotes: 'name'
+// - Unquoted keys: { name: "Alice" }
+// - Trailing commas: { "a": 1, }
+// - Comments: // or /* */
+// - undefined, functions, symbols
+```
+
+**JSON.stringify()**
+
+```javascript
+const user = { name: 'Alice', age: 30 };
+
+// Basic usage
+JSON.stringify(user);  // '{"name":"Alice","age":30}'
+
+// Pretty printing (2 space indent)
+JSON.stringify(user, null, 2);
+// {
+//   "name": "Alice",
+//   "age": 30
+// }
+
+// Tab indent
+JSON.stringify(user, null, '\t');
+```
+
+
 ## Resources
 
 - [MDN: JSON](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON) — JSON object reference

@@ -141,6 +141,53 @@ parent.addEventListener('click', handler, { capture: true });
 
 Use `addEventListener` to attach event handlers. The event object contains details about the event. Use `preventDefault()` to stop default browser behavior. Use options like `once` and `passive` for specific behaviors. Always clean up listeners to prevent memory leaks.
 
+## Code Examples
+
+**Adding Event Listeners**
+
+```javascript
+const button = document.querySelector('button');
+
+// addEventListener (preferred)
+button.addEventListener('click', function(event) {
+  console.log('Clicked!', event.target);
+});
+
+// With arrow function
+button.addEventListener('click', (e) => {
+  console.log('Clicked!', e.target);
+});
+
+// Named function (easier to remove)
+function handleClick(e) {
+  console.log('Clicked!');
+}
+button.addEventListener('click', handleClick);
+button.removeEventListener('click', handleClick);
+```
+
+**The Event Object**
+
+```javascript
+element.addEventListener('click', (e) => {
+  e.target;        // Element that triggered the event
+  e.currentTarget; // Element the listener is attached to
+  e.type;          // 'click'
+  e.timeStamp;     // When the event occurred
+  
+  // Mouse events
+  e.clientX, e.clientY;  // Viewport coordinates
+  e.pageX, e.pageY;      // Page coordinates
+  e.button;              // Which mouse button
+  
+  // Keyboard events
+  e.key;         // 'Enter', 'a', 'ArrowUp'
+  e.code;        // 'Enter', 'KeyA', 'ArrowUp'
+  e.altKey, e.ctrlKey, e.shiftKey, e.metaKey;
+});
+```
+
+
 ## Resources
 
 - [MDN: EventTarget.addEventListener()](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener) — addEventListener reference

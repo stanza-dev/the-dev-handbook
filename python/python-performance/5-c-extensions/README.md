@@ -1,8 +1,8 @@
-# 🔗 C-Extensions & Integration
+# 🔗 C-Extensions & Native Code
 
 > Part of [Python Performance: JIT & Internals](https://stanza.dev/courses/python-performance)
 
-Extending Python with C/Rust.
+Extending Python with C, Cython, and Rust for maximum performance in critical code paths.
 
 ## Lessons
 
@@ -15,8 +15,8 @@ Extending Python with C/Rust.
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Extension Technology
-- 🧩 Challenge: Rust-Powered Libraries
+- 🧩 Multiple Choice: Extension Technology Quiz
+- 🧩 Challenge: Rust-Powered Python Libraries
 - ✏️ Fill in the Blank: C Extension Header
 
 → [Practice in your IDE](https://stanza.dev/courses/python-performance)

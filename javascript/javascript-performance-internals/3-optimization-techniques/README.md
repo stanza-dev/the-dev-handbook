@@ -1,8 +1,8 @@
-# 🚀 Code Optimization
+# 🚀 Runtime Optimization Patterns
 
 > Part of [JavaScript Under the Hood](https://stanza.dev/courses/javascript-performance-internals)
 
-Writing faster JavaScript code.
+Practical techniques for writing faster JavaScript in the browser and Node.js.
 
 ## Lessons
 
@@ -15,8 +15,8 @@ Writing faster JavaScript code.
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: When to Debounce
-- 🧩 Multiple Choice: When to Throttle
-- 🧩 Multiple Choice: DOM Batching Benefit
+- ✏️ Fill in the Blank: Debounce vs Throttle
+- 🧩 Challenge: DOM Update Pipeline
+- 🧩 Challenge: Throttle Frame Rate
 
 → [Practice in your IDE](https://stanza.dev/courses/javascript-performance-internals)

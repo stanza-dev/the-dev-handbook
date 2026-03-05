@@ -13,10 +13,12 @@ Patterns for communication between objects.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **5 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Observer in the Browser
-- 🧩 Multiple Choice: Strategy Pattern Use Case
+- ✏️ Fill in the Blank: Strategy Pattern Core Idea
 - 🧩 Multiple Choice: Command Pattern Feature
+- 🧩 Challenge: Command Pattern Execution
+- 🧩 Challenge: Behavioral Pattern Characteristics
 
 → [Practice in your IDE](https://stanza.dev/courses/javascript-design-patterns)
