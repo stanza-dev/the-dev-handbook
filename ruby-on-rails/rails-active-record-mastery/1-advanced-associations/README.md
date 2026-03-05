@@ -8,14 +8,16 @@ Master complex relationship patterns beyond basic has_many and belongs_to
 
 1. [Polymorphic Associations](./1-polymorphic-associations.md)
 2. [Self-Referential Associations](./2-referential-associations.md)
-3. [Single Table Inheritance (STI)](./3-table-inheritance.md)
+3. [Delegated Types](./3-delegated-types.md)
+4. [Single Table Inheritance (STI)](./4-table-inheritance.md)
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
+- ✏️ Fill in the Blank: Polymorphic Association Basics
 - 🧩 Multiple Choice: Polymorphic Columns
-- 🧩 Multiple Choice: STI Type Column
-- 🧩 Multiple Choice: Self Join Class Name
+- ✏️ Fill in the Blank: STI Type Column
+- 🧩 Challenge: Self Join Class Name
 
 → [Practice in your IDE](https://stanza.dev/courses/rails-active-record-mastery)

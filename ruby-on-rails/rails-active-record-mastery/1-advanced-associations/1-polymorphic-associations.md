@@ -5,11 +5,22 @@ source_lesson: "rails-active-record-mastery-polymorphic-associations"
 
 # Polymorphic Associations
 
-Polymorphic associations allow a model to belong to multiple other models on a single association. This is perfect for features like comments that can belong to articles, photos, or videos.
+## Introduction
+Polymorphic associations allow a model to belong to multiple other models on a single association. If you have ever needed comments on articles, photos, and videos without duplicating tables, polymorphic associations are the answer.
 
-## The Problem
+## Key Concepts
+- **Polymorphic association**: A single association that can point to records in different tables, identified by a `_type` and `_id` column pair.
+- **`commentable`**: A conventional naming pattern for the polymorphic interface (the "able" suffix signals polymorphism).
+- **`as:` option**: Used on the `has_many` side to declare which polymorphic interface a model participates in.
 
-Imagine you want comments on multiple types of content:
+## Real World Context
+Almost every production Rails application has at least one polymorphic association. Comments, attachments, tags, likes, and activity feeds are classic examples. Without polymorphism, you would need a separate join table or model for every combination, leading to massive code duplication.
+
+## Deep Dive
+
+### The Problem
+
+Imagine you want comments on multiple types of content. Without polymorphism, you would need separate models:
 
 ```ruby
 # Without polymorphism, you'd need:
@@ -26,9 +37,9 @@ class VideoComment < ApplicationRecord
 end
 ```
 
-This leads to code duplication and separate tables for each.
+This leads to code duplication and separate tables for each type.
 
-## The Polymorphic Solution
+### The Polymorphic Solution
 
 With polymorphism, one Comment model works for all:
 
@@ -54,12 +65,14 @@ class Video < ApplicationRecord
 end
 ```
 
-## The Migration
+The `as: :commentable` option tells Rails that this model participates in the `commentable` polymorphic interface.
 
-Polymorphic associations need two columns: `_type` and `_id`:
+### The Migration
+
+Polymorphic associations need two columns, `_type` and `_id`:
 
 ```ruby
-class CreateComments < ActiveRecord::Migration[8.0]
+class CreateComments < ActiveRecord::Migration[8.1]
   def change
     create_table :comments do |t|
       t.text :body
@@ -73,9 +86,9 @@ class CreateComments < ActiveRecord::Migration[8.0]
 end
 ```
 
-The `commentable_type` stores the class name ("Article", "Photo", etc.).
+The `commentable_type` stores the class name ("Article", "Photo", etc.) and `commentable_id` stores the primary key of that record.
 
-## Using Polymorphic Associations
+### Using Polymorphic Associations
 
 ```ruby
 # Create comments on different types
@@ -96,15 +109,7 @@ comment.commentable_type   # => "Article"
 comment.commentable_id     # => 1
 ```
 
-## Common Use Cases
-
-- **Comments**: On posts, photos, videos, products
-- **Attachments**: Files attached to messages, tasks, projects
-- **Tags/Taggings**: Tags on articles, products, users
-- **Likes/Favorites**: Users liking various content types
-- **Activity Feeds**: Tracking actions on different models
-
-## Querying Polymorphic Associations
+### Querying Polymorphic Associations
 
 ```ruby
 # Find all comments on articles
@@ -119,11 +124,61 @@ Comment.includes(:commentable).each do |comment|
 end
 ```
 
-## Limitations
+Note that eager loading polymorphic associations issues one query per type, which can be expensive if you have many types.
 
-- Cannot use foreign key constraints (type varies)
-- Eager loading loads each type separately
-- Need to handle each type differently in views
+### Rails 8.1 Deprecation Support
+
+Rails 8.1 introduces the `deprecated: true` option for associations, which logs a deprecation warning whenever the association is accessed:
+
+```ruby
+class Author < ApplicationRecord
+  has_many :legacy_posts, deprecated: true
+end
+```
+
+This is useful when migrating away from a polymorphic pattern or renaming associations.
+
+## Common Pitfalls
+1. **Cannot use foreign key constraints** -- Because the `_type` column means the `_id` can reference different tables, the database cannot enforce referential integrity. Use application-level validations instead.
+2. **N+1 queries on eager loading** -- `includes(:commentable)` issues separate queries per type. For performance-critical pages, consider a denormalized cache column or a different design.
+3. **Orphaned records** -- Without foreign keys, deleting a parent does not cascade. Always use `dependent: :destroy` on the `has_many` side.
+
+## Best Practices
+1. **Index the polymorphic columns** -- Always add a composite index on `[commentable_type, commentable_id]` for query performance.
+2. **Use `dependent: :destroy`** -- Since you cannot rely on database-level cascading, explicitly declare cleanup behavior on the parent model.
+3. **Consider delegated types for complex cases** -- If your polymorphic types have very different attributes, Rails 6.1+ delegated types may be a better fit.
+
+## Summary
+- Polymorphic associations let one model belong to many different models via `_type` and `_id` columns.
+- Use `belongs_to :x, polymorphic: true` and `has_many :items, as: :x`.
+- You cannot use database foreign key constraints with polymorphic associations.
+- Eager loading issues one query per type, so be mindful of performance.
+- Common uses include comments, attachments, tags, likes, and activity feeds.
+
+## Code Examples
+
+**Defining and using a polymorphic association -- Comment can belong to any model that declares `has_many :comments, as: :commentable`**
+
+```ruby
+# app/models/comment.rb
+class Comment < ApplicationRecord
+  belongs_to :commentable, polymorphic: true
+end
+
+# app/models/article.rb
+class Article < ApplicationRecord
+  has_many :comments, as: :commentable, dependent: :destroy
+end
+
+# Usage
+article = Article.create(title: "Rails Guide")
+article.comments.create(body: "Great article!")
+
+comment = Comment.first
+comment.commentable       # => #<Article ...>
+comment.commentable_type  # => "Article"
+```
+
 
 ## Resources
 

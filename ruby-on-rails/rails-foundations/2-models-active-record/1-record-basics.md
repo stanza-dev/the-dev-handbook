@@ -5,73 +5,70 @@ source_lesson: "rails-foundations-active-record-basics"
 
 # Introduction to Active Record
 
-Active Record is Rails' **Object-Relational Mapping (ORM)** layer. It connects your Ruby objects to database tables, allowing you to work with data using Ruby instead of SQL.
+## Introduction
 
-## What is an ORM?
+Active Record is Rails' Object-Relational Mapping (ORM) layer. It lets you interact with your database using Ruby objects instead of writing raw SQL, making database operations intuitive and productive.
 
-An ORM maps:
-- **Database tables** → Ruby classes (Models)
-- **Table rows** → Ruby objects (Instances)
-- **Table columns** → Object attributes
+## Key Concepts
+
+- **ORM (Object-Relational Mapping)**: A technique that maps database tables to Ruby classes, rows to objects, and columns to attributes.
+- **Active Record**: Rails' implementation of the ORM pattern, named after Martin Fowler's Active Record design pattern.
+- **Migration**: A Ruby class that defines changes to your database schema in a version-controlled way.
+- **Naming conventions**: Rails automatically maps class names to table names (e.g., `User` -> `users`, `LineItem` -> `line_items`).
+
+## Real World Context
+
+Without an ORM, you would write raw SQL for every database operation. Active Record lets you write `User.find(1)` instead of `SELECT * FROM users WHERE id = 1`. This makes code more readable, portable across databases, and less prone to SQL injection vulnerabilities.
+
+## Deep Dive
+
+### What an ORM Maps
 
 ```
 Database Table: users          Ruby Class: User
-┌────┬─────────┬─────────────┐  ┌─────────────────────┐
-│ id │  name   │    email    │  │ class User          │
-├────┼─────────┼─────────────┤  │   attr: id          │
-│ 1  │ "Alice" │ "a@test.com"│◄─┤   attr: name        │
-│ 2  │ "Bob"   │ "b@test.com"│  │   attr: email       │
-└────┴─────────┴─────────────┘  └─────────────────────┘
++----+---------+-------------+  +---------------------+
+| id |  name   |    email    |  | class User          |
++----+---------+-------------+  |   attr: id          |
+| 1  | "Alice" | "a@test.com"|<-|   attr: name        |
+| 2  | "Bob"   | "b@test.com"|  |   attr: email       |
++----+---------+-------------+  +---------------------+
 ```
 
-## Creating Your First Model
-
-Generate a model using the Rails generator:
+### Creating Your First Model
 
 ```bash
 bin/rails generate model Article title:string body:text
 ```
 
-This creates:
-1. **Model file**: `app/models/article.rb`
-2. **Migration file**: `db/migrate/XXXXXX_create_articles.rb`
-
-### The Model Class
+This creates a model file and a migration:
 
 ```ruby
 # app/models/article.rb
 class Article < ApplicationRecord
-  # That's it! Active Record handles the rest
+  # Active Record handles everything
 end
 ```
 
-By inheriting from `ApplicationRecord`, your class gains all Active Record functionality.
-
-### The Migration
-
 ```ruby
 # db/migrate/20240101000000_create_articles.rb
-class CreateArticles < ActiveRecord::Migration[8.0]
+class CreateArticles < ActiveRecord::Migration[8.1]
   def change
     create_table :articles do |t|
       t.string :title
       t.text :body
-
-      t.timestamps  # Adds created_at and updated_at
+      t.timestamps
     end
   end
 end
 ```
 
-Run the migration to create the table:
+Run the migration:
 
 ```bash
 bin/rails db:migrate
 ```
 
-## Naming Conventions
-
-Active Record uses **conventions** to map classes to tables:
+### Naming Conventions
 
 | Model Class | Table Name | File Name |
 |-------------|------------|------------|
@@ -80,35 +77,59 @@ Active Record uses **conventions** to map classes to tables:
 | `LineItem` | `line_items` | `line_item.rb` |
 | `Person` | `people` | `person.rb` |
 
-Rails automatically:
-- Pluralizes class names for table names
-- Uses snake_case for multi-word tables
-- Handles irregular plurals (person → people)
-
-## The Rails Console
-
-Test your models interactively:
-
-```bash
-bin/rails console
-```
-
-In the console:
+### Using the Rails Console
 
 ```ruby
-# Create a new article
-article = Article.new(title: "Hello Rails", body: "My first article!")
-article.save
-# => true
+bin/rails console
 
-# Or create in one step
+article = Article.new(title: "Hello Rails", body: "My first article!")
+article.save   # => true
+
 article = Article.create(title: "Second Post", body: "More content")
 
-# Find articles
-Article.all          # All articles
-Article.first        # First article
-Article.find(1)      # Find by ID
+Article.all    # All articles
+Article.first  # First article
+Article.find(1) # Find by ID
 ```
+
+## Common Pitfalls
+
+- **Forgetting to run migrations**: After generating a model, you must run `bin/rails db:migrate` before using it.
+- **Fighting naming conventions**: Don't manually set table names unless absolutely necessary. Follow Rails conventions.
+- **Not using the console**: The Rails console (`bin/rails c`) is the fastest way to test model behavior interactively.
+
+## Best Practices
+
+- Always use generators (`bin/rails generate model`) to create models and migrations together.
+- Run `bin/rails db:migrate` immediately after creating a migration.
+- Use `bin/rails console` to explore and test your models.
+
+## Summary
+
+- Active Record maps database tables to Ruby classes, rows to objects, and columns to attributes.
+- Generate models with `bin/rails generate model Name field:type`.
+- Migrations define schema changes; run them with `bin/rails db:migrate`.
+- Rails naming conventions (e.g., `User` -> `users`) eliminate manual configuration.
+
+## Code Examples
+
+**A minimal Active Record model inherits from ApplicationRecord, gaining CRUD operations, querying, and database mapping automatically.**
+
+```ruby
+# Generate a model
+# bin/rails generate model Article title:string body:text
+
+class Article < ApplicationRecord
+  # Inheriting from ApplicationRecord gives you
+  # all Active Record functionality automatically
+end
+
+# In the Rails console:
+article = Article.create(title: "Hello", body: "World")
+Article.find(1)   # => #<Article id: 1, title: "Hello"...>
+Article.all       # => all articles
+```
+
 
 ## Resources
 

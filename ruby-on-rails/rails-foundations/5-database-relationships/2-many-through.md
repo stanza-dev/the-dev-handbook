@@ -5,34 +5,36 @@ source_lesson: "rails-foundations-has-many-through"
 
 # Many-to-Many with has_many :through
 
-When two models need to relate to each other in both directions, you need a many-to-many relationship. Rails handles this with `has_many :through`.
+## Introduction
 
-## The Problem
+When two models need to relate to each other in both directions, you need a many-to-many relationship. Rails handles this elegantly with `has_many :through`, using a join model to connect the two sides.
 
-Consider articles and tags:
-- An article can have many tags
-- A tag can belong to many articles
+## Key Concepts
 
-You need a **join table** to connect them.
+- **Many-to-many relationship**: A relationship where both sides can have multiple associated records (e.g., articles have many tags, tags have many articles).
+- **Join model**: An intermediate model (e.g., `ArticleTag`) that holds the foreign keys for both sides.
+- **`has_many :through`**: Declares a many-to-many association that traverses through a join model.
+- **`has_and_belongs_to_many` (HABTM)**: A simpler but less flexible alternative that doesn't use a join model.
 
-## Setting Up has_many :through
+## Real World Context
+
+Many-to-many relationships appear everywhere: students enroll in courses, users have roles, products belong to categories. `has_many :through` is preferred over HABTM because the join model can hold additional attributes (e.g., enrollment date, role permissions) and supports validations and callbacks.
+
+## Deep Dive
 
 ### The Models
 
 ```ruby
-# app/models/article.rb
 class Article < ApplicationRecord
   has_many :article_tags
   has_many :tags, through: :article_tags
 end
 
-# app/models/tag.rb
 class Tag < ApplicationRecord
   has_many :article_tags
   has_many :articles, through: :article_tags
 end
 
-# app/models/article_tag.rb (the join model)
 class ArticleTag < ApplicationRecord
   belongs_to :article
   belongs_to :tag
@@ -42,8 +44,7 @@ end
 ### The Migrations
 
 ```ruby
-# Create tags table
-class CreateTags < ActiveRecord::Migration[8.0]
+class CreateTags < ActiveRecord::Migration[8.1]
   def change
     create_table :tags do |t|
       t.string :name
@@ -52,17 +53,13 @@ class CreateTags < ActiveRecord::Migration[8.0]
   end
 end
 
-# Create join table
-class CreateArticleTags < ActiveRecord::Migration[8.0]
+class CreateArticleTags < ActiveRecord::Migration[8.1]
   def change
     create_table :article_tags do |t|
       t.references :article, null: false, foreign_key: true
       t.references :tag, null: false, foreign_key: true
-
       t.timestamps
     end
-
-    # Prevent duplicate associations
     add_index :article_tags, [:article_id, :tag_id], unique: true
   end
 end
@@ -71,81 +68,78 @@ end
 ### Using the Association
 
 ```ruby
-# Create some tags
 ruby_tag = Tag.create(name: "Ruby")
 rails_tag = Tag.create(name: "Rails")
 
-# Create an article with tags
 article = Article.create(title: "Learning Rails")
 article.tags << ruby_tag
 article.tags << rails_tag
 
-# Or assign all at once
-article.tags = [ruby_tag, rails_tag]
-
-# Query both directions
 article.tags          # => [ruby_tag, rails_tag]
 ruby_tag.articles     # => [article]
-
-# Add tags by ID
-article.tag_ids = [1, 2, 3]
+article.tag_ids = [1, 2, 3]  # Assign by IDs
 ```
 
-## Adding Attributes to the Join
-
-The join model can have its own attributes:
+### Adding Attributes to the Join
 
 ```ruby
 class ArticleTag < ApplicationRecord
   belongs_to :article
   belongs_to :tag
-
   # Additional column: position
 end
 
-# Create with extra attributes
 article.article_tags.create(tag: ruby_tag, position: 1)
 ```
 
-## has_and_belongs_to_many (HABTM)
+### When to Use `has_many :through` vs HABTM
 
-A simpler but less flexible alternative:
+Use `has_many :through` when you need:
+- Additional attributes on the join
+- Validations or callbacks on the join
+- To query the join model directly
+
+## Common Pitfalls
+
+- **Forgetting the unique index**: Without `add_index :article_tags, [:article_id, :tag_id], unique: true`, duplicate associations can be created.
+- **Missing the join model declaration**: Both sides need `has_many :article_tags` in addition to the `:through` association.
+- **Using HABTM when you need join attributes**: Start with `has_many :through` since you can always add attributes to the join model later.
+
+## Best Practices
+
+- Always use `has_many :through` over HABTM for new applications.
+- Add a unique composite index on the join table to prevent duplicates.
+- Declare the join model association (`has_many :article_tags`) before the through association.
+
+## Summary
+
+- `has_many :through` creates many-to-many relationships using a join model.
+- The join model holds foreign keys for both sides and can have additional attributes.
+- Both sides declare `has_many :join_model` and `has_many :other_model, through: :join_model`.
+- Add a unique composite index to prevent duplicate associations.
+- Prefer `has_many :through` over HABTM for flexibility.
+
+## Code Examples
+
+**A many-to-many relationship using has_many :through. The ArticleTag join model connects articles and tags, allowing both sides to access the other.**
 
 ```ruby
 class Article < ApplicationRecord
-  has_and_belongs_to_many :tags
+  has_many :article_tags
+  has_many :tags, through: :article_tags
 end
 
 class Tag < ApplicationRecord
-  has_and_belongs_to_many :articles
+  has_many :article_tags
+  has_many :articles, through: :article_tags
+end
+
+class ArticleTag < ApplicationRecord
+  belongs_to :article
+  belongs_to :tag
 end
 ```
 
-**Use `has_many :through` instead** when you need:
-- Additional attributes on the join
-- Validations on the join
-- Callbacks on the join
-- To query the join model directly
-
-## Practical Example: Forms with Checkboxes
-
-```erb
-<%= form_with model: @article do |f| %>
-  <% Tag.all.each do |tag| %>
-    <label>
-      <%= check_box_tag "article[tag_ids][]", tag.id, @article.tag_ids.include?(tag.id) %>
-      <%= tag.name %>
-    </label>
-  <% end %>
-<% end %>
-```
-
-```ruby
-# In controller
-def article_params
-  params.require(:article).permit(:title, :body, tag_ids: [])
-end
-```
 
 ## Resources
 

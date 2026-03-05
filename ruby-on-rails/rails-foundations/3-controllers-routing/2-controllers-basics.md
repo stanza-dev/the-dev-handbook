@@ -5,66 +5,41 @@ source_lesson: "rails-foundations-controllers-basics"
 
 # Understanding Controllers
 
-Controllers are the middlemen of your Rails application. They receive HTTP requests, interact with models, and render responses.
+## Introduction
 
-## Controller Basics
+Controllers are the coordinators of your Rails application. They receive HTTP requests from the router, interact with models to fetch or modify data, and decide what response to send back to the browser.
 
-Generate a controller:
+## Key Concepts
 
-```bash
-bin/rails generate controller Articles index show new create
-```
+- **Controller**: A Ruby class that inherits from `ApplicationController` and contains action methods.
+- **Action**: A public method in a controller that handles a specific HTTP request.
+- **Instance variables** (`@var`): Variables prefixed with `@` that are automatically shared with the view template.
+- **Implicit rendering**: Rails automatically renders the view template matching the controller and action name.
 
-This creates `app/controllers/articles_controller.rb`:
+## Real World Context
 
-```ruby
-class ArticlesController < ApplicationController
-  def index
-    # Handle GET /articles
-  end
+Controllers enforce the separation of concerns in MVC. Keeping controllers thin and pushing business logic into models is a key Rails best practice. A well-structured controller reads like a simple script: find the data, do the thing, respond.
 
-  def show
-    # Handle GET /articles/:id
-  end
+## Deep Dive
 
-  def new
-    # Handle GET /articles/new
-  end
-
-  def create
-    # Handle POST /articles
-  end
-end
-```
-
-## Controller Actions
-
-Each public method in a controller is an "action" that handles requests:
+### A Complete CRUD Controller
 
 ```ruby
 class ArticlesController < ApplicationController
-  # GET /articles
   def index
     @articles = Article.all
-    # Automatically renders app/views/articles/index.html.erb
   end
 
-  # GET /articles/:id
   def show
     @article = Article.find(params[:id])
-    # Automatically renders app/views/articles/show.html.erb
   end
 
-  # GET /articles/new
   def new
     @article = Article.new
-    # Automatically renders app/views/articles/new.html.erb
   end
 
-  # POST /articles
   def create
     @article = Article.new(article_params)
-
     if @article.save
       redirect_to @article, notice: "Article created!"
     else
@@ -72,15 +47,12 @@ class ArticlesController < ApplicationController
     end
   end
 
-  # GET /articles/:id/edit
   def edit
     @article = Article.find(params[:id])
   end
 
-  # PATCH/PUT /articles/:id
   def update
     @article = Article.find(params[:id])
-
     if @article.update(article_params)
       redirect_to @article, notice: "Article updated!"
     else
@@ -88,59 +60,77 @@ class ArticlesController < ApplicationController
     end
   end
 
-  # DELETE /articles/:id
   def destroy
     @article = Article.find(params[:id])
     @article.destroy
     redirect_to articles_path, notice: "Article deleted!"
   end
+
+  private
+  def article_params
+    params.require(:article).permit(:title, :body, :published)
+  end
 end
 ```
 
-## Instance Variables
-
-Variables prefixed with `@` are available in views:
+### Rendering vs Redirecting
 
 ```ruby
-def show
-  @article = Article.find(params[:id])  # Available in view
-  article = Article.last                 # NOT available in view
-end
-```
-
-## Rendering and Redirecting
-
-### Implicit Rendering
-
-Rails automatically renders `app/views/controller_name/action_name.html.erb`:
-
-```ruby
-def index
-  @articles = Article.all
-  # Automatically renders app/views/articles/index.html.erb
-end
-```
-
-### Explicit Rendering
-
-```ruby
-render :new                    # Render app/views/articles/new.html.erb
-render "products/show"         # Render different controller's view
-render plain: "Hello"          # Render plain text
+render :new                    # Render a view template
 render json: @article          # Render JSON
-render status: :not_found      # Render with status code
+redirect_to @article           # Send a redirect response
+redirect_back fallback_location: root_path
 ```
 
-### Redirecting
+**Key difference**: `render` displays a view within the current request. `redirect_to` sends a new HTTP request.
+
+## Common Pitfalls
+
+- **Fat controllers**: Putting business logic in controllers instead of models makes code hard to test and reuse.
+- **Double render errors**: Calling both `render` and `redirect_to` in the same action raises an error. Use `return` after early renders.
+- **Forgetting the `@` prefix**: Local variables (without `@`) are not available in views.
+
+## Best Practices
+
+- Keep controllers thin: move business logic to models or service objects.
+- Use `redirect_to` after successful mutations (POST/PATCH/DELETE) to follow the Post-Redirect-Get pattern.
+- Always set the HTTP status code on error renders (`:unprocessable_entity` for validation errors).
+
+## Summary
+
+- Controllers inherit from `ApplicationController` and contain action methods.
+- Instance variables (`@article`) are automatically shared with views.
+- Rails implicitly renders the view matching the controller/action name.
+- Use `redirect_to` after successful writes, `render` for displaying forms with errors.
+- Keep controllers thin by delegating logic to models.
+
+## Code Examples
+
+**A controller with index and create actions demonstrating implicit rendering, redirect after success, and re-rendering the form on validation failure.**
 
 ```ruby
-redirect_to articles_path      # Redirect to index
-redirect_to @article           # Redirect to show (uses article_path(@article))
-redirect_to root_path          # Redirect to homepage
-redirect_back fallback_location: root_path  # Go back or fallback
+class ArticlesController < ApplicationController
+  def index
+    @articles = Article.all
+    # Renders app/views/articles/index.html.erb automatically
+  end
+
+  def create
+    @article = Article.new(article_params)
+    if @article.save
+      redirect_to @article, notice: "Article created!"
+    else
+      render :new, status: :unprocessable_entity
+    end
+  end
+
+  private
+  def article_params
+    params.require(:article).permit(:title, :body)
+  end
+end
 ```
 
-**Key difference**: `render` displays a view, `redirect_to` sends a new HTTP request.
 
 ## Resources
 

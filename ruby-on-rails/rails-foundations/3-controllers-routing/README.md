@@ -13,10 +13,11 @@ Handle HTTP requests and define URL structure
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Resources Routes
-- 🧩 Multiple Choice: Path Helper Output
+- 🧩 Challenge: Resources Routes
+- ✏️ Fill in the Blank: Path Helper Output
 - 🧩 Multiple Choice: Strong Params Output
+- 🧩 Challenge: Resource Route HTTP Methods
 
 → [Practice in your IDE](https://stanza.dev/courses/rails-foundations)

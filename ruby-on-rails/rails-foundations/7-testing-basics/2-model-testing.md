@@ -5,19 +5,26 @@ source_lesson: "rails-foundations-model-testing"
 
 # Testing Models
 
-Model tests verify your business logic, validations, associations, and methods work correctly.
+## Introduction
 
-## Generating Model Tests
+Model tests verify your business logic, validations, associations, and custom methods work correctly. They are the fastest tests to write and run, and they cover the core logic of your application.
 
-```bash
-bin/rails generate model Article title:string body:text
-# Creates: test/models/article_test.rb
-```
+## Key Concepts
 
-## Testing Validations
+- **Model test**: A test class inheriting from `ActiveSupport::TestCase` that tests a model's validations, methods, scopes, and associations.
+- **Validation testing**: Verifying that models accept valid data and reject invalid data with appropriate error messages.
+- **Association testing**: Confirming that model relationships (has_many, belongs_to) work correctly.
+- **Scope testing**: Ensuring named scopes return the correct subset of records.
+
+## Real World Context
+
+Model tests are the foundation of your test suite. They run in milliseconds, require no browser, and test the logic that matters most. A well-tested model gives you confidence that your business rules are enforced regardless of how the data is accessed (web, API, console).
+
+## Deep Dive
+
+### Testing Validations
 
 ```ruby
-# app/models/article.rb
 class Article < ApplicationRecord
   validates :title, presence: true, length: { minimum: 5 }
   validates :body, presence: true
@@ -25,9 +32,6 @@ end
 ```
 
 ```ruby
-# test/models/article_test.rb
-require "test_helper"
-
 class ArticleTest < ActiveSupport::TestCase
   test "valid with all attributes" do
     article = Article.new(title: "Hello World", body: "Content")
@@ -43,35 +47,14 @@ class ArticleTest < ActiveSupport::TestCase
   test "invalid with short title" do
     article = Article.new(title: "Hi", body: "Content")
     assert_not article.valid?
-    assert_includes article.errors[:title], "is too short (minimum is 5 characters)"
-  end
-
-  test "invalid without body" do
-    article = Article.new(title: "Hello World")
-    assert_not article.valid?
   end
 end
 ```
 
-## Testing Associations
+### Testing Associations
 
 ```ruby
-# app/models/article.rb
-class Article < ApplicationRecord
-  belongs_to :author, class_name: "User"
-  has_many :comments, dependent: :destroy
-end
-```
-
-```ruby
-# test/models/article_test.rb
 class ArticleTest < ActiveSupport::TestCase
-  test "belongs to author" do
-    article = articles(:published_article)
-    assert_respond_to article, :author
-    assert_instance_of User, article.author
-  end
-
   test "has many comments" do
     article = articles(:published_article)
     assert_respond_to article, :comments
@@ -80,7 +63,6 @@ class ArticleTest < ActiveSupport::TestCase
   test "destroys comments when destroyed" do
     article = articles(:published_article)
     article.comments.create(body: "Test comment")
-
     assert_difference "Comment.count", -1 do
       article.destroy
     end
@@ -88,55 +70,37 @@ class ArticleTest < ActiveSupport::TestCase
 end
 ```
 
-## Testing Custom Methods
+### Testing Custom Methods
 
 ```ruby
-# app/models/article.rb
 class Article < ApplicationRecord
   def published?
     published_at.present? && published_at <= Time.current
   end
 
   def reading_time
-    words_per_minute = 200
-    (body.split.size / words_per_minute.to_f).ceil
+    (body.split.size / 200.0).ceil
   end
 end
 ```
 
 ```ruby
-# test/models/article_test.rb
 class ArticleTest < ActiveSupport::TestCase
-  test "published? returns true for published articles" do
+  test "published? returns true for past dates" do
     article = Article.new(published_at: 1.day.ago)
     assert article.published?
   end
 
-  test "published? returns false for future publish date" do
-    article = Article.new(published_at: 1.day.from_now)
-    assert_not article.published?
-  end
-
   test "reading_time calculates correctly" do
-    # 400 words should be 2 minutes
     article = Article.new(body: "word " * 400)
     assert_equal 2, article.reading_time
   end
 end
 ```
 
-## Testing Scopes
+### Testing Scopes
 
 ```ruby
-# app/models/article.rb
-class Article < ApplicationRecord
-  scope :published, -> { where("published_at <= ?", Time.current) }
-  scope :recent, -> { order(created_at: :desc) }
-end
-```
-
-```ruby
-# test/models/article_test.rb
 class ArticleTest < ActiveSupport::TestCase
   test "published scope returns only published articles" do
     published = Article.create(title: "Pub", body: "x", published_at: 1.day.ago)
@@ -148,6 +112,49 @@ class ArticleTest < ActiveSupport::TestCase
   end
 end
 ```
+
+## Common Pitfalls
+
+- **Only testing the happy path**: Always test both valid and invalid cases. Test edge cases and boundary conditions.
+- **Testing Rails itself**: Don't test that `validates :title, presence: true` works. Test your specific business rules and combinations.
+- **Shared state between tests**: Each test should be independent. Use `setup` for shared setup and don't rely on test execution order.
+
+## Best Practices
+
+- Test validations by checking both valid and invalid states.
+- Test custom methods with various inputs including edge cases.
+- Use `assert_difference` to verify that create/destroy operations change record counts.
+
+## Summary
+
+- Model tests inherit from `ActiveSupport::TestCase` and live in `test/models/`.
+- Test validations by creating invalid objects and checking `errors`.
+- Test associations with `assert_respond_to` and `assert_difference` for dependent destroy.
+- Test custom methods with representative inputs and edge cases.
+- Model tests are fast and should be the largest portion of your test suite.
+
+## Code Examples
+
+**Model tests verify validations reject invalid data and associations behave correctly, including dependent destroy behavior.**
+
+```ruby
+class ArticleTest < ActiveSupport::TestCase
+  test "invalid without title" do
+    article = Article.new(body: "Content")
+    assert_not article.valid?
+    assert_includes article.errors[:title], "can't be blank"
+  end
+
+  test "destroys comments when destroyed" do
+    article = articles(:published_article)
+    article.comments.create(body: "Test")
+    assert_difference "Comment.count", -1 do
+      article.destroy
+    end
+  end
+end
+```
+
 
 ## Resources
 

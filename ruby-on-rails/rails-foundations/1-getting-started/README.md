@@ -8,14 +8,16 @@ Understand the Rails philosophy and set up your first application
 
 1. [What is Ruby on Rails?](./1-is-rails.md)
 2. [Setting Up Your Rails Environment](./2-up-environment.md)
-3. [Creating Your First Rails Application](./3-first-app.md)
+3. [Rails Directory Structure](./3-directory-structure.md)
+4. [Creating Your First Rails Application](./4-first-app.md)
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Rails Core Principle
-- 🧩 Multiple Choice: Mvc Component Model
-- 🧩 Multiple Choice: Starting the Rails Server
+- ✏️ Fill in the Blank: Rails Core Principle
+- 🧩 Multiple Choice: MVC Component Model
+- 🧩 Challenge: Starting a Rails Application
+- 🧩 Challenge: The app/ Directory
 
 → [Practice in your IDE](https://stanza.dev/courses/rails-foundations)

@@ -13,10 +13,11 @@ Master database interactions with Active Record ORM
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Active Record Find
 - 🔗 Matching: Create vs New
-- 🧩 Multiple Choice: Validation Behavior
+- ✏️ Fill in the Blank: Validation Behavior
+- 🧩 Challenge: Query Count
 
 → [Practice in your IDE](https://stanza.dev/courses/rails-foundations)

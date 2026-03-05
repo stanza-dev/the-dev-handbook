@@ -5,11 +5,21 @@ source_lesson: "rails-active-record-mastery-service-objects"
 
 # Service Objects and Form Objects
 
-Keep models thin by extracting complex business logic into service objects and form handling into form objects.
+## Introduction
+As Rails applications grow, models accumulate business logic that does not belong there. Service objects encapsulate multi-step operations involving multiple models or external services. Form objects handle complex forms that span multiple models. Both patterns keep your models focused on data access and validation.
 
-## Service Objects
+## Key Concepts
+- **Service object**: A plain Ruby class that encapsulates a single business operation (e.g., checkout, registration, import).
+- **Form object**: A class that includes `ActiveModel::Model` to handle form data that spans multiple models.
+- **Single Responsibility**: Each service object does one thing. Name it as a verb: `CreateOrder`, `ProcessPayment`, `ImportUsers`.
+- **`ActiveModel::Model`**: A mixin that gives plain classes validation, error handling, and form builder compatibility.
 
-Encapsulate complex operations that involve multiple models or external services:
+## Real World Context
+A checkout process touches orders, payments, inventory, notifications, and analytics. Putting all this in `Order#save` callbacks makes the model untestable and fragile. A `CheckoutService` class is explicit, testable, and easy to reason about. Every mature Rails codebase uses service objects for complex operations.
+
+## Deep Dive
+
+### Service Objects
 
 ```ruby
 # app/services/order_checkout_service.rb
@@ -30,9 +40,6 @@ class OrderCheckoutService
   rescue PaymentError => e
     @order.errors.add(:base, e.message)
     false
-  rescue InventoryError => e
-    @order.errors.add(:base, "Some items are out of stock")
-    false
   end
 
   private
@@ -50,11 +57,9 @@ class OrderCheckoutService
       amount: @order.total,
       card: @payment_params
     )
-
     unless payment.success?
       raise PaymentError, payment.error_message
     end
-
     @order.update!(payment_id: payment.id, status: "paid")
   end
 
@@ -67,29 +72,16 @@ class OrderCheckoutService
 
   def send_notifications
     OrderMailer.confirmation(@order).deliver_later
-    SlackNotifier.new_order(@order)
   end
 end
 
 # Usage in controller
-class CheckoutsController < ApplicationController
-  def create
-    @order = current_cart.to_order
-
-    result = OrderCheckoutService.new(@order, payment_params).call
-
-    if result
-      redirect_to order_path(@order), notice: "Order placed!"
-    else
-      render :new
-    end
-  end
-end
+result = OrderCheckoutService.new(@order, payment_params).call
 ```
 
-## Form Objects
+The service wraps everything in a transaction. If any step fails, the entire operation rolls back.
 
-Handle complex forms that don't map directly to a single model:
+### Form Objects
 
 ```ruby
 # app/forms/registration_form.rb
@@ -99,18 +91,13 @@ class RegistrationForm
 
   attribute :email, :string
   attribute :password, :string
-  attribute :password_confirmation, :string
   attribute :company_name, :string
   attribute :terms_accepted, :boolean
 
   validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, presence: true, length: { minimum: 8 }
-  validates :password_confirmation, presence: true
   validates :company_name, presence: true
   validates :terms_accepted, acceptance: true
-
-  validate :passwords_match
-  validate :email_not_taken
 
   def save
     return false unless valid?
@@ -118,13 +105,10 @@ class RegistrationForm
     ActiveRecord::Base.transaction do
       @company = Company.create!(name: company_name)
       @user = User.create!(
-        email: email,
-        password: password,
-        company: @company,
-        role: "admin"
+        email: email, password: password,
+        company: @company, role: "admin"
       )
     end
-
     true
   rescue ActiveRecord::RecordInvalid => e
     errors.add(:base, e.message)
@@ -134,51 +118,12 @@ class RegistrationForm
   def user
     @user
   end
-
-  private
-
-  def passwords_match
-    if password != password_confirmation
-      errors.add(:password_confirmation, "doesn't match password")
-    end
-  end
-
-  def email_not_taken
-    if User.exists?(email: email)
-      errors.add(:email, "is already taken")
-    end
-  end
-end
-
-# Usage in controller
-class RegistrationsController < ApplicationController
-  def new
-    @form = RegistrationForm.new
-  end
-
-  def create
-    @form = RegistrationForm.new(registration_params)
-
-    if @form.save
-      sign_in @form.user
-      redirect_to dashboard_path
-    else
-      render :new
-    end
-  end
-
-  private
-
-  def registration_params
-    params.require(:registration_form).permit(
-      :email, :password, :password_confirmation,
-      :company_name, :terms_accepted
-    )
-  end
 end
 ```
 
-## When to Use Each Pattern
+Form objects validate all inputs before touching the database, and they work seamlessly with Rails form builders.
+
+### When to Use Each Pattern
 
 | Pattern | Use When |
 |---------|----------|
@@ -186,6 +131,51 @@ end
 | **Query Object** | Complex queries with many parameters |
 | **Service Object** | Multi-step operations, external services |
 | **Form Object** | Forms spanning multiple models |
+
+## Common Pitfalls
+1. **Service objects that do too much** -- A service should do one operation. If it grows beyond 100 lines, split it.
+2. **Skipping validations in service objects** -- Always validate inputs before executing. Use `valid?` or form objects.
+3. **Not wrapping in transactions** -- Multi-model operations must be wrapped in `ActiveRecord::Base.transaction` to ensure atomicity.
+
+## Best Practices
+1. **Name services as verbs** -- `ProcessPayment`, `SendInvitation`, `ImportCSV` clearly communicate intent.
+2. **Return truthy/falsy or a result object** -- Consistent return values make controller logic simple.
+3. **Keep the `call` method short** -- It should read like a table of contents. Extract steps into private methods.
+
+## Summary
+- Service objects encapsulate multi-step business operations.
+- Form objects handle forms that span multiple models.
+- Both patterns keep models thin and controllers simple.
+- Wrap multi-model operations in transactions.
+- Name services as verbs and keep the `call` method short.
+
+## Code Examples
+
+**A form object using ActiveModel::Model -- validates inputs and creates multiple records in a transaction**
+
+```ruby
+class RegistrationForm
+  include ActiveModel::Model
+  include ActiveModel::Attributes
+
+  attribute :email, :string
+  attribute :password, :string
+  attribute :company_name, :string
+
+  validates :email, presence: true
+  validates :password, length: { minimum: 8 }
+
+  def save
+    return false unless valid?
+    ActiveRecord::Base.transaction do
+      @company = Company.create!(name: company_name)
+      @user = User.create!(email: email, password: password, company: @company)
+    end
+    true
+  end
+end
+```
+
 
 ## Resources
 

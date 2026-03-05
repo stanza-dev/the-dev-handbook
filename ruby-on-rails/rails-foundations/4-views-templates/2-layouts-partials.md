@@ -5,11 +5,24 @@ source_lesson: "rails-foundations-layouts-partials"
 
 # Layouts and Partials
 
-Layouts provide a consistent structure for your pages. Partials let you extract reusable view components.
+## Introduction
 
-## Layouts
+Layouts provide a consistent wrapper for every page in your application, while partials let you extract reusable view fragments. Together they keep your views DRY and maintainable.
 
-The main layout wraps all your views:
+## Key Concepts
+
+- **Layout**: A template that wraps all views, providing shared HTML structure (head, navbar, footer). Located at `app/views/layouts/application.html.erb`.
+- **`yield`**: The point in the layout where the current view's content is inserted.
+- **Partial**: A reusable view fragment whose filename starts with an underscore (e.g., `_article.html.erb`).
+- **`content_for`**: A mechanism to pass content from a view into named sections of the layout.
+
+## Real World Context
+
+Every web application needs consistent navigation, footer, and metadata across pages. Layouts handle this. When you display the same article card on the index page and the homepage, a partial prevents code duplication. Large Rails apps can have hundreds of partials.
+
+## Deep Dive
+
+### The Application Layout
 
 ```erb
 <!-- app/views/layouts/application.html.erb -->
@@ -17,110 +30,49 @@ The main layout wraps all your views:
 <html>
   <head>
     <title><%= content_for(:title) || "My App" %></title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
-    <%= csp_meta_tag %>
     <%= stylesheet_link_tag "application" %>
-    <%= javascript_importmap_tags %>
   </head>
-
   <body>
     <%= render "shared/navbar" %>
-
-    <main class="container">
+    <main>
       <% if notice %>
-        <div class="alert alert-success"><%= notice %></div>
+        <div class="alert"><%= notice %></div>
       <% end %>
-      <% if alert %>
-        <div class="alert alert-danger"><%= alert %></div>
-      <% end %>
-
       <%= yield %>
     </main>
-
     <%= render "shared/footer" %>
   </body>
 </html>
 ```
 
-### yield
-
-The `yield` statement is where your view content gets inserted.
-
-### content_for
-
-Pass content from views to layouts:
-
-```erb
-<!-- In your view -->
-<% content_for :title, "My Page Title" %>
-
-<% content_for :sidebar do %>
-  <div class="sidebar">
-    <h3>Related Links</h3>
-    ...
-  </div>
-<% end %>
-
-<!-- In your layout -->
-<title><%= content_for(:title) || "Default Title" %></title>
-<aside><%= yield :sidebar %></aside>
-```
-
-## Partials
-
-Partials are reusable view fragments. They start with an underscore:
-
-### Basic Partial
+### Partials
 
 ```erb
 <!-- app/views/articles/_article.html.erb -->
 <article>
   <h2><%= article.title %></h2>
   <p><%= article.body %></p>
-  <small>Posted <%= time_ago_in_words(article.created_at) %> ago</small>
 </article>
-```
 
-Render it:
-
-```erb
-<!-- Explicit local variable -->
+<!-- Render a single partial -->
 <%= render partial: "article", locals: { article: @article } %>
 
-<!-- Shorthand (Rails infers the local variable name) -->
+<!-- Shorthand -->
 <%= render @article %>
-```
 
-### Rendering Collections
-
-```erb
-<!-- Renders _article.html.erb for each article -->
+<!-- Render a collection -->
 <%= render @articles %>
-
-<!-- Equivalent to: -->
-<% @articles.each do |article| %>
-  <%= render article %>
-<% end %>
 ```
 
-### Partials with Spacers
+### content_for
 
 ```erb
-<%= render partial: "article", collection: @articles, spacer_template: "article_divider" %>
-```
+<!-- In your view -->
+<% content_for :title, "My Page Title" %>
 
-### Shared Partials
-
-```erb
-<!-- app/views/shared/_navbar.html.erb -->
-<nav>
-  <%= link_to "Home", root_path %>
-  <%= link_to "Articles", articles_path %>
-</nav>
-
-<!-- Render from any view -->
-<%= render "shared/navbar" %>
+<!-- In your layout -->
+<title><%= content_for(:title) || "Default Title" %></title>
 ```
 
 ### Partials with Local Variables
@@ -132,6 +84,46 @@ Render it:
 <!-- Usage -->
 <%= render "shared/button", text: "Edit", path: edit_article_path(@article), style: "primary" %>
 ```
+
+## Common Pitfalls
+
+- **Including the underscore when rendering**: Write `render "article"`, not `render "_article"`. Rails adds the underscore automatically.
+- **Too many partials**: Extracting every line into a partial hurts readability. Extract when you have genuine reuse or a partial simplifies a complex view.
+- **Forgetting local variables**: Partials do not have access to instance variables by convention. Pass data explicitly via `locals:` or the shorthand.
+
+## Best Practices
+
+- Use the application layout for elements shared across all pages (navigation, footer, flash messages).
+- Extract partials when the same markup appears in multiple views.
+- Use `render @collection` for rendering lists, which is faster than manual loops.
+
+## Summary
+
+- Layouts wrap views with shared HTML structure; `yield` inserts the view content.
+- Partials are reusable view fragments with filenames starting with `_`.
+- Render partials with `render "name"` (without the underscore prefix).
+- `render @articles` efficiently renders a partial for each item in the collection.
+- Use `content_for` to pass content from views to specific layout sections.
+
+## Code Examples
+
+**Partials are rendered without the underscore prefix. Collections can be rendered in one call, and layouts use yield to insert view content.**
+
+```ruby
+# Rendering a partial
+# <%= render "article", article: @article %>
+
+# Rendering a collection (renders _article.html.erb for each)
+# <%= render @articles %>
+
+# Layout with yield
+# <body>
+#   <%= render "shared/navbar" %>
+#   <main><%= yield %></main>
+#   <%= render "shared/footer" %>
+# </body>
+```
+
 
 ## Resources
 

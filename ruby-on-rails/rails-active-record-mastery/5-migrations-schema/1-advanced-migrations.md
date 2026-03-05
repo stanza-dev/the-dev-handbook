@@ -5,14 +5,27 @@ source_lesson: "rails-active-record-mastery-advanced-migrations"
 
 # Advanced Migration Techniques
 
-Beyond basic table creation, migrations handle complex schema changes, data transformations, and database-specific features.
+## Introduction
+Beyond basic table creation, migrations handle complex schema changes, data transformations, and database-specific features. Mastering advanced migration techniques is essential for maintaining production databases without downtime or data loss.
 
-## Reversible Migrations
+## Key Concepts
+- **`reversible` block**: Defines separate `up` and `down` logic within a `change` method for operations Rails cannot automatically reverse.
+- **`execute`**: Runs raw SQL within a migration for database-specific features.
+- **CHECK constraint**: A database-level rule that enforces a boolean expression on column values.
+- **Partial index**: An index that only includes rows matching a condition, saving space and improving query speed.
+- **`disable_ddl_transaction!`**: Opts out of wrapping the migration in a transaction, required for concurrent index creation.
 
-Rails automatically reverses most migrations. For complex cases, use `reversible`:
+## Real World Context
+Production applications evolve constantly. You will rename columns, change types, add constraints, create database functions, and backfill data. Each operation has pitfalls that can lock tables, lose data, or break running code. Knowing the right migration technique for each scenario prevents production incidents.
+
+## Deep Dive
+
+### Reversible Migrations
+
+Rails automatically reverses most operations (like `add_column`). For complex cases, use `reversible`:
 
 ```ruby
-class AddFullNameToUsers < ActiveRecord::Migration[8.0]
+class AddFullNameToUsers < ActiveRecord::Migration[8.1]
   def change
     add_column :users, :full_name, :string
 
@@ -22,95 +35,84 @@ class AddFullNameToUsers < ActiveRecord::Migration[8.0]
           user.update_column(:full_name, "#{user.first_name} #{user.last_name}")
         end
       end
-
       dir.down do
-        # No action needed - column will be dropped
+        # No action needed -- column will be dropped
       end
     end
   end
 end
 ```
 
-Or use separate `up` and `down` methods:
+The `reversible` block lets you define forward and backward behavior while keeping the main `change` method.
+
+### Separate up and down Methods
+
+For migrations that cannot use `change` at all:
 
 ```ruby
-class ChangeStatusToInteger < ActiveRecord::Migration[8.0]
+class ChangeStatusToInteger < ActiveRecord::Migration[8.1]
   def up
-    # Add new column
     add_column :orders, :status_code, :integer, default: 0
-
-    # Migrate data
     execute <<-SQL
       UPDATE orders SET status_code = CASE status
         WHEN 'pending' THEN 0
         WHEN 'processing' THEN 1
         WHEN 'shipped' THEN 2
-        WHEN 'delivered' THEN 3
         ELSE 0
       END
     SQL
-
-    # Remove old column
     remove_column :orders, :status
-
-    # Rename new column
     rename_column :orders, :status_code, :status
   end
 
   def down
-    # Reverse the process
     add_column :orders, :status_text, :string
-
     execute <<-SQL
       UPDATE orders SET status_text = CASE status
         WHEN 0 THEN 'pending'
         WHEN 1 THEN 'processing'
         WHEN 2 THEN 'shipped'
-        WHEN 3 THEN 'delivered'
         ELSE 'pending'
       END
     SQL
-
     remove_column :orders, :status
     rename_column :orders, :status_text, :status
   end
 end
 ```
 
-## Execute Raw SQL
+### Index Options
 
 ```ruby
-class AddDatabaseFunctions < ActiveRecord::Migration[8.0]
-  def up
-    execute <<-SQL
-      CREATE OR REPLACE FUNCTION update_timestamp()
-      RETURNS TRIGGER AS $$
-      BEGIN
-        NEW.updated_at = NOW();
-        RETURN NEW;
-      END;
-      $$ LANGUAGE plpgsql;
-    SQL
-  end
+class AddIndexes < ActiveRecord::Migration[8.1]
+  def change
+    # Partial index
+    add_index :articles, :published_at, where: "published = true"
 
-  def down
-    execute "DROP FUNCTION IF EXISTS update_timestamp()"
+    # Expression index (PostgreSQL)
+    add_index :users, "LOWER(email)", name: "index_users_on_lower_email"
+  end
+end
+
+# Concurrent index (no table lock, PostgreSQL)
+class AddConcurrentIndex < ActiveRecord::Migration[8.1]
+  disable_ddl_transaction!
+
+  def change
+    add_index :large_table, :column, algorithm: :concurrently
   end
 end
 ```
 
-## Check Constraints
+Concurrent indexes require `disable_ddl_transaction!` because they cannot run inside a transaction.
+
+### Check Constraints
 
 ```ruby
-class AddConstraintsToProducts < ActiveRecord::Migration[8.0]
+class AddConstraints < ActiveRecord::Migration[8.1]
   def change
-    # Ensure price is positive
-    add_check_constraint :products, "price > 0", name: "products_price_positive"
-
-    # Ensure quantity is non-negative
-    add_check_constraint :products, "quantity >= 0", name: "products_quantity_non_negative"
-
-    # Ensure valid status
+    add_check_constraint :products, "price > 0",
+      name: "products_price_positive"
     add_check_constraint :orders,
       "status IN ('pending', 'processing', 'shipped', 'delivered')",
       name: "orders_valid_status"
@@ -118,40 +120,41 @@ class AddConstraintsToProducts < ActiveRecord::Migration[8.0]
 end
 ```
 
-## Index Options
+## Common Pitfalls
+1. **Forgetting `disable_ddl_transaction!`** -- Concurrent index creation fails inside a transaction. Always add this directive for `algorithm: :concurrently`.
+2. **Large data updates in transactions** -- Updating millions of rows in a single transaction can lock the table and exhaust memory. Use `in_batches` with `disable_ddl_transaction!`.
+3. **Non-reversible migrations without `down`** -- If you use `execute` or `remove_column` in `change`, Rails may not know how to reverse it. Always define `down` or use `reversible`.
+
+## Best Practices
+1. **Name all constraints** -- Use the `name:` option so constraints are easy to identify in error messages and rollbacks.
+2. **Use `in_batches` for data migrations** -- Process large tables in chunks to avoid locking and memory issues.
+3. **Separate schema and data migrations** -- Keep DDL changes (column additions) and DML changes (data backfills) in separate migrations for clarity.
+
+## Summary
+- Use `reversible` or separate `up`/`down` methods for operations Rails cannot auto-reverse.
+- `execute` runs raw SQL for database-specific features like functions and triggers.
+- Partial indexes and expression indexes optimize queries on subsets of data.
+- `disable_ddl_transaction!` is required for concurrent index creation.
+- Always name constraints and separate schema changes from data backfills.
+
+## Code Examples
+
+**A reversible migration that adds a column and backfills data -- the down direction drops the column automatically**
 
 ```ruby
-class AddIndexes < ActiveRecord::Migration[8.0]
+class AddFullNameWithBackfill < ActiveRecord::Migration[8.1]
   def change
-    # Partial index (only index some rows)
-    add_index :articles, :published_at, where: "published = true"
+    add_column :users, :full_name, :string
 
-    # Unique index with condition
-    add_index :users, :email, unique: true, where: "deleted_at IS NULL"
-
-    # Expression index (PostgreSQL)
-    add_index :users, "LOWER(email)", name: "index_users_on_lower_email"
-
-    # Concurrent index (no lock, PostgreSQL)
-    add_index :large_table, :column, algorithm: :concurrently
-  end
-end
-```
-
-## Bulk Changes
-
-```ruby
-class ModifyUsersTable < ActiveRecord::Migration[8.0]
-  def change
-    change_table :users, bulk: true do |t|
-      t.string :phone
-      t.string :address
-      t.remove :legacy_field
-      t.index :phone
+    reversible do |dir|
+      dir.up do
+        User.in_batches.update_all("full_name = first_name || ' ' || last_name")
+      end
     end
   end
 end
 ```
+
 
 ## Resources
 

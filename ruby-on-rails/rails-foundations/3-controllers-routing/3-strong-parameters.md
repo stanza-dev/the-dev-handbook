@@ -5,24 +5,33 @@ source_lesson: "rails-foundations-strong-parameters"
 
 # Strong Parameters and Security
 
-Strong Parameters protect your application from mass assignment vulnerabilities by explicitly whitelisting which parameters are allowed.
+## Introduction
 
-## The Problem: Mass Assignment
+Strong Parameters protect your application from mass assignment vulnerabilities by requiring you to explicitly whitelist which request parameters are allowed. This is a critical security feature built into Rails.
 
-Imagine a User model with an `admin` attribute:
+## Key Concepts
+
+- **Mass assignment**: Passing a hash of attributes directly to `create` or `update`. Without protection, attackers can set fields they should not have access to.
+- **`params.require`**: Ensures a top-level parameter key exists, raising an error if missing.
+- **`params.permit`**: Whitelists specific attributes, silently ignoring any unpermitted ones.
+- **`params.expect`**: A more explicit alternative that combines require and permit.
+
+## Real World Context
+
+Without Strong Parameters, a malicious user could add `user[admin]=true` to a form submission and grant themselves admin access. Strong Parameters ensure that only the attributes you explicitly allow can be set through user input.
+
+## Deep Dive
+
+### The Problem
 
 ```ruby
 # DANGEROUS - Never do this!
 def create
-  User.create(params[:user])
+  User.create(params[:user])  # Attacker could set admin=true!
 end
 ```
 
-A malicious user could send `user[admin]=true` and make themselves an admin!
-
-## The Solution: Strong Parameters
-
-Rails requires you to explicitly permit parameters:
+### The Solution
 
 ```ruby
 class ArticlesController < ApplicationController
@@ -32,45 +41,10 @@ class ArticlesController < ApplicationController
   end
 
   private
-
   def article_params
     params.require(:article).permit(:title, :body, :published)
   end
 end
-```
-
-## Understanding params
-
-The `params` hash contains all request parameters:
-
-```ruby
-# GET /articles?page=2&sort=title
-params[:page]  # => "2"
-params[:sort]  # => "title"
-
-# POST /articles with form data
-params[:article][:title]  # => "My Article"
-params[:article][:body]   # => "Content..."
-```
-
-## Strong Parameters Methods
-
-### require
-
-Ensures a parameter exists:
-
-```ruby
-params.require(:article)
-# Raises ActionController::ParameterMissing if :article is missing
-```
-
-### permit
-
-Whitelists allowed attributes:
-
-```ruby
-params.require(:article).permit(:title, :body)
-# Returns only title and body, ignores everything else
 ```
 
 ### Permitting Different Types
@@ -84,46 +58,11 @@ params.require(:article).permit(tag_ids: [])
 
 # Nested attributes
 params.require(:user).permit(:name, address_attributes: [:street, :city])
-
-# Hash with any keys
-params.require(:settings).permit(preferences: {})
 ```
 
-## Complete Example
+### params.expect
 
-```ruby
-class ArticlesController < ApplicationController
-  def create
-    @article = Article.new(article_params)
-
-    if @article.save
-      redirect_to @article
-    else
-      render :new, status: :unprocessable_entity
-    end
-  end
-
-  def update
-    @article = Article.find(params[:id])
-
-    if @article.update(article_params)
-      redirect_to @article
-    else
-      render :edit, status: :unprocessable_entity
-    end
-  end
-
-  private
-
-  def article_params
-    params.require(:article).permit(:title, :body, :published, :category_id, tag_ids: [])
-  end
-end
-```
-
-## Rails 8: params.expect
-
-Rails 8 introduces a more explicit syntax:
+Rails provides a more explicit syntax:
 
 ```ruby
 def article_params
@@ -131,7 +70,50 @@ def article_params
 end
 ```
 
-This is functionally equivalent to `require().permit()` but more explicit about the structure.
+This is functionally equivalent to `require().permit()` but more explicit about the expected structure.
+
+## Common Pitfalls
+
+- **Permitting too many attributes**: Only permit what the current action needs. An admin controller might permit different fields than a public one.
+- **Forgetting nested params**: Arrays and nested hashes need special syntax (`tag_ids: []`, `address: [:street]`).
+- **Not using strong params at all**: Passing raw `params` to `create` or `update` raises `ActiveModel::ForbiddenAttributesError`.
+
+## Best Practices
+
+- Define a private `_params` method for each resource (e.g., `article_params`, `user_params`).
+- Be explicit about what is permitted; never use `permit!` which allows everything.
+- Use different parameter methods for different roles if needed.
+
+## Summary
+
+- Strong Parameters prevent mass assignment attacks by whitelisting allowed attributes.
+- Use `params.require(:key).permit(:attr1, :attr2)` to filter incoming data.
+- Passing raw params to `create`/`update` raises `ForbiddenAttributesError`.
+- Arrays need `field: []` syntax; nested hashes need `field: [:subfield]`.
+- `params.expect` provides a more explicit alternative syntax.
+
+## Code Examples
+
+**Strong Parameters whitelist allowed attributes in a private method, preventing mass assignment vulnerabilities.**
+
+```ruby
+class ArticlesController < ApplicationController
+  def create
+    @article = Article.new(article_params)
+    if @article.save
+      redirect_to @article
+    else
+      render :new, status: :unprocessable_entity
+    end
+  end
+
+  private
+  def article_params
+    params.require(:article).permit(:title, :body, :published, tag_ids: [])
+  end
+end
+```
+
 
 ## Resources
 

@@ -5,11 +5,23 @@ source_lesson: "rails-active-record-mastery-custom-validators"
 
 # Building Custom Validators
 
-While Rails provides many built-in validators, you'll often need custom validation logic specific to your domain.
+## Introduction
+While Rails provides many built-in validators (presence, uniqueness, format, numericality), you will often need custom validation logic specific to your domain. Rails offers three approaches: custom validation methods, EachValidator classes, and Validator classes with `validates_with`.
 
-## Custom Validation Methods
+## Key Concepts
+- **`validate` method**: Registers a custom validation method that can add errors to the record.
+- **`EachValidator`**: A reusable validator class that validates a single attribute. Used with the `validates :attr, your_validator: true` syntax.
+- **`validates_with`**: Registers a Validator class that can validate the entire record (not just one attribute).
+- **`errors.add`**: The method used inside validators to attach error messages to specific attributes.
 
-The simplest approach - define a method and use `validate`:
+## Real World Context
+Every non-trivial Rails application needs custom validations. Validating that an end date is after a start date, checking email domains against a blocklist, ensuring URLs are well-formed, or verifying business rules like "an order cannot exceed inventory" all require custom validators. Reusable EachValidator classes are especially valuable in large codebases where the same validation appears across multiple models.
+
+## Deep Dive
+
+### Custom Validation Methods
+
+The simplest approach -- define a method and register it with `validate`:
 
 ```ruby
 class Event < ApplicationRecord
@@ -20,7 +32,6 @@ class Event < ApplicationRecord
 
   def end_date_after_start_date
     return if start_date.blank? || end_date.blank?
-
     if end_date <= start_date
       errors.add(:end_date, "must be after start date")
     end
@@ -28,7 +39,6 @@ class Event < ApplicationRecord
 
   def not_in_past
     return if start_date.blank?
-
     if start_date < Date.current
       errors.add(:start_date, "cannot be in the past")
     end
@@ -36,28 +46,19 @@ class Event < ApplicationRecord
 end
 ```
 
-## Custom Validator Classes
+Note the early return when values are blank. This prevents `NoMethodError` on nil and lets the `presence` validator handle blank checking.
 
-For reusable validators, create a class:
+### Custom EachValidator Classes
 
-### EachValidator - For Single Attributes
+For reusable validators, create a class that inherits from `ActiveModel::EachValidator`:
 
 ```ruby
 # app/validators/email_validator.rb
 class EmailValidator < ActiveModel::EachValidator
   def validate_each(record, attribute, value)
     return if value.blank?
-
     unless value =~ URI::MailTo::EMAIL_REGEXP
       record.errors.add(attribute, options[:message] || "is not a valid email")
-    end
-
-    # Check for disposable email domains
-    if options[:reject_disposable]
-      domain = value.split("@").last
-      if DisposableEmailDomain.exists?(domain: domain)
-        record.errors.add(attribute, "cannot be a disposable email")
-      end
     end
   end
 end
@@ -65,51 +66,15 @@ end
 # Usage in model
 class User < ApplicationRecord
   validates :email, email: true
-  validates :backup_email, email: { reject_disposable: true }
+  validates :backup_email, email: { message: "must be a valid address" }
 end
 ```
 
-### More Custom EachValidators
-
-```ruby
-# app/validators/url_validator.rb
-class UrlValidator < ActiveModel::EachValidator
-  def validate_each(record, attribute, value)
-    return if value.blank?
-
-    begin
-      uri = URI.parse(value)
-      valid = uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)
-      valid &&= uri.host.present?
-    rescue URI::InvalidURIError
-      valid = false
-    end
-
-    unless valid
-      record.errors.add(attribute, options[:message] || "is not a valid URL")
-    end
-  end
-end
-
-# app/validators/future_date_validator.rb
-class FutureDateValidator < ActiveModel::EachValidator
-  def validate_each(record, attribute, value)
-    return if value.blank?
-
-    unless value > Date.current
-      record.errors.add(attribute, options[:message] || "must be in the future")
-    end
-  end
-end
-
-# Usage
-class Event < ApplicationRecord
-  validates :website, url: true
-  validates :starts_on, future_date: { message: "cannot be in the past" }
-end
-```
+The class name determines the validator key: `EmailValidator` becomes `email:` in the `validates` call. The `options` hash passes any configuration from the model declaration.
 
 ### Validator Classes with validates_with
+
+For validations that span multiple attributes:
 
 ```ruby
 # app/validators/profanity_validator.rb
@@ -131,6 +96,44 @@ class Comment < ApplicationRecord
   validates_with ProfanityValidator, fields: [:body, :title]
 end
 ```
+
+## Common Pitfalls
+1. **Not handling nil/blank values** -- Always add an early return for blank values. Let the `presence` validator handle that concern separately.
+2. **Putting validation logic in callbacks** -- Use `validate` methods, not `before_save` checks. Callbacks that add errors and `throw(:abort)` bypass the standard validation flow.
+3. **Hardcoding error messages** -- Use the `options[:message]` pattern to allow models to customize the message.
+
+## Best Practices
+1. **Extract reusable validators to `app/validators/`** -- Any validation used in 2+ models should be an EachValidator class.
+2. **Follow the naming convention** -- `FooValidator` is used as `validates :attr, foo: true`. Rails expects this naming.
+3. **Test validators independently** -- EachValidator classes can be unit-tested without instantiating the full model.
+
+## Summary
+- Use `validate :method_name` for one-off custom validations specific to a single model.
+- Use `EachValidator` subclasses for reusable per-attribute validators.
+- Use `validates_with` for validators that check multiple attributes or the whole record.
+- Always handle nil/blank values with an early return.
+- Store reusable validators in `app/validators/` and follow the naming convention.
+
+## Code Examples
+
+**A reusable EachValidator for URLs -- validates that the value is a well-formed HTTP(S) URL with a host**
+
+```ruby
+# app/validators/url_validator.rb
+class UrlValidator < ActiveModel::EachValidator
+  def validate_each(record, attribute, value)
+    return if value.blank?
+    uri = URI.parse(value)
+    valid = (uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)) && uri.host.present?
+    record.errors.add(attribute, "is not a valid URL") unless valid
+  rescue URI::InvalidURIError
+    record.errors.add(attribute, "is not a valid URL")
+  end
+end
+
+# Usage: validates :website, url: true
+```
+
 
 ## Resources
 

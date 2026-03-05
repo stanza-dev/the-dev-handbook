@@ -182,11 +182,11 @@ Maintained by [Stanza](https://stanza.dev) — Learn coding faster right in your
 ### Ruby-on-rails
 
 - 📡 [Real-Time Rails with Action Cable](./ruby-on-rails/rails-action-cable/) — 10 lessons
-- 🗃️ [Active Record Mastery](./ruby-on-rails/rails-active-record-mastery/) — 15 lessons
+- 🗃️ [Active Record Mastery](./ruby-on-rails/rails-active-record-mastery/) — 24 lessons
 - 🔌 [Building RESTful APIs with Rails](./ruby-on-rails/rails-api-development/) — 14 lessons
 - ⚡ [Background Processing in Rails](./ruby-on-rails/rails-background-processing/) — 12 lessons
 - 🚀 [Rails Deployment and DevOps](./ruby-on-rails/rails-deployment-devops/) — 12 lessons
-- 🛤️ [Rails Foundations](./ruby-on-rails/rails-foundations/) — 23 lessons
+- 🛤️ [Rails Foundations](./ruby-on-rails/rails-foundations/) — 28 lessons
 - ⚡ [Modern Rails Frontend with Hotwire](./ruby-on-rails/modern-rails-frontend-hotwire/) — 17 lessons
 - 🏎️ [Rails Performance Optimization](./ruby-on-rails/rails-performance-optimization/) — 14 lessons
 - 🔒 [Rails Security Hardening](./ruby-on-rails/rails-security-hardening/) — 15 lessons

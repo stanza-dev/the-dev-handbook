@@ -8,12 +8,16 @@ Design patterns for clean, maintainable model code
 
 1. [Scopes and Query Objects](./1-scopes-queries.md)
 2. [Service Objects and Form Objects](./2-service-objects.md)
+3. [Enum Attributes](./3-enum-attributes.md)
+4. [Query Objects and Concerns](./4-objects-concerns.md)
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
+- ✏️ Fill in the Blank: Defining Scopes
 - 🧩 Multiple Choice: Scope Return Values
-- 🧩 Multiple Choice: Service Object Purpose
+- 🧩 Challenge: Service Object Purpose
+- 🧩 Challenge: Concern Structure
 
 → [Practice in your IDE](https://stanza.dev/courses/rails-active-record-mastery)

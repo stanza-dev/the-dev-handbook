@@ -5,27 +5,30 @@ source_lesson: "rails-foundations-sessions-cookies"
 
 # Sessions and Cookies
 
-HTTP is stateless - each request is independent. Sessions let you persist data across requests, enabling features like user login.
+## Introduction
 
-## How Sessions Work
+HTTP is stateless — each request is independent with no memory of previous ones. Sessions and cookies solve this by letting you persist data across requests, enabling features like user login and shopping carts.
 
-1. User logs in with credentials
-2. Server creates a session and stores user ID
-3. Server sends a session cookie to browser
-4. Browser sends cookie with every request
-5. Server reads cookie to identify user
+## Key Concepts
 
-## Using Sessions in Rails
+- **Session**: Server-side storage that persists data across requests for a specific user. In Rails, accessed via the `session` hash.
+- **Cookie**: A small piece of data stored in the browser and sent with every request. Rails uses an encrypted cookie as the default session store.
+- **Flash messages**: Special session data that persists for exactly one request, used for success/error notifications after redirects.
+- **CSRF protection**: Rails automatically includes an authenticity token to prevent cross-site request forgery attacks.
 
-Rails provides a `session` hash that works like a Hash:
+## Real World Context
+
+Every logged-in experience on the web relies on sessions. When you log into a website and it remembers you across page loads, that is sessions at work. Understanding the difference between sessions (secure, server-validated) and cookies (client-stored, readable) is essential for building secure applications.
+
+## Deep Dive
+
+### Using Sessions
 
 ```ruby
 class SessionsController < ApplicationController
   def create
     user = User.find_by(email: params[:email])
-
     if user&.authenticate(params[:password])
-      # Store user ID in session
       session[:user_id] = user.id
       redirect_to root_path, notice: "Logged in!"
     else
@@ -35,24 +38,19 @@ class SessionsController < ApplicationController
   end
 
   def destroy
-    # Clear the session
     session[:user_id] = nil
-    # Or clear everything: reset_session
     redirect_to root_path, notice: "Logged out!"
   end
 end
 ```
 
-## Accessing Current User
-
-Create a helper method in ApplicationController:
+### Accessing Current User
 
 ```ruby
 class ApplicationController < ActionController::Base
   helper_method :current_user, :logged_in?
 
   private
-
   def current_user
     @current_user ||= User.find_by(id: session[:user_id])
   end
@@ -69,78 +67,76 @@ class ApplicationController < ActionController::Base
 end
 ```
 
-Use in views:
-
-```erb
-<% if logged_in? %>
-  <p>Welcome, <%= current_user.name %>!</p>
-  <%= link_to "Log out", logout_path, data: { turbo_method: :delete } %>
-<% else %>
-  <%= link_to "Log in", login_path %>
-<% end %>
-```
-
-## Flash Messages
-
-Flash stores messages for the next request:
+### Flash Messages
 
 ```ruby
-# Set flash for next request
-flash[:notice] = "Article saved!"
-flash[:alert] = "Something went wrong"
-redirect_to articles_path
-
-# Set flash for current request (when rendering)
-flash.now[:alert] = "Invalid data"
-render :new
+flash[:notice] = "Article saved!"   # For next request
+flash.now[:alert] = "Invalid data"  # For current request (when rendering)
 ```
-
-Display in layout:
 
 ```erb
 <% flash.each do |type, message| %>
-  <div class="alert alert-<%= type %>">
-    <%= message %>
-  </div>
+  <div class="alert alert-<%= type %>"><%= message %></div>
 <% end %>
 ```
 
-## Cookies vs Sessions
+### Sessions vs Cookies
 
 | Sessions | Cookies |
 |----------|----------|
-| Stored server-side | Stored in browser |
+| Stored server-side (encrypted cookie) | Stored in browser |
 | More secure | Less secure |
-| Limited to request | Can persist for months |
-| Use for: user ID | Use for: preferences |
+| Limited to request lifecycle | Can persist for months |
+| Use for: user ID, auth data | Use for: preferences, theme |
 
 ### Using Cookies Directly
 
 ```ruby
-# Set a cookie
 cookies[:theme] = "dark"
-
-# Set with options
-cookies[:remember_token] = {
-  value: user.remember_token,
-  expires: 2.weeks.from_now,
-  httponly: true,
-  secure: Rails.env.production?
-}
-
-# Signed cookies (tamper-proof)
-cookies.signed[:user_id] = user.id
-
-# Encrypted cookies (unreadable)
-cookies.encrypted[:secret] = "sensitive data"
-
-# Read cookies
-cookies[:theme]           # => "dark"
-cookies.signed[:user_id]  # => 1
-
-# Delete cookies
+cookies.signed[:user_id] = user.id       # Tamper-proof
+cookies.encrypted[:secret] = "sensitive"  # Unreadable
 cookies.delete(:theme)
 ```
+
+## Common Pitfalls
+
+- **Storing sensitive data in plain cookies**: Use `cookies.signed` or `cookies.encrypted` for anything sensitive.
+- **Using `flash` instead of `flash.now` when rendering**: `flash` persists to the next request, so using it with `render` shows the message twice.
+- **Not using `reset_session` after login**: To prevent session fixation attacks, reset the session after successful authentication.
+
+## Best Practices
+
+- Store only the user ID in the session, not the entire user object.
+- Use `helper_method` to make `current_user` available in views.
+- Always use `flash.now` when rendering (not redirecting).
+
+## Summary
+
+- Sessions persist data across HTTP requests using encrypted cookies by default.
+- Store `user_id` in the session for authentication; look up the user on each request.
+- Flash messages display notifications after redirects; use `flash.now` when rendering.
+- Use `cookies.signed` or `cookies.encrypted` for sensitive cookie data.
+- The `current_user` pattern with memoization is the standard way to access the logged-in user.
+
+## Code Examples
+
+**The current_user pattern uses the session to store a user ID and memoizes the database lookup, making the logged-in user available across controllers and views.**
+
+```ruby
+class ApplicationController < ActionController::Base
+  helper_method :current_user, :logged_in?
+
+  private
+  def current_user
+    @current_user ||= User.find_by(id: session[:user_id])
+  end
+
+  def logged_in?
+    current_user.present?
+  end
+end
+```
+
 
 ## Resources
 
