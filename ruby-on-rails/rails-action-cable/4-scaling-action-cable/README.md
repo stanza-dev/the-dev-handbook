@@ -2,18 +2,22 @@
 
 > Part of [Real-Time Rails with Action Cable](https://stanza.dev/courses/rails-action-cable)
 
-Configure Action Cable for production workloads
+Configure adapters, manage connection limits, and optimize performance for production
 
 ## Lessons
 
-1. [Redis Configuration for Production](./1-redis-configuration.md)
-2. [Connection Management and Performance](./2-connection-management.md)
+1. [Production Adapters Compared](./1-production-adapters.md)
+2. [Connection Management and Limits](./2-connection-management.md)
+3. [Performance Optimization](./3-performance-optimization.md)
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **5 interactive challenges** available on Stanza:
 
+- ✏️ Fill in the Blank: PostgreSQL Adapter Limitation
 - 🧩 Multiple Choice: Redis Necessary
-- 🧩 Multiple Choice: Reject Connection
+- 🧩 Challenge: Force-Disconnecting a User
+- 🧩 Challenge: Performance Optimization Strategies
+- 🧩 Multiple Choice: Adapter Selection
 
 → [Practice in your IDE](https://stanza.dev/courses/rails-action-cable)

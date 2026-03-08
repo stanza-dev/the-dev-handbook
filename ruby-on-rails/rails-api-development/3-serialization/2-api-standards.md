@@ -3,164 +3,130 @@ source_course: "rails-api-development"
 source_lesson: "rails-api-development-api-standards"
 ---
 
-# API Response Standards
+# Building JSON with Jbuilder
 
-Consistent response formats make your API easier to use. Let's explore common standards.
+## Introduction
+Jbuilder is a Rails-native templating DSL for building JSON responses. Instead of overriding `as_json` on models, you create `.json.jbuilder` view templates that give you full control over response structure with a clean Ruby syntax.
 
-## JSON:API Specification
+## Key Concepts
+- **Jbuilder Template**: A `.json.jbuilder` file that defines JSON structure using a Ruby DSL.
+- **`json.extract!`**: Extracts specific attributes from an object.
+- **Partial Rendering**: Reuse JSON fragments across endpoints with `json.partial!`.
+- **Collection Rendering**: Render arrays of objects with `json.array!`.
 
-A popular standard for API responses:
+## Real World Context
+Jbuilder shines when your JSON structure doesn't mirror your database schema: nested objects, computed fields, conditional attributes, and complex relationships. It's included in Rails by default and follows the same view layer conventions as ERB templates.
 
-```json
-{
-  "data": {
-    "type": "articles",
-    "id": "1",
-    "attributes": {
-      "title": "Rails API Guide",
-      "body": "Content here...",
-      "created_at": "2024-01-15T10:30:00Z"
-    },
-    "relationships": {
-      "author": {
-        "data": { "type": "users", "id": "5" }
-      },
-      "tags": {
-        "data": [
-          { "type": "tags", "id": "1" },
-          { "type": "tags", "id": "2" }
-        ]
-      }
-    }
-  },
-  "included": [
-    {
-      "type": "users",
-      "id": "5",
-      "attributes": { "name": "John Doe" }
-    }
-  ]
-}
-```
-
-## Simple Envelope Pattern
-
-A straightforward approach many APIs use:
+## Deep Dive
+### Basic Template
 
 ```ruby
-# Success responses
-{
-  "success": true,
-  "data": { ... }
-}
+# app/views/api/v1/products/show.json.jbuilder
+json.extract! @product, :id, :name, :description
+json.price @product.formatted_price
+json.in_stock @product.stock_count > 0
 
-# Collection responses
-{
-  "success": true,
-  "data": [ ... ],
-  "meta": {
-    "total": 100,
-    "page": 1,
-    "per_page": 25
-  }
-}
-
-# Error responses
-{
-  "success": false,
-  "error": {
-    "code": "validation_error",
-    "message": "Validation failed",
-    "details": [
-      { "field": "title", "message": "can't be blank" },
-      { "field": "body", "message": "is too short" }
-    ]
-  }
-}
-```
-
-## Implementing Consistent Responses
-
-```ruby
-# app/controllers/concerns/api_response.rb
-module ApiResponse
-  extend ActiveSupport::Concern
-
-  def render_success(data, status: :ok, meta: nil)
-    response = { success: true, data: data }
-    response[:meta] = meta if meta
-    render json: response, status: status
-  end
-
-  def render_error(message, status: :bad_request, code: nil, details: nil)
-    error = { message: message }
-    error[:code] = code if code
-    error[:details] = details if details
-    render json: { success: false, error: error }, status: status
-  end
-
-  def render_validation_errors(record)
-    details = record.errors.map do |error|
-      { field: error.attribute, message: error.message }
-    end
-    render_error("Validation failed", status: :unprocessable_entity,
-                 code: "validation_error", details: details)
-  end
+json.category do
+  json.extract! @product.category, :id, :name
 end
 
-# Usage in controller
-class Api::V1::ArticlesController < Api::V1::BaseController
-  include ApiResponse
-
-  def index
-    @articles = Article.published.page(params[:page])
-    render_success(
-      ArticleSerializer.new(@articles).as_json,
-      meta: pagination_meta(@articles)
-    )
-  end
-
-  def create
-    @article = current_user.articles.build(article_params)
-
-    if @article.save
-      render_success(ArticleSerializer.new(@article).as_json, status: :created)
-    else
-      render_validation_errors(@article)
-    end
-  end
-
-  private
-
-  def pagination_meta(collection)
-    {
-      total: collection.total_count,
-      page: collection.current_page,
-      per_page: collection.limit_value,
-      total_pages: collection.total_pages
-    }
-  end
+json.links do
+  json.self api_v1_product_url(@product)
+  json.reviews api_v1_product_reviews_url(@product)
 end
 ```
 
-## Error Codes
+`json.extract!` pulls named attributes. Custom keys can use any Ruby expression. Nested objects use blocks.
 
-Use consistent error codes:
+### Collection Template
 
 ```ruby
-module ErrorCodes
-  VALIDATION_ERROR = "validation_error"
-  NOT_FOUND = "not_found"
-  UNAUTHORIZED = "unauthorized"
-  FORBIDDEN = "forbidden"
-  RATE_LIMITED = "rate_limited"
-  SERVER_ERROR = "server_error"
+# app/views/api/v1/products/index.json.jbuilder
+json.data @products do |product|
+  json.extract! product, :id, :name
+  json.price product.formatted_price
+  json.category product.category.name
+end
+
+json.meta do
+  json.total @products.total_count
+  json.page @products.current_page
+  json.per_page @products.limit_value
 end
 ```
+
+Blocks iterate over collections. The envelope pattern (`data` + `meta`) is easy to implement.
+
+### Partials
+
+```ruby
+# app/views/api/v1/products/_product.json.jbuilder
+json.extract! product, :id, :name, :description
+json.price product.formatted_price
+json.category product.category&.name
+
+# Reuse in index:
+json.data @products, partial: "api/v1/products/product", as: :product
+
+# Reuse in show:
+json.partial! "api/v1/products/product", product: @product
+```
+
+Partials prevent duplication between index and show endpoints.
+
+### Conditional Attributes
+
+```ruby
+json.extract! @product, :id, :name, :price
+json.admin_notes @product.admin_notes if current_user&.admin?
+json.edit_url edit_api_v1_product_url(@product) if current_user&.can_edit?(@product)
+```
+
+Conditional rendering lets you tailor responses based on the authenticated user's permissions.
+
+## Common Pitfalls
+1. **N+1 queries in templates** — Accessing associations in templates without eager loading triggers N+1 queries. Always use `includes` in the controller.
+2. **Overly complex templates** — If a template exceeds 30-40 lines, extract partials or consider a serializer library.
+
+## Best Practices
+1. **Use partials for reusable fragments** — Define a `_product.json.jbuilder` and reuse it across endpoints.
+2. **Eager load in the controller** — `@products = Product.includes(:category, :reviews).all`.
+
+## Summary
+- Jbuilder templates (`.json.jbuilder`) define JSON with a clean Ruby DSL.
+- `json.extract!` pulls model attributes, blocks create nested objects.
+- Partials share JSON fragments across endpoints.
+- Conditional rendering tailors responses based on user permissions.
+- Always eager load associations in controllers to prevent N+1 queries.
+
+## Code Examples
+
+**A Jbuilder template with nested objects, collections, computed values, and HATEOAS links**
+
+```ruby
+# app/views/api/v1/products/show.json.jbuilder
+json.extract! @product, :id, :name, :description
+json.price @product.formatted_price
+json.in_stock @product.stock_count.positive?
+
+json.category do
+  json.extract! @product.category, :id, :name
+end
+
+json.reviews @product.reviews do |review|
+  json.extract! review, :id, :body, :rating
+  json.author review.author.name
+end
+
+json.links do
+  json.self api_v1_product_url(@product)
+end
+```
+
 
 ## Resources
 
-- [JSON:API Specification](https://jsonapi.org/) — The JSON:API specification
+- [Jbuilder GitHub](https://github.com/rails/jbuilder) — Jbuilder gem documentation and examples
 
 ---
 

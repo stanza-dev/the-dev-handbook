@@ -1,4 +1,4 @@
-# undefined Secure Coding Practices
+# 🏗️ Secure Coding Practices
 
 > Part of [Rails Security Hardening](https://stanza.dev/courses/rails-security-hardening)
 
@@ -12,8 +12,10 @@ Apply security best practices throughout your codebase.
 
 ## Practice Challenges
 
-This section includes **1 interactive challenge** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Challenge: Security Audit Challenge
+- ✏️ Fill in the Blank: Strong Parameters Method
+- 🧩 Multiple Choice: Secure Credential Storage
 
 → [Practice in your IDE](https://stanza.dev/courses/rails-security-hardening)

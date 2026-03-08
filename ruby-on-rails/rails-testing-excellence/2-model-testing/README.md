@@ -1,8 +1,8 @@
-# undefined Testing Models
+# 📦 Testing Models
 
 > Part of [Rails Testing Excellence](https://stanza.dev/courses/rails-testing-excellence)
 
-Learn comprehensive strategies for testing Active Record models.
+Learn comprehensive strategies for testing Active Record models including validations, associations, and callbacks.
 
 ## Lessons
 
@@ -12,9 +12,11 @@ Learn comprehensive strategies for testing Active Record models.
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Challenge: Model Validation Challenge
 - 🔗 Matching: Callback Testing Challenge
+- 🧩 Challenge: Model Validation Challenge
+- ✏️ Fill in the Blank: Model Scope Testing Quiz
 
 → [Practice in your IDE](https://stanza.dev/courses/rails-testing-excellence)

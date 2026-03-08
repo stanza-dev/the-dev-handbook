@@ -3,159 +3,132 @@ source_course: "rails-api-development"
 source_lesson: "rails-api-development-token-authentication"
 ---
 
-# Token-Based Authentication
+# API Authentication Fundamentals
 
-APIs use tokens instead of sessions since they're stateless. Let's implement a simple token-based auth system.
+## Introduction
+APIs cannot use browser cookies for authentication. Instead, they rely on tokens — unique strings that clients include in request headers to prove their identity. Rails 8 provides built-in tools for implementing token authentication.
 
-## How Token Auth Works
+## Key Concepts
+- **Token Authentication**: Clients send a token in the `Authorization` header with each request.
+- **`has_secure_password`**: A Rails method that adds bcrypt password hashing to a model.
+- **`has_secure_token`**: Generates a unique token for a model attribute.
+- **`authenticate_by`**: A Rails method for secure password checking that prevents timing attacks.
 
-1. Client sends credentials (email/password)
-2. Server validates and returns a token
-3. Client sends token with each request
-4. Server validates token and identifies user
+## Real World Context
+Every API with user accounts needs authentication. Mobile apps, SPAs, and third-party integrations all send tokens with requests. The token proves the client is who they claim to be without sending credentials on every request.
 
-## Setting Up the User Model
+## Deep Dive
+### Setting Up User Model
 
 ```ruby
-# Migration
-class AddAuthTokenToUsers < ActiveRecord::Migration[8.0]
-  def change
-    add_column :users, :auth_token, :string
-    add_index :users, :auth_token, unique: true
-  end
-end
+# Generate user model with password digest
+rails generate model User email:string:uniq password_digest:string api_token:string:uniq
+```
 
+```ruby
 # app/models/user.rb
 class User < ApplicationRecord
   has_secure_password
-
-  before_create :generate_auth_token
+  has_secure_token :api_token
 
   validates :email, presence: true, uniqueness: true
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
+end
+```
 
-  def regenerate_auth_token
-    update(auth_token: generate_token)
+`has_secure_password` adds `password` and `password_confirmation` virtual attributes and stores a bcrypt hash in `password_digest`. `has_secure_token :api_token` generates a unique 24-character token on creation.
+
+### Authentication Controller
+
+```ruby
+class Api::V1::SessionsController < ApplicationController
+  def create
+    user = User.authenticate_by(
+      email: params[:email],
+      password: params[:password]
+    )
+
+    if user
+      render json: { token: user.api_token, user: user.as_json(only: [:id, :email]) }
+    else
+      render json: { error: "Invalid email or password" }, status: :unauthorized
+    end
   end
+end
+```
 
+`authenticate_by` is a Rails method that safely looks up the user and verifies the password in constant time, preventing timing attacks that could reveal whether an email exists.
+
+### Token Verification
+
+```ruby
+class ApplicationController < ActionController::API
   private
 
-  def generate_auth_token
-    self.auth_token = generate_token
+  def authenticate_user!
+    token = request.headers["Authorization"]&.remove("Bearer ")
+    @current_user = User.find_by(api_token: token)
+
+    render json: { error: "Unauthorized" }, status: :unauthorized unless @current_user
   end
 
-  def generate_token
-    loop do
-      token = SecureRandom.hex(32)
-      break token unless User.exists?(auth_token: token)
-    end
+  def current_user
+    @current_user
   end
 end
 ```
 
-## Authentication Controller
+The `authenticate_user!` method extracts the Bearer token from the Authorization header and finds the matching user. Controllers that need authentication call this as a `before_action`.
+
+### Protecting Endpoints
 
 ```ruby
-# app/controllers/api/v1/authentication_controller.rb
-module Api
-  module V1
-    class AuthenticationController < BaseController
-      skip_before_action :authenticate_user!, only: [:create]
+class Api::V1::ProductsController < ApplicationController
+  before_action :authenticate_user!
+  before_action :set_product, only: [:show, :update, :destroy]
 
-      # POST /api/v1/auth
-      def create
-        user = User.find_by(email: params[:email])
-
-        if user&.authenticate(params[:password])
-          render json: {
-            token: user.auth_token,
-            user: {
-              id: user.id,
-              email: user.email,
-              name: user.name
-            }
-          }
-        else
-          render json: { error: "Invalid credentials" }, status: :unauthorized
-        end
-      end
-
-      # DELETE /api/v1/auth
-      def destroy
-        current_user.regenerate_auth_token
-        head :no_content
-      end
-    end
+  def index
+    render json: current_user.products
   end
 end
 ```
 
-## Base Controller with Auth
+The `before_action` ensures every request to this controller is authenticated.
+
+## Common Pitfalls
+1. **Storing tokens in plain text** — While `has_secure_token` generates cryptographically secure tokens, consider hashing stored tokens for defense in depth.
+2. **Not using `authenticate_by`** — Manual email lookup + `authenticate` is vulnerable to timing attacks that reveal which emails exist in your system.
+
+## Best Practices
+1. **Use `authenticate_by`** — It's the secure, Rails-recommended way to verify credentials.
+2. **Always use Bearer token format** — `Authorization: Bearer <token>` is the standard format.
+
+## Summary
+- APIs use token-based authentication via the `Authorization: Bearer <token>` header.
+- `has_secure_password` handles password hashing with bcrypt.
+- `has_secure_token` generates unique API tokens.
+- `authenticate_by` prevents timing attacks during credential verification.
+- Protect endpoints with `before_action :authenticate_user!`.
+
+## Code Examples
+
+**The authenticate_by method — Rails' secure credential verification that prevents timing attacks**
 
 ```ruby
-# app/controllers/api/v1/base_controller.rb
-module Api
-  module V1
-    class BaseController < ApplicationController
-      before_action :authenticate_user!
-
-      private
-
-      def authenticate_user!
-        unless current_user
-          render json: { error: "Unauthorized" }, status: :unauthorized
-        end
-      end
-
-      def current_user
-        @current_user ||= authenticate_with_token
-      end
-
-      def authenticate_with_token
-        # Check Authorization header
-        header = request.headers["Authorization"]
-        return nil unless header
-
-        # Extract token from "Bearer <token>"
-        token = header.split(" ").last
-        User.find_by(auth_token: token)
-      end
-    end
-  end
-end
+# Secure login with authenticate_by (Rails 7.1+)
+user = User.authenticate_by(
+  email: params[:email],
+  password: params[:password]
+)
+# Returns the user if credentials match, nil otherwise.
+# Uses constant-time comparison to prevent timing attacks.
+# Safer than: User.find_by(email: email)&.authenticate(password)
 ```
 
-## Client Usage
-
-```bash
-# Login
-curl -X POST http://localhost:3000/api/v1/auth \
-  -H "Content-Type: application/json" \
-  -d '{"email": "user@example.com", "password": "secret"}'
-
-# Response
-{"token": "abc123...", "user": {"id": 1, "email": "user@example.com"}}
-
-# Authenticated request
-curl http://localhost:3000/api/v1/articles \
-  -H "Authorization: Bearer abc123..."
-```
-
-## Routes
-
-```ruby
-namespace :api do
-  namespace :v1 do
-    resource :auth, only: [:create, :destroy], controller: "authentication"
-    # or
-    post "auth", to: "authentication#create"
-    delete "auth", to: "authentication#destroy"
-  end
-end
-```
 
 ## Resources
 
-- [Securing Rails Applications](https://guides.rubyonrails.org/security.html) — Rails security best practices
+- [Active Model SecurePassword](https://api.rubyonrails.org/classes/ActiveModel/SecurePassword/ClassMethods.html) — API docs for has_secure_password and authenticate_by
 
 ---
 

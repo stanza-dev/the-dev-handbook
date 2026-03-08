@@ -3,93 +3,113 @@ source_course: "modern-rails-frontend-hotwire"
 source_lesson: "rails-hotwire-advanced-frame-patterns"
 ---
 
-# Advanced Frame Patterns
+# Frame Navigation and Targeting
 
-Combine frames for sophisticated UI patterns.
+## Introduction
+By default, links inside a Turbo Frame only update that frame. Turbo provides targeting controls to direct navigation to any frame or break out entirely for full-page navigation.
 
-## Modal Pattern
+## Key Concepts
+- **Frame Scoping**: Links inside a frame automatically target that frame.
+- **`data-turbo-frame`**: Overrides the default frame target on links/forms.
+- **`_top` Target**: Special value for full-page navigation, escaping frame scope.
+- **Frame `target` attribute**: Default target for all links inside a frame.
+
+## Real World Context
+Frame targeting enables tabbed interfaces, sidebar navigation updating a main area, and search forms updating result lists — all without JavaScript.
+
+## Deep Dive
+### Default Scoping
 
 ```erb
-<!-- Layout with modal container -->
-<body>
+<%= turbo_frame_tag "task_42" do %>
+  <p>Buy groceries</p>
+  <%= link_to "Edit", edit_task_path(42) %>  <!-- updates only task_42 -->
+<% end %>
+```
+
+Clicking Edit replaces only this frame. Everything else stays untouched.
+
+### Cross-Frame Targeting
+
+Links can target any frame by ID:
+
+```erb
+<nav>
+  <%= link_to "Overview", product_overview_path(@product),
+      data: { turbo_frame: "tab_content" } %>
+  <%= link_to "Reviews", product_reviews_path(@product),
+      data: { turbo_frame: "tab_content" } %>
+</nav>
+<%= turbo_frame_tag "tab_content" do %>
+  <%= render "overview" %>
+<% end %>
+```
+
+Tab links outside the frame target it by ID, creating a tabbed interface with zero JavaScript.
+
+### Default Target on Frame
+
+Set a default target for all links in a frame:
+
+```erb
+<%= turbo_frame_tag "sidebar", target: "main_content" do %>
+  <ul>
+    <li><%= link_to "Dashboard", dashboard_path %></li>
+    <li><%= link_to "Settings", settings_path %></li>
+  </ul>
+<% end %>
+<%= turbo_frame_tag "main_content" do %>
   <%= yield %>
-  
-  <%= turbo_frame_tag 'modal' %>
-</body>
-
-<!-- Link that opens modal -->
-<%= link_to 'Edit', edit_product_path(@product), 
-    data: { turbo_frame: 'modal' } %>
-
-<!-- products/edit.html.erb -->
-<%= turbo_frame_tag 'modal' do %>
-  <div class="modal-backdrop" data-action="click->modal#close">
-    <div class="modal-content" data-controller="modal">
-      <h2>Edit Product</h2>
-      <%= form_with model: @product do |f| %>
-        <%= f.text_field :name %>
-        <%= f.submit 'Save' %>
-      <% end %>
-      
-      <%= link_to 'Cancel', products_path, data: { turbo_frame: 'modal' } %>
-    </div>
-  </div>
 <% end %>
 ```
 
-## Pagination in Frames
+Every link in the sidebar updates `main_content` without per-link attributes.
+
+### URL Updates
+
+Frame navigations don't update the browser URL by default. Add `turbo_action` for bookmarkable URLs:
 
 ```erb
-<%= turbo_frame_tag 'products_list' do %>
-  <div class="products">
-    <%= render @products %>
-  </div>
-  
-  <div class="pagination">
-    <%= link_to 'Previous', products_path(page: @page - 1) if @page > 1 %>
-    <%= link_to 'Next', products_path(page: @page + 1) if @products.any? %>
-  </div>
-<% end %>
+<%= link_to "Electronics", products_path(category: "electronics"),
+    data: { turbo_frame: "product_list", turbo_action: "advance" } %>
 ```
 
-## Tab Navigation
+## Common Pitfalls
+1. **Unintended frame scoping** — Links inside frames only update that frame. Use `_top` when you want full-page navigation.
+2. **Missing frame in response** — If the targeted frame doesn't exist in the response, Turbo shows a Content Missing error.
 
-```erb
-<div class="tabs">
-  <nav>
-    <%= link_to 'Details', product_details_path(@product), 
-        data: { turbo_frame: 'tab_content' } %>
-    <%= link_to 'Reviews', product_reviews_path(@product), 
-        data: { turbo_frame: 'tab_content' } %>
-    <%= link_to 'Related', product_related_path(@product), 
-        data: { turbo_frame: 'tab_content' } %>
-  </nav>
-  
-  <%= turbo_frame_tag 'tab_content', 
-      src: product_details_path(@product) do %>
-    <p>Loading...</p>
-  <% end %>
-</div>
+## Best Practices
+1. **Use `target` on the frame element** — When all links should navigate the same target, set it on the frame.
+2. **Add `turbo_action: "advance"` for bookmarkable navigations** — Tab selections, filters, and pagination should update the URL.
+
+## Summary
+- Links inside frames automatically scope to that frame.
+- `data-turbo-frame="_top"` breaks out for full-page navigation.
+- Links can target any frame by specifying its ID.
+- The `target` attribute on a frame sets a default for all its links.
+- `data-turbo-action="advance"` updates the browser URL.
+
+## Code Examples
+
+**A zero-JS tabbed interface built with frame targeting and URL-updating navigation**
+
+```ruby
+# A tabbed interface — zero JavaScript
+# <nav>
+#   <%= link_to "Details", product_details_path(@product),
+#       data: { turbo_frame: "tab_panel", turbo_action: "advance" } %>
+#   <%= link_to "Reviews", product_reviews_path(@product),
+#       data: { turbo_frame: "tab_panel", turbo_action: "advance" } %>
+# </nav>
+# <%= turbo_frame_tag "tab_panel" do %>
+#   <%= render "details" %>
+# <% end %>
 ```
 
-## Frame Loading States
 
-```css
-turbo-frame {
-  display: block;
-}
+## Resources
 
-turbo-frame[busy] {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-turbo-frame[busy]::after {
-  content: '';
-  position: absolute;
-  /* Spinner styles */
-}
-```
+- [Turbo Frames Handbook](https://turbo.hotwired.dev/handbook/frames) — Official handbook on frame navigation and targeting
 
 ---
 

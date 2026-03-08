@@ -3,95 +3,103 @@ source_course: "modern-rails-frontend-hotwire"
 source_lesson: "rails-hotwire-managing-dependencies"
 ---
 
-# Managing Dependencies
+# Managing Dependencies with Import Maps
 
-Import Maps provides commands and conventions for managing JavaScript dependencies.
+## Introduction
+Import Maps provides a CLI tool for adding, updating, and removing JavaScript packages without npm or yarn. You can pull packages from CDNs or vendor them locally for full control.
 
-## Adding Packages
+## Key Concepts
+- **Pinning**: Adding a JavaScript package to your import map so it can be imported by name.
+- **CDN Source**: Where the package is downloaded from — jspm.io (default), unpkg, or jsdelivr.
+- **Vendoring**: Downloading a package into `vendor/javascript` so it is served from your own server.
+- **`pin_all_from`**: Maps every file in a directory to an importable module under a namespace.
 
-```bash
-# Pin from CDN (jspm.io by default)
-bin/importmap pin lodash
+## Real World Context
+In a typical Rails 8 project, you might need a date library, charting library, or utility like lodash. With Import Maps, adding any of these takes a single command — no package.json, no lock file, no node_modules.
 
-# Pin specific version
-bin/importmap pin lodash@4.17.21
+## Deep Dive
+### Adding Packages
 
-# Pin from unpkg CDN
-bin/importmap pin react --from unpkg
-
-# Pin from jsdelivr
-bin/importmap pin vue --from jsdelivr
-```
-
-## Viewing Pinned Packages
+The `bin/importmap` CLI handles package management:
 
 ```bash
-# List all pinned packages
-bin/importmap packages
+bin/importmap pin lodash-es
+bin/importmap pin sortablejs@1.15.0
+bin/importmap pin chart.js --from jsdelivr
 ```
 
-## Updating Packages
+Each command adds a line to `config/importmap.rb` with the resolved CDN URL.
+
+### Updating and Removing
 
 ```bash
-# Update all packages
-bin/importmap update
-
-# Update specific package
-bin/importmap update lodash
+bin/importmap packages    # List all pinned packages
+bin/importmap update      # Update all packages
+bin/importmap unpin lodash-es  # Remove a package
 ```
 
-## Removing Packages
+The `packages` command shows current versions and source URLs for auditing.
+
+### Vendoring Locally
+
+For CDN-free production deployments, vendor packages:
 
 ```bash
-# Unpin a package
-bin/importmap unpin lodash
+bin/importmap vendor sortablejs
 ```
 
-## Vendoring Packages Locally
-
-For packages you want to serve from your app:
-
-```bash
-# Download to vendor/javascript
-bin/importmap vendor lodash
-```
+This downloads to `vendor/javascript/` and updates the pin to reference the local copy:
 
 ```ruby
-# config/importmap.rb
-pin 'lodash', to: 'vendor/lodash.js'
+pin "sortablejs", to: "vendor/sortablejs.js"
 ```
 
-## Organizing Custom JavaScript
+Vendored packages are served through the Rails asset pipeline.
+
+### Organizing Custom JavaScript
+
+Use `pin` for single files and `pin_all_from` for directories:
 
 ```ruby
-# config/importmap.rb
-
-# Single file
-pin 'utils', to: 'utils.js'
-
-# Directory of files
-pin_all_from 'app/javascript/lib', under: 'lib'
-
-# With subdirectories
-pin_all_from 'app/javascript/components', under: 'components'
+pin "utils/dates", to: "utils/dates.js"
+pin_all_from "app/javascript/services", under: "services"
 ```
 
-Usage:
-```javascript
-import { formatDate } from 'lib/dates'
-import { Modal } from 'components/modal'
-```
+With `pin_all_from`, every `.js` file in the directory becomes importable under the namespace.
 
-## Preloading for Performance
+## Common Pitfalls
+1. **Using CommonJS packages** — Import Maps require ES modules. Use ESM variants like `lodash-es` instead of `lodash`.
+2. **Forgetting to vendor before offline deploy** — If production servers cannot reach CDNs, vendor all external packages.
+
+## Best Practices
+1. **Preload selectively** — Only preload packages needed on every page. Charting libraries used on one page should load on demand.
+2. **Vendor for production stability** — Vendoring eliminates CDN dependency from deployments.
+
+## Summary
+- Use `bin/importmap pin` to add packages and `bin/importmap unpin` to remove them.
+- Use `bin/importmap vendor` to download packages locally.
+- `pin_all_from` maps a directory of files to importable modules.
+- Always use ESM-compatible packages.
+- Preload only critical packages.
+
+## Code Examples
+
+**A real-world importmap.rb with CDN pins, vendored packages, and local code directories**
 
 ```ruby
-# Preload critical packages
-pin '@hotwired/turbo-rails', preload: true
-pin '@hotwired/stimulus', preload: true
-
-# Don't preload rarely-used packages
-pin 'chart.js'  # Loaded on demand
+# config/importmap.rb — mixing CDN, vendored, and local code
+pin "application", preload: true
+pin "@hotwired/turbo-rails", to: "turbo.min.js", preload: true
+pin "sortablejs", to: "https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/modular/sortable.esm.js"
+pin "chart.js", to: "vendor/chart.js"
+pin_all_from "app/javascript/controllers", under: "controllers"
+pin_all_from "app/javascript/helpers", under: "helpers"
 ```
+
+
+## Resources
+
+- [importmap-rails Usage](https://github.com/rails/importmap-rails#usage) — Detailed usage for pinning, vendoring, and managing packages
 
 ---
 

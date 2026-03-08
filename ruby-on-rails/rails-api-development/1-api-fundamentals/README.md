@@ -2,20 +2,21 @@
 
 > Part of [Building RESTful APIs with Rails](https://stanza.dev/courses/rails-api-development)
 
-Set up Rails for API development
+Set up Rails for API development with the --api flag and understand API-specific controllers, routing, and middleware.
 
 ## Lessons
 
 1. [Creating API-Only Rails Applications](./1-only-setup.md)
-2. [API Routing and Namespacing](./2-api-routing.md)
-3. [Rendering JSON Responses](./3-json-responses.md)
+2. [API Controllers and Routing](./2-api-routing.md)
+3. [Structuring JSON Responses](./3-json-responses.md)
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: API Controller Inheritance
-- 🧩 Multiple Choice: HTTP Status for Creation
-- 🧩 Multiple Choice: API Namespace
+- 🧩 Multiple Choice: API-Only Mode
+- ✏️ Fill in the Blank: API Controller Base Class
+- 🧩 Challenge: API CRUD Flow
+- 🔗 Matching: HTTP Status Codes
 
 → [Practice in your IDE](https://stanza.dev/courses/rails-api-development)

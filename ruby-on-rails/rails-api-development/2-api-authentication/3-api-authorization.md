@@ -3,188 +3,141 @@ source_course: "rails-api-development"
 source_lesson: "rails-api-development-api-authorization"
 ---
 
-# API Authorization
+# Rails 8 Authentication Generator
 
-Authentication verifies who you are. Authorization determines what you can do.
+## Introduction
+Rails 8 introduced a built-in authentication generator that scaffolds a complete session-based authentication system. While designed for full-stack apps, it provides a solid foundation that can be adapted for API token authentication.
 
-## Simple Role-Based Authorization
+## Key Concepts
+- **`bin/rails generate authentication`**: The Rails 8 command that generates User model, Session model, controllers, and views for authentication.
+- **Session Model**: A database-backed session that tracks authenticated users.
+- **Password Reset Flow**: The generator includes password reset functionality with secure tokens.
+
+## Real World Context
+Before Rails 8, authentication required either a gem (Devise, Clearance) or building from scratch. The built-in generator provides a maintained, secure starting point that follows Rails conventions. For APIs, you adapt the generated code to use tokens instead of sessions.
+
+## Deep Dive
+### Running the Generator
+
+```bash
+bin/rails generate authentication
+```
+
+This creates:
+
+```
+app/models/user.rb              # User model with has_secure_password
+app/models/session.rb           # Session model
+app/controllers/sessions_controller.rb
+app/controllers/passwords_controller.rb
+app/mailers/passwords_mailer.rb
+db/migrate/..._create_users.rb
+db/migrate/..._create_sessions.rb
+```
+
+The generated User model:
 
 ```ruby
-# app/models/user.rb
 class User < ApplicationRecord
-  ROLES = %w[user editor admin].freeze
+  has_secure_password
+  has_many :sessions, dependent: :destroy
 
-  validates :role, inclusion: { in: ROLES }
-
-  def admin?
-    role == "admin"
-  end
-
-  def editor?
-    role.in?(%w[editor admin])
-  end
+  normalizes :email_address, with: -> (e) { e.strip.downcase }
 end
+```
 
-# app/controllers/api/v1/base_controller.rb
+Notice `normalizes :email_address` — a Rails 7.1+ feature that automatically strips and downcases emails before saving.
+
+### Adapting for API Use
+
+The generator creates session-based auth. For APIs, adapt it to return tokens:
+
+```ruby
+# app/controllers/api/v1/auth_controller.rb
 module Api
   module V1
-    class BaseController < ApplicationController
-      before_action :authenticate_user!
+    class AuthController < ApplicationController
+      def login
+        user = User.authenticate_by(
+          email_address: params[:email_address],
+          password: params[:password]
+        )
 
-      private
-
-      def require_admin!
-        unless current_user&.admin?
-          render json: { error: "Forbidden" }, status: :forbidden
+        if user
+          session = user.sessions.create!
+          render json: {
+            token: session.id,
+            user: { id: user.id, email: user.email_address }
+          }, status: :created
+        else
+          render json: { error: "Invalid credentials" },
+                 status: :unauthorized
         end
       end
 
-      def require_editor!
-        unless current_user&.editor?
-          render json: { error: "Forbidden" }, status: :forbidden
-        end
+      def logout
+        Current.session&.destroy
+        head :no_content
       end
     end
   end
 end
-
-# Usage
-class Api::V1::AdminController < Api::V1::BaseController
-  before_action :require_admin!
-end
 ```
 
-## Resource-Based Authorization
+The session ID serves as the API token. Each login creates a new session, and logout destroys it. This gives you token revocation for free.
+
+### Current Attributes
+
+The generator sets up `Current` for request-scoped attributes:
 
 ```ruby
-class Api::V1::ArticlesController < Api::V1::BaseController
-  before_action :set_article, only: [:show, :update, :destroy]
-  before_action :authorize_article!, only: [:update, :destroy]
-
-  def update
-    if @article.update(article_params)
-      render json: @article
-    else
-      render json: { errors: @article.errors }, status: :unprocessable_entity
-    end
-  end
-
-  private
-
-  def set_article
-    @article = Article.find(params[:id])
-  end
-
-  def authorize_article!
-    unless can_modify?(@article)
-      render json: { error: "Not authorized to modify this article" },
-             status: :forbidden
-    end
-  end
-
-  def can_modify?(article)
-    current_user.admin? || article.author_id == current_user.id
-  end
+class Current < ActiveSupport::CurrentAttributes
+  attribute :session
+  delegate :user, to: :session, allow_nil: true
 end
 ```
 
-## Policy Objects
+This lets you access `Current.user` anywhere in the request cycle.
 
-For complex authorization, use policy objects:
+## Common Pitfalls
+1. **Using the generator as-is for APIs** — The generated controllers render HTML. You need to adapt them for JSON responses.
+2. **Forgetting to run migrations** — The generator creates migration files but doesn't run them automatically.
+
+## Best Practices
+1. **Start with the generator, then customize** — It provides secure defaults. Build on them rather than starting from scratch.
+2. **Use session-based tokens for revocation** — Database-backed sessions can be individually revoked, unlike stateless JWTs.
+
+## Summary
+- `bin/rails generate authentication` scaffolds a complete auth system in Rails 8.
+- It creates User and Session models, controllers, and password reset flow.
+- Adapt the generated code for API use by returning session IDs as tokens.
+- Current attributes provide request-scoped access to the authenticated user.
+- Database-backed sessions give you token revocation for free.
+
+## Code Examples
+
+**The User model from Rails 8's auth generator — includes secure password, sessions, and email normalization**
 
 ```ruby
-# app/policies/article_policy.rb
-class ArticlePolicy
-  attr_reader :user, :article
+# Generated User model (Rails 8)
+class User < ApplicationRecord
+  has_secure_password
+  has_many :sessions, dependent: :destroy
 
-  def initialize(user, article)
-    @user = user
-    @article = article
-  end
+  normalizes :email_address,
+    with: -> (e) { e.strip.downcase }
 
-  def show?
-    article.published? || owned? || user&.admin?
-  end
-
-  def create?
-    user.present?
-  end
-
-  def update?
-    owned? || user&.admin?
-  end
-
-  def destroy?
-    owned? || user&.admin?
-  end
-
-  def publish?
-    user&.editor? && owned?
-  end
-
-  private
-
-  def owned?
-    article.author_id == user&.id
-  end
-end
-
-# Usage in controller
-class Api::V1::ArticlesController < Api::V1::BaseController
-  def update
-    @article = Article.find(params[:id])
-    policy = ArticlePolicy.new(current_user, @article)
-
-    unless policy.update?
-      return render json: { error: "Forbidden" }, status: :forbidden
-    end
-
-    if @article.update(article_params)
-      render json: @article
-    else
-      render json: { errors: @article.errors }, status: :unprocessable_entity
-    end
-  end
+  validates :email_address,
+    presence: true,
+    uniqueness: true,
+    format: { with: URI::MailTo::EMAIL_REGEXP }
 end
 ```
 
-## Scoping Queries
-
-```ruby
-# app/policies/article_policy.rb
-class ArticlePolicy
-  class Scope
-    def initialize(user, scope)
-      @user = user
-      @scope = scope
-    end
-
-    def resolve
-      if user&.admin?
-        scope.all
-      elsif user
-        scope.where("published = ? OR author_id = ?", true, user.id)
-      else
-        scope.where(published: true)
-      end
-    end
-
-    private
-
-    attr_reader :user, :scope
-  end
-end
-
-# Usage
-def index
-  @articles = ArticlePolicy::Scope.new(current_user, Article).resolve
-  render json: @articles
-end
-```
 
 ## Resources
 
-- [Pundit GitHub](https://github.com/varvet/pundit) — Popular authorization library for Rails
+- [Getting Started with Rails](https://guides.rubyonrails.org/getting_started.html) — Rails guide covering the authentication generator and setup
 
 ---
 

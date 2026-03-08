@@ -3,88 +3,117 @@ source_course: "modern-rails-frontend-hotwire"
 source_lesson: "rails-hotwire-turbo-drive"
 ---
 
-# Turbo Drive
+# Turbo Drive Basics
 
-Turbo Drive makes navigation instant by fetching pages in the background and swapping content.
+## Introduction
+Turbo Drive intercepts every link click and form submission, fetches the response in the background, and swaps the page content without a full browser reload. The result is SPA-like speed with zero JavaScript from you.
 
-## How It Works
+## Key Concepts
+- **Page Visit**: Turbo intercepts a link click and fetches the destination via `fetch`.
+- **Body Swap**: Turbo replaces the `<body>` from the response, preserving `<head>` when possible.
+- **Preview Cache**: Turbo caches page snapshots for instant back-button previews.
+- **Progress Bar**: A thin bar shown when server responses take over 500ms.
 
-Turbo Drive automatically:
-1. Intercepts link clicks and form submissions
-2. Fetches the page via fetch API
-3. Extracts the `<body>` content
-4. Swaps it into the current page
-5. Updates the URL and history
+## Real World Context
+Without Turbo Drive, every link click causes the browser to tear down the page, request a new one, re-parse CSS/JS, and rebuild the DOM. Turbo Drive eliminates this overhead, saving 100-300ms per navigation in typical Rails apps.
 
-## It Just Works
+## Deep Dive
+### How Navigation Works
 
-```erb
-<!-- These work automatically with Turbo Drive -->
-<%= link_to 'Products', products_path %>
-
-<%= form_with model: @product do |f| %>
-  <%= f.text_field :name %>
-  <%= f.submit 'Save' %>
-<% end %>
+```
+1. User clicks <a href="/products">
+2. Turbo intercepts the click
+3. Turbo sends fetch() to /products
+4. Server renders full HTML as usual
+5. Turbo extracts <body> from response
+6. Turbo merges <head>, replaces <body>
+7. Turbo updates URL and history
+8. turbo:load event fires
 ```
 
-## Disabling Turbo Drive
+The server doesn't know Turbo is involved. It renders a complete HTML page as always.
+
+### It Works Automatically
+
+All standard Rails links work with Turbo Drive:
 
 ```erb
-<!-- For specific link -->
-<%= link_to 'Download', file_path, data: { turbo: false } %>
+<%= link_to "Products", products_path %>
+<%= link_to "Edit", edit_product_path(@product) %>
+<%= button_to "Delete", product_path(@product), method: :delete %>
+```
 
-<!-- For an entire section -->
+No special attributes needed. Turbo intercepts all links within your domain by default.
+
+### Opting Out
+
+Use `data-turbo="false"` when you need a full page reload:
+
+```erb
+<%= link_to "Download PDF", report_path(format: :pdf),
+    data: { turbo: false } %>
+
 <div data-turbo="false">
-  <%= link_to 'External', 'https://example.com' %>
+  <!-- All links here bypass Turbo -->
 </div>
-
-<!-- Disable for form -->
-<%= form_with url: upload_path, data: { turbo: false } do |f| %>
-  <%= f.file_field :document %>
-  <%= f.submit 'Upload' %>
-<% end %>
 ```
 
-## Progress Bar
+The attribute is inherited by descendants.
 
-Turbo shows a progress bar for slow requests:
-
-```css
-.turbo-progress-bar {
-  height: 4px;
-  background-color: #3b82f6;
-}
-```
-
-## Turbo Drive Events
+### Important Events
 
 ```javascript
-// Before navigation starts
-document.addEventListener('turbo:before-visit', (event) => {
-  console.log('Navigating to:', event.detail.url)
+// Fires on every Turbo navigation (replaces DOMContentLoaded)
+document.addEventListener("turbo:load", () => {
+  // Initialize third-party libraries here
 })
 
-// After page loads
-document.addEventListener('turbo:load', () => {
-  console.log('Page loaded')
-  // Initialize third-party scripts here
-})
-
-// Page is about to be cached
-document.addEventListener('turbo:before-cache', () => {
-  // Clean up before caching
+// Clean up before Turbo caches the page
+document.addEventListener("turbo:before-cache", () => {
+  // Remove tooltips, modals, temporary UI
 })
 ```
 
-## Cache Control
+`turbo:load` fires on every navigation, unlike `DOMContentLoaded` which fires only once. Use it for any initialization code, or better yet, use Stimulus controllers.
 
-```erb
-<!-- Skip cache for this page -->
-<head>
-  <meta name="turbo-cache-control" content="no-cache">
-</head>
+## Common Pitfalls
+1. **Using DOMContentLoaded** — Only fires once. After Turbo navigations it won't fire again. Use `turbo:load` or Stimulus.
+2. **Not handling preview cache** — Back-button shows cached snapshot. Open modals/tooltips appear in the preview. Clean up with `turbo:before-cache`.
+
+## Best Practices
+1. **Use Stimulus instead of event listeners** — Controllers auto-connect/disconnect with the DOM.
+2. **Set cache control for dynamic pages** — Use `<meta name="turbo-cache-control" content="no-cache">` for frequently changing pages.
+
+## Summary
+- Turbo Drive intercepts links and forms, fetching pages via fetch and swapping `<body>`.
+- Works automatically with all standard Rails links and forms.
+- Use `data-turbo="false"` to opt out specific elements.
+- `turbo:load` replaces `DOMContentLoaded` for code that runs on every page.
+- Turbo caches pages for instant back-button previews.
+
+## Code Examples
+
+**A standard Rails controller works with Turbo Drive without any modifications**
+
+```ruby
+# Controllers need no changes for Turbo Drive
+class ProductsController < ApplicationController
+  def index
+    @products = Product.all
+    # Renders full HTML — Turbo extracts <body> client-side
+  end
+
+  def show
+    @product = Product.find(params[:id])
+    # Server has no idea Turbo is involved
+  end
+end
 ```
+
+
+## Resources
+
+- [Turbo Drive Handbook](https://turbo.hotwired.dev/handbook/drive) — Official handbook on Drive navigation and caching
 
 ---
 

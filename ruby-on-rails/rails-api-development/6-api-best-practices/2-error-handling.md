@@ -3,180 +3,125 @@ source_course: "rails-api-development"
 source_lesson: "rails-api-development-error-handling"
 ---
 
-# Comprehensive Error Handling
+# Structured Error Responses
 
-Produce consistent, helpful error responses across your entire API.
+## Introduction
+APIs need consistent, machine-readable error responses. Every error — validation failure, not found, unauthorized, server error — should follow the same JSON structure so clients can handle errors generically.
 
-## Global Exception Handling
+## Key Concepts
+- **Error Envelope**: A consistent JSON structure for all errors (e.g., `{ error: { message, status, code } }`).
+- **`rescue_from`**: A Rails method that catches exceptions and renders custom responses.
+- **Problem Details (RFC 7807)**: A standard for HTTP API error responses.
+- **Validation Errors**: Errors returned when model validation fails.
+
+## Real World Context
+APIs that return inconsistent errors are painful to consume. Stripe, GitHub, and Twilio all use consistent error formats. A standard format means clients can handle all errors with a single error-handling function.
+
+## Deep Dive
+### Application-Level Error Handling
 
 ```ruby
-class Api::V1::BaseController < ApplicationController
-  rescue_from StandardError, with: :handle_standard_error
-  rescue_from ActiveRecord::RecordNotFound, with: :handle_not_found
-  rescue_from ActiveRecord::RecordInvalid, with: :handle_validation_error
-  rescue_from ActionController::ParameterMissing, with: :handle_parameter_missing
-  rescue_from AuthenticationError, with: :handle_authentication_error
-  rescue_from AuthorizationError, with: :handle_authorization_error
+class ApplicationController < ActionController::API
+  rescue_from ActiveRecord::RecordNotFound, with: :not_found
+  rescue_from ActiveRecord::RecordInvalid, with: :unprocessable_entity
+  rescue_from ActionController::ParameterMissing, with: :bad_request
 
   private
 
-  def handle_not_found(exception)
+  def not_found(exception)
     render json: {
       error: {
-        code: 'not_found',
+        status: 404,
         message: "Resource not found",
-        details: exception.message
+        detail: exception.message
       }
     }, status: :not_found
   end
 
-  def handle_validation_error(exception)
+  def unprocessable_entity(exception)
     render json: {
       error: {
-        code: 'validation_error',
-        message: 'Validation failed',
-        details: format_validation_errors(exception.record)
+        status: 422,
+        message: "Validation failed",
+        errors: exception.record.errors.full_messages
       }
     }, status: :unprocessable_entity
   end
 
-  def handle_parameter_missing(exception)
+  def bad_request(exception)
     render json: {
       error: {
-        code: 'parameter_missing',
-        message: "Required parameter missing: #{exception.param}"
+        status: 400,
+        message: "Bad request",
+        detail: exception.message
       }
     }, status: :bad_request
   end
-
-  def handle_authentication_error(exception)
-    render json: {
-      error: {
-        code: 'unauthorized',
-        message: exception.message || 'Authentication required'
-      }
-    }, status: :unauthorized
-  end
-
-  def handle_authorization_error(exception)
-    render json: {
-      error: {
-        code: 'forbidden',
-        message: exception.message || 'Access denied'
-      }
-    }, status: :forbidden
-  end
-
-  def handle_standard_error(exception)
-    # Log the error
-    Rails.logger.error(exception.message)
-    Rails.logger.error(exception.backtrace.join("\n"))
-
-    # Report to error tracking service
-    Sentry.capture_exception(exception) if defined?(Sentry)
-
-    # Don't expose internal errors in production
-    if Rails.env.production?
-      render json: {
-        error: {
-          code: 'internal_error',
-          message: 'An unexpected error occurred'
-        }
-      }, status: :internal_server_error
-    else
-      render json: {
-        error: {
-          code: 'internal_error',
-          message: exception.message,
-          backtrace: exception.backtrace.first(10)
-        }
-      }, status: :internal_server_error
-    end
-  end
-
-  def format_validation_errors(record)
-    record.errors.map do |error|
-      {
-        field: error.attribute.to_s,
-        message: error.message,
-        code: error.type.to_s
-      }
-    end
-  end
 end
 ```
 
-## Custom Error Classes
+Every error follows the same shape: `status`, `message`, and additional details. Clients parse `error.message` for display and `error.status` for programmatic handling.
+
+### Validation Error Details
 
 ```ruby
-# app/errors/api_error.rb
-class ApiError < StandardError
-  attr_reader :code, :status
-
-  def initialize(message, code: nil, status: :bad_request)
-    super(message)
-    @code = code || 'api_error'
-    @status = status
-  end
-end
-
-class AuthenticationError < ApiError
-  def initialize(message = 'Authentication required')
-    super(message, code: 'unauthorized', status: :unauthorized)
-  end
-end
-
-class AuthorizationError < ApiError
-  def initialize(message = 'Access denied')
-    super(message, code: 'forbidden', status: :forbidden)
-  end
-end
-
-class RateLimitError < ApiError
-  def initialize
-    super('Rate limit exceeded', code: 'rate_limited', status: :too_many_requests)
-  end
-end
-```
-
-## Error Response Schema
-
-```yaml
-# Always return errors in this format:
-{
-  "error": {
-    "code": "validation_error",
-    "message": "Human readable message",
-    "details": [
-      {
-        "field": "email",
-        "message": "is invalid",
-        "code": "invalid"
+def create
+  product = Product.new(product_params)
+  if product.save
+    render json: product, status: :created
+  else
+    render json: {
+      error: {
+        status: 422,
+        message: "Validation failed",
+        errors: product.errors.messages
       }
-    ],
-    "request_id": "abc-123"  # For debugging
-  }
-}
+    }, status: :unprocessable_entity
+  end
+end
 ```
 
-## Request ID Tracking
+`errors.messages` returns a hash like `{ name: ["can't be blank"], price: ["must be greater than 0"] }`, letting clients show field-specific errors.
+
+## Common Pitfalls
+1. **Leaking stack traces in production** — Never include exception backtraces in API responses. Use generic messages for 500 errors.
+2. **Inconsistent error formats** — If some endpoints return `{ message: "..." }` and others return `{ error: "..." }`, clients need special handling.
+
+## Best Practices
+1. **Handle errors at the application level** — `rescue_from` in ApplicationController catches errors from all endpoints.
+2. **Return field-specific validation errors** — `errors.messages` lets clients highlight specific form fields.
+
+## Summary
+- Use a consistent error envelope for all API errors.
+- `rescue_from` catches exceptions at the application level.
+- Include field-specific validation errors for form handling.
+- Never expose stack traces or internal details in production.
+
+## Code Examples
+
+**Application-level error handling ensuring consistent JSON error format across all endpoints**
 
 ```ruby
-class Api::V1::BaseController < ApplicationController
-  before_action :set_request_id
+class ApplicationController < ActionController::API
+  rescue_from ActiveRecord::RecordNotFound do |e|
+    render json: {
+      error: { status: 404, message: "Not found", detail: e.message }
+    }, status: :not_found
+  end
 
-  private
-
-  def set_request_id
-    @request_id = request.headers['X-Request-Id'] || SecureRandom.uuid
-    response.headers['X-Request-Id'] = @request_id
+  rescue_from ActiveRecord::RecordInvalid do |e|
+    render json: {
+      error: { status: 422, message: "Validation failed",
+               errors: e.record.errors.messages }
+    }, status: :unprocessable_entity
   end
 end
 ```
+
 
 ## Resources
 
-- [Error Reporting in Rails](https://guides.rubyonrails.org/error_reporting.html) — Rails error reporting guide
+- [Error Handling in Rails](https://guides.rubyonrails.org/action_controller_overview.html#rescue) — Rails guide on rescue_from and exception handling in controllers
 
 ---
 

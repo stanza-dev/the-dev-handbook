@@ -5,11 +5,23 @@ source_lesson: "rails-security-content-security-policy"
 
 # Content Security Policy
 
-Content Security Policy (CSP) is an HTTP header that tells browsers which sources of content to trust.
+## Introduction
+Content Security Policy (CSP) is an HTTP header that tells browsers which sources of content to trust. Even if an XSS vulnerability exists in your application, CSP can prevent the injected script from executing.
 
-## Configuring CSP in Rails
+## Key Concepts
+- **CSP Header**: An HTTP response header that defines a policy for allowed content sources.
+- **Directive**: A rule within CSP that controls a specific resource type (scripts, styles, images, etc.).
+- **Nonce**: A unique, random value generated per request that allows specific inline scripts.
+- **Report-Only Mode**: A CSP mode that logs violations without blocking content, useful for testing.
 
-Rails 7+ includes CSP support:
+## Real World Context
+CSP is your last line of defense against XSS. Major sites like GitHub, Google, and Facebook all use strict CSP policies. Rails has built-in CSP support, making it straightforward to configure.
+
+## Deep Dive
+
+### Configuring CSP in Rails
+
+Rails includes CSP support out of the box:
 
 ```ruby
 # config/initializers/content_security_policy.rb
@@ -20,47 +32,48 @@ Rails.application.configure do
     policy.img_src     :self, :data, 'https://cdn.example.com'
     policy.script_src  :self
     policy.style_src   :self, 'https://fonts.googleapis.com'
-    
+
     # Report violations to your server
     policy.report_uri '/csp-violation-report'
   end
 end
 ```
 
-## CSP Directives
+Each directive specifies which sources are trusted for that resource type. The `:self` keyword means the same origin as the page.
 
-- `default-src`: Fallback for other directives
-- `script-src`: Valid sources for JavaScript
-- `style-src`: Valid sources for stylesheets
-- `img-src`: Valid sources for images
-- `connect-src`: Valid URLs for fetch, WebSocket, etc.
-- `frame-src`: Valid sources for frames
-
-## Nonces for Inline Scripts
+### Nonces for Inline Scripts
 
 CSP blocks inline scripts by default. Use nonces to allow specific ones:
 
-```ruby
-# In controller or layout
+```erb
 <%= tag.script nonce: content_security_policy_nonce do %>
   console.log('This inline script is allowed');
 <% end %>
 ```
 
-With CSP configuration:
+The nonce is a random value that changes on every request. Only scripts with the matching nonce are executed.
+
+Configure CSP to accept nonces:
+
 ```ruby
 policy.script_src :self, :nonce
 ```
 
-## Report-Only Mode
+This tells the browser to execute inline scripts only if they carry the correct nonce value.
 
-Test CSP without breaking your site:
+### Report-Only Mode
+
+Test your CSP policy without breaking your site:
 
 ```ruby
 config.content_security_policy_report_only = true
 ```
 
-## Per-Action CSP
+In report-only mode, violations are logged but not blocked. This lets you refine your policy before enforcing it.
+
+### Per-Action CSP
+
+Override CSP for specific controller actions:
 
 ```ruby
 class PostsController < ApplicationController
@@ -69,6 +82,44 @@ class PostsController < ApplicationController
   end, only: :show
 end
 ```
+
+This allows Google Maps scripts only on the show action, keeping a strict policy everywhere else.
+
+## Common Pitfalls
+1. **Using `unsafe-inline` for scripts** — This directive defeats the purpose of CSP entirely. Use nonces instead.
+2. **Deploying CSP without report-only testing** — A misconfigured CSP can break your entire site. Always test in report-only mode first.
+
+## Best Practices
+1. **Start with a strict policy** — Begin with `default_src :self` and add exceptions only as needed.
+2. **Monitor violation reports** — Set up a reporting endpoint to catch violations in production and detect potential attacks.
+
+## Summary
+- CSP is an HTTP header that restricts which content sources browsers trust.
+- Rails has built-in CSP support via an initializer.
+- Use nonces for inline scripts instead of `unsafe-inline`.
+- Test policies in report-only mode before enforcing them.
+- Per-action CSP overrides allow exceptions for specific pages.
+
+## Code Examples
+
+**A strict CSP configuration that only allows same-origin resources and nonce-authenticated inline scripts**
+
+```ruby
+# config/initializers/content_security_policy.rb
+Rails.application.configure do
+  config.content_security_policy do |policy|
+    policy.default_src :self
+    policy.script_src  :self, :nonce
+    policy.style_src   :self, 'https://fonts.googleapis.com'
+    policy.report_uri  '/csp-violation-report'
+  end
+end
+```
+
+
+## Resources
+
+- [Rails Content Security Policy Guide](https://guides.rubyonrails.org/security.html#content-security-policy) — Official Rails guide on configuring Content Security Policy
 
 ---
 

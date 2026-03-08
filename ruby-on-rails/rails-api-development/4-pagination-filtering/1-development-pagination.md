@@ -3,137 +3,119 @@ source_course: "rails-api-development"
 source_lesson: "rails-api-development-pagination"
 ---
 
-# API Pagination Strategies
+# API Pagination
 
-APIs must paginate large collections. Let's explore different strategies.
+## Introduction
+APIs serving collections must paginate responses to avoid returning thousands of records in a single request. Rails has excellent pagination gems that integrate cleanly with API responses.
 
-## Offset-Based Pagination
+## Key Concepts
+- **Offset Pagination**: Uses `page` and `per_page` parameters. Simple but slow for deep pages.
+- **Cursor Pagination**: Uses an opaque cursor pointing to the last item. Fast and consistent.
+- **Pagy**: A fast, lightweight pagination gem with API-friendly features.
+- **Link Headers**: Pagination metadata returned in HTTP headers following the RFC 5988 standard.
 
-The most common approach using page numbers:
+## Real World Context
+Every API endpoint that returns collections needs pagination. Without it, endpoints become slower as data grows, clients download unnecessary data, and servers waste memory. GitHub, Stripe, and Shopify all use pagination in their APIs.
+
+## Deep Dive
+### Offset Pagination with Pagy
 
 ```ruby
-# Using Kaminari gem
 # Gemfile
-gem 'kaminari'
-
-# Controller
-class Api::V1::ArticlesController < Api::V1::BaseController
-  def index
-    @articles = Article.published
-                       .order(created_at: :desc)
-                       .page(params[:page])
-                       .per(params[:per_page] || 25)
-
-    render json: {
-      data: ArticleSerializer.new(@articles).as_json,
-      meta: {
-        current_page: @articles.current_page,
-        total_pages: @articles.total_pages,
-        total_count: @articles.total_count,
-        per_page: @articles.limit_value
-      },
-      links: pagination_links(@articles)
-    }
-  end
-
-  private
-
-  def pagination_links(collection)
-    {
-      self: url_for(page: collection.current_page),
-      first: url_for(page: 1),
-      last: url_for(page: collection.total_pages),
-      prev: collection.prev_page ? url_for(page: collection.prev_page) : nil,
-      next: collection.next_page ? url_for(page: collection.next_page) : nil
-    }
-  end
-end
+gem "pagy"
 ```
-
-Client usage:
-```
-GET /api/v1/articles?page=2&per_page=10
-```
-
-## Cursor-Based Pagination
-
-Better for real-time data and large datasets:
 
 ```ruby
-class Api::V1::ArticlesController < Api::V1::BaseController
+# app/controllers/api/v1/products_controller.rb
+class Api::V1::ProductsController < ApplicationController
+  include Pagy::Backend
+
   def index
-    @articles = fetch_articles_with_cursor
+    pagy, products = pagy(Product.all, items: params[:per_page] || 25)
 
     render json: {
-      data: ArticleSerializer.new(@articles).as_json,
+      data: products,
       meta: {
-        has_more: @articles.size > limit,
-        next_cursor: @articles.last&.id
+        current_page: pagy.page,
+        total_pages: pagy.pages,
+        total_count: pagy.count,
+        per_page: pagy.items
       }
     }
   end
-
-  private
-
-  def fetch_articles_with_cursor
-    articles = Article.published.order(id: :desc)
-
-    if params[:cursor]
-      articles = articles.where("id < ?", params[:cursor])
-    end
-
-    articles.limit(limit + 1).to_a.first(limit)
-  end
-
-  def limit
-    [(params[:limit] || 25).to_i, 100].min
-  end
 end
 ```
 
-Client usage:
-```
-GET /api/v1/articles?cursor=100&limit=25
-```
+Pagy is significantly faster than Kaminari (15x) and WillPaginate (40x) in benchmarks. The meta block gives clients all the information they need for pagination controls.
 
-## Link Headers (REST Standard)
+### Cursor Pagination
+
+For large datasets, cursor pagination is more efficient:
 
 ```ruby
-class Api::V1::ArticlesController < Api::V1::BaseController
-  def index
-    @articles = Article.page(params[:page]).per(25)
+def index
+  limit = (params[:limit] || 25).to_i.clamp(1, 100)
+  products = Product.order(:id)
 
-    set_pagination_headers(@articles)
-    render json: @articles
+  if params[:after]
+    products = products.where("id > ?", params[:after])
   end
 
-  private
+  products = products.limit(limit + 1) # Fetch one extra to check for next page
+  has_next = products.size > limit
+  products = products.first(limit)
 
-  def set_pagination_headers(collection)
-    links = []
-    links << %(<#{url_for(page: 1)}>; rel="first")
-    links << %(<#{url_for(page: collection.total_pages)}>; rel="last")
-    links << %(<#{url_for(page: collection.prev_page)}>; rel="prev") if collection.prev_page
-    links << %(<#{url_for(page: collection.next_page)}>; rel="next") if collection.next_page
-
-    response.headers["Link"] = links.join(", ")
-    response.headers["X-Total-Count"] = collection.total_count.to_s
-    response.headers["X-Total-Pages"] = collection.total_pages.to_s
-  end
+  render json: {
+    data: products,
+    meta: {
+      has_next_page: has_next,
+      next_cursor: has_next ? products.last.id : nil
+    }
+  }
 end
 ```
 
-## Comparison
+Cursor pagination uses the last item's ID as a cursor. It doesn't suffer from the offset problem where deep pages require scanning many rows.
 
-| Approach | Pros | Cons |
-|----------|------|------|
-| Offset | Simple, familiar | Slow for large offsets, inconsistent with real-time data |
-| Cursor | Fast, consistent | Can't jump to specific page |
-| Link Headers | REST standard | Requires header parsing |
+## Common Pitfalls
+1. **Not clamping per_page** — Without limits, clients can request `per_page=100000` and crash your server.
+2. **Using offset for large tables** — `OFFSET 10000` requires the database to scan 10,000 rows before returning results.
+
+## Best Practices
+1. **Default to 25 items per page** — A sensible default that balances payload size and request count.
+2. **Always clamp the limit** — `(params[:limit] || 25).to_i.clamp(1, 100)` prevents abuse.
+
+## Summary
+- Use Pagy for fast offset pagination with API-friendly metadata.
+- Use cursor pagination for large datasets where offset becomes slow.
+- Always clamp page size to prevent abuse.
+- Include pagination metadata in the response for client navigation.
+
+## Code Examples
+
+**Cursor pagination fetching one extra record to determine if there's a next page**
+
+```ruby
+# Cursor pagination — efficient for large datasets
+def index
+  limit = (params[:limit] || 25).to_i.clamp(1, 100)
+  scope = Product.order(:id)
+  scope = scope.where("id > ?", params[:after]) if params[:after]
+  items = scope.limit(limit + 1).to_a
+  has_next = items.size > limit
+  items = items.first(limit)
+
+  render json: {
+    data: items,
+    meta: { has_next_page: has_next, next_cursor: items.last&.id }
+  }
+end
+```
+
 
 ## Resources
 
-- [Kaminari Gem](https://github.com/kaminari/kaminari) — Popular pagination library for Rails
+- [Pagy Gem](https://github.com/ddnexus/pagy) — Pagy documentation — the fastest pagination gem for Rails
 
 ---
 

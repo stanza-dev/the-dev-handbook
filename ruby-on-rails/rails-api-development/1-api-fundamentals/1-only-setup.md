@@ -5,137 +5,101 @@ source_lesson: "rails-api-development-api-only-setup"
 
 # Creating API-Only Rails Applications
 
-Rails can be configured as an API-only application, removing view-related middleware for a leaner, faster API server.
+## Introduction
+Rails provides a dedicated mode for building JSON APIs. The `--api` flag creates a leaner application that skips browser-specific middleware, views, and helpers. In Rails 8.1, this includes Solid Queue for background jobs and Solid Cache for caching by default.
 
-## Creating an API Application
+## Key Concepts
+- **API-Only Mode**: A Rails configuration that removes browser middleware (cookies, sessions, CSRF) and uses `ActionController::API` instead of `ActionController::Base`.
+- **`ActionController::API`**: A lighter controller base class without view rendering, flash messages, or cookie handling.
+- **Middleware Stack**: API-only apps include only middleware needed for JSON processing, logging, and security.
+- **Solid Queue**: Rails 8's default background job backend, replacing the need for Redis-backed Sidekiq in many cases.
+
+## Real World Context
+Mobile apps, single-page applications, and microservices all need JSON APIs. Rails' API mode strips away HTML-specific features, reducing memory usage and response times. Companies like Shopify and GitHub run Rails API backends serving millions of requests.
+
+## Deep Dive
+### Creating the Application
 
 ```bash
 rails new my_api --api
 ```
 
-The `--api` flag:
-- Configures ApplicationController to inherit from `ActionController::API`
-- Removes browser-specific middleware (cookies, sessions, flash)
-- Skips generating views, helpers, and assets
-- Configures generators to skip view generation
-
-## What Changes?
-
-### Application Controller
-
-```ruby
-# Standard Rails
-class ApplicationController < ActionController::Base
-end
-
-# API-only Rails
-class ApplicationController < ActionController::API
-end
-```
-
-`ActionController::API` includes:
-- URL generation
-- Redirects
-- Rendering (JSON, etc.)
-- Parameter filtering
-- HTTP caching
-- Basic authentication
-
-It excludes:
-- Cookie/session management
-- Flash messages
-- Asset helpers
-- Form helpers
-
-### Configuration
+This generates an application with key differences from a standard Rails app:
 
 ```ruby
 # config/application.rb
 module MyApi
   class Application < Rails::Application
+    config.load_defaults 8.1
     config.api_only = true
   end
 end
 ```
 
-## Converting Existing App to API
+The `config.api_only = true` setting configures the entire application for API mode. Controllers inherit from `ActionController::API`, the middleware stack is trimmed, and view generation is skipped.
+
+### The API Controller Base
 
 ```ruby
-# config/application.rb
-config.api_only = true
-
 # app/controllers/application_controller.rb
 class ApplicationController < ActionController::API
+  # No CSRF protection (APIs use token auth)
+  # No session handling
+  # No cookie handling
+  # No flash messages
+  # No view rendering helpers
 end
 ```
 
-## Basic API Controller
+`ActionController::API` includes only the modules needed for API responses: rendering, redirecting, parameter filtering, and basic callbacks. It's roughly 60% lighter than `ActionController::Base`.
+
+### Rails 8.1 Defaults
+
+New Rails 8.1 API apps include several modern defaults:
 
 ```ruby
-class ArticlesController < ApplicationController
-  def index
-    @articles = Article.all
-    render json: @articles
-  end
+# Gemfile (generated)
+gem "solid_queue"  # Background jobs (replaces Redis + Sidekiq for many cases)
+gem "solid_cache"  # SQL-based caching
+gem "solid_cable"  # Action Cable without Redis
+```
 
-  def show
-    @article = Article.find(params[:id])
-    render json: @article
-  end
+These "Solid" libraries use your existing database instead of requiring Redis, simplifying infrastructure for API applications.
 
-  def create
-    @article = Article.new(article_params)
+## Common Pitfalls
+1. **Adding browser middleware back unnecessarily** — If you need sessions or cookies, you probably want a full Rails app, not API-only.
+2. **Forgetting CORS configuration** — API-only apps serving browser clients need `rack-cors` gem configured. Without it, browsers block cross-origin requests.
 
-    if @article.save
-      render json: @article, status: :created
-    else
-      render json: { errors: @article.errors }, status: :unprocessable_entity
-    end
-  end
+## Best Practices
+1. **Start API-only and add back selectively** — It's easier to add specific middleware than to remove unnecessary ones.
+2. **Use Solid Queue for background jobs** — It's the Rails 8 default and eliminates the Redis dependency for most job processing needs.
 
-  def update
-    @article = Article.find(params[:id])
+## Summary
+- `rails new my_api --api` creates a lean API-focused application.
+- API controllers inherit from `ActionController::API`, a lighter base class.
+- Rails 8.1 includes Solid Queue, Solid Cache, and Solid Cable by default.
+- API mode removes browser middleware (sessions, cookies, CSRF, flash).
+- Configure `rack-cors` for browser clients making cross-origin requests.
 
-    if @article.update(article_params)
-      render json: @article
-    else
-      render json: { errors: @article.errors }, status: :unprocessable_entity
-    end
-  end
+## Code Examples
 
-  def destroy
-    @article = Article.find(params[:id])
-    @article.destroy
-    head :no_content
-  end
+**The API-only application controller — inherits from ActionController::API with only API-essential modules**
 
-  private
-
-  def article_params
-    params.require(:article).permit(:title, :body, :published)
-  end
+```ruby
+# app/controllers/application_controller.rb
+class ApplicationController < ActionController::API
+  # Lighter than ActionController::Base:
+  # - No CSRF protection (use token auth instead)
+  # - No session/cookie handling
+  # - No flash messages or view helpers
+  # - Includes: rendering, params, callbacks, rescue_from
 end
 ```
 
-## HTTP Status Codes
-
-Use appropriate status codes:
-
-| Status | Symbol | Use When |
-|--------|--------|----------|
-| 200 | :ok | Successful GET/PUT |
-| 201 | :created | Successful POST |
-| 204 | :no_content | Successful DELETE |
-| 400 | :bad_request | Malformed request |
-| 401 | :unauthorized | Authentication required |
-| 403 | :forbidden | Not allowed |
-| 404 | :not_found | Resource doesn't exist |
-| 422 | :unprocessable_entity | Validation failed |
-| 500 | :internal_server_error | Server error |
 
 ## Resources
 
-- [Using Rails for API-only Applications](https://guides.rubyonrails.org/api_app.html) — Official guide to Rails API applications
+- [Using Rails for API-Only Applications](https://guides.rubyonrails.org/api_app.html) — Official guide on API-only mode, middleware, and configuration
 
 ---
 

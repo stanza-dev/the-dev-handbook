@@ -3,114 +3,163 @@ source_course: "modern-rails-frontend-hotwire"
 source_lesson: "rails-hotwire-stimulus-patterns"
 ---
 
-# Stimulus Patterns
+# Actions and Events
 
-Learn patterns for building reusable Stimulus controllers.
+## Introduction
+Stimulus actions map DOM events to controller methods using `data-action` attributes. Instead of writing `addEventListener` calls, you declare the event binding directly in HTML, keeping behavior close to the markup it affects.
 
-## Outlets (Controller Communication)
+## Key Concepts
+- **Action Descriptor**: The `data-action` attribute format: `event->controller#method`.
+- **Default Events**: Some elements have default events (click for buttons, submit for forms, input for inputs).
+- **Event Options**: Modifiers like `:prevent`, `:stop`, `:once` appended to the action descriptor.
+- **Action Parameters**: Passing data from HTML to action methods via `data-[controller]-[param]-param`.
 
-```javascript
-// controllers/form_controller.js
-import { Controller } from '@hotwired/stimulus'
+## Real World Context
+Actions are how you connect user interactions to behavior. Clicking a button, submitting a form, pressing a key, hovering an element — every event-driven interaction in a Stimulus-powered app uses the action descriptor syntax.
 
-export default class extends Controller {
-  static outlets = ['submit-button']
-  
-  validate() {
-    const isValid = this.checkValidity()
-    
-    this.submitButtonOutlets.forEach(button => {
-      button.toggle(isValid)
-    })
-  }
-}
+## Deep Dive
+### Action Descriptor Syntax
 
-// controllers/submit_button_controller.js
-export default class extends Controller {
-  toggle(enabled) {
-    this.element.disabled = !enabled
-  }
-}
-```
+The full format is `event->controller#method`:
 
 ```html
-<form data-controller="form" data-form-submit-button-outlet="#submit">
-  <input data-action="input->form#validate">
-  <button id="submit" data-controller="submit-button">Submit</button>
-</form>
-```
-
-## Classes API
-
-```javascript
-import { Controller } from '@hotwired/stimulus'
-
-export default class extends Controller {
-  static classes = ['active', 'loading']
-  
-  toggle() {
-    this.element.classList.toggle(this.activeClass)
-  }
-  
-  startLoading() {
-    this.element.classList.add(this.loadingClass)
-  }
-}
-```
-
-```html
-<div data-controller="button"
-     data-button-active-class="btn-active"
-     data-button-loading-class="btn-loading">
+<div data-controller="clipboard">
+  <input data-clipboard-target="source" value="Copy me!">
+  <button data-action="click->clipboard#copy">Copy</button>
 </div>
 ```
 
-## Async Data Loading
+The button's click event triggers the `copy` method on the `clipboard` controller. The format always follows: `event->controller#method`.
+
+### Default Events
+
+Some elements have default events that can be omitted:
+
+```html
+<!-- These are equivalent -->
+<button data-action="click->modal#open">Open</button>
+<button data-action="modal#open">Open</button>  <!-- click is default for button -->
+
+<form data-action="submit->search#perform">  <!-- explicit -->
+<form data-action="search#perform">           <!-- submit is default for form -->
+
+<input data-action="input->filter#update">    <!-- explicit -->
+<input data-action="filter#update">           <!-- input is default for input -->
+```
+
+Defaults: `click` for links/buttons, `submit` for forms, `input` for input/textarea/select.
+
+### Event Modifiers
+
+Append modifiers with colons:
+
+```html
+<!-- Prevent default behavior -->
+<form data-action="submit->form#save:prevent">
+
+<!-- Stop event propagation -->
+<button data-action="click->menu#toggle:stop">
+
+<!-- Fire only once -->
+<button data-action="click->intro#dismiss:once">
+
+<!-- Keyboard-specific: only on Enter key -->
+<input data-action="keydown.enter->search#perform">
+
+<!-- Combine modifiers -->
+<a data-action="click->modal#open:prevent:stop">
+```
+
+Modifiers eliminate the need for `event.preventDefault()` and `event.stopPropagation()` in your JavaScript.
+
+### Action Parameters
+
+Pass data from HTML to action methods:
+
+```html
+<div data-controller="cart">
+  <button data-action="click->cart#add"
+          data-cart-product-id-param="42"
+          data-cart-quantity-param="1">
+    Add to Cart
+  </button>
+</div>
+```
+
+Access parameters in the action method:
 
 ```javascript
-import { Controller } from '@hotwired/stimulus'
+add(event) {
+  const { productId, quantity } = event.params
+  console.log(`Adding product ${productId}, qty ${quantity}`)
+  // productId is "42", quantity is "1"
+}
+```
+
+Parameters are automatically extracted from `data-[controller]-[name]-param` attributes on the element that triggered the action.
+
+### Multiple Actions on One Element
+
+Space-separate multiple actions:
+
+```html
+<input data-action="input->search#update focus->search#expand blur->search#collapse">
+```
+
+This element responds to three different events, each calling a different method on the same controller.
+
+## Common Pitfalls
+1. **Wrong action format** — The delimiter is `->` (not `.` or `:`). The format is `event->controller#method`.
+2. **Forgetting the controller name** — `data-action="click->copy"` is wrong. It must include both controller and method: `click->clipboard#copy`.
+
+## Best Practices
+1. **Use modifiers instead of JavaScript event methods** — `:prevent` and `:stop` are cleaner than calling `event.preventDefault()` in your method.
+2. **Use action parameters for per-element data** — Instead of querying data attributes manually, use the `data-*-param` pattern for clean data passing.
+
+## Summary
+- Actions use the format `event->controller#method` in `data-action` attributes.
+- Default events (click, submit, input) can be omitted for common elements.
+- Modifiers (`:prevent`, `:stop`, `:once`, `.enter`) control event behavior declaratively.
+- Action parameters pass data from HTML to methods via `data-*-param` attributes.
+- Multiple actions can be space-separated on a single element.
+
+## Code Examples
+
+**A validation controller using action parameters to receive min/max constraints from HTML attributes**
+
+```javascript
+import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ['content']
-  static values = { url: String }
-  
-  async connect() {
-    await this.load()
-  }
-  
-  async load() {
-    this.element.classList.add('loading')
-    
-    try {
-      const response = await fetch(this.urlValue)
-      this.contentTarget.innerHTML = await response.text()
-    } finally {
-      this.element.classList.remove('loading')
+  static targets = ["field", "output"]
+
+  // Action with event parameter
+  validate({ target, params }) {
+    const value = target.value
+    const { min, max } = params  // from data-validator-min-param, data-validator-max-param
+
+    if (value.length < min || value.length > max) {
+      this.outputTarget.textContent = `Must be ${min}-${max} characters`
+      this.outputTarget.classList.add("text-red-500")
+    } else {
+      this.outputTarget.textContent = "Looks good!"
+      this.outputTarget.classList.remove("text-red-500")
     }
   }
 }
+
+// <div data-controller="validator">
+//   <input data-action="input->validator#validate"
+//          data-validator-min-param="3"
+//          data-validator-max-param="50">
+//   <p data-validator-target="output"></p>
+// </div>
 ```
 
-## Debounce Pattern
 
-```javascript
-import { Controller } from '@hotwired/stimulus'
+## Resources
 
-export default class extends Controller {
-  static values = { delay: { type: Number, default: 300 } }
-  
-  search() {
-    clearTimeout(this.timeout)
-    this.timeout = setTimeout(() => {
-      this.performSearch()
-    }, this.delayValue)
-  }
-  
-  performSearch() {
-    // Actual search logic
-  }
-}
-```
+- [Stimulus Actions](https://stimulus.hotwired.dev/reference/actions) — Official reference for action descriptors, events, and parameters
 
 ---
 

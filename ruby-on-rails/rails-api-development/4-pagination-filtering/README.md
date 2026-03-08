@@ -1,19 +1,21 @@
-# 📄 Pagination and Filtering
+# 🔍 Pagination, Filtering & Search
 
 > Part of [Building RESTful APIs with Rails](https://stanza.dev/courses/rails-api-development)
 
-Handle large datasets and complex queries in your API
+Implement cursor and offset pagination, query filtering, and search for scalable API endpoints.
 
 ## Lessons
 
-1. [API Pagination Strategies](./1-development-pagination.md)
-2. [Filtering and Sorting](./2-filtering-sorting.md)
+1. [API Pagination](./1-development-pagination.md)
+2. [Query Filtering and Scoping](./2-filtering-sorting.md)
+3. [Search and Sorting](./3-development-search.md)
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Cursor vs Offset
-- 🧩 Multiple Choice: SQL Injection Filter
+- 🧩 Multiple Choice: Pagination Types
+- ✏️ Fill in the Blank: Rails Scopes
+- 🧩 Challenge: Pagination Math
 
 → [Practice in your IDE](https://stanza.dev/courses/rails-api-development)

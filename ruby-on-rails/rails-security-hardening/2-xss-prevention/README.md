@@ -1,4 +1,4 @@
-# undefined Cross-Site Scripting (XSS) Prevention
+# 🛡️ Cross-Site Scripting (XSS) Prevention
 
 > Part of [Rails Security Hardening](https://stanza.dev/courses/rails-security-hardening)
 
@@ -12,8 +12,10 @@ Prevent XSS attacks by properly handling user-generated content.
 
 ## Practice Challenges
 
-This section includes **1 interactive challenge** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
 - 🔗 Matching: XSS Prevention Challenge
+- 🧩 Multiple Choice: CSP Nonce Purpose
+- 🧩 Challenge: XSS Defense Layers
 
 → [Practice in your IDE](https://stanza.dev/courses/rails-security-hardening)

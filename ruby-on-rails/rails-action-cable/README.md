@@ -2,19 +2,19 @@
 
 > Build real-time features with WebSockets using Action Cable. Create live notifications, chat applications, presence tracking, and real-time updates in your Rails applications.
 
-**Rails 8** · Intermediate → Advanced
+**Rails 8.1.2** · Intermediate → Advanced
 
 ## Sections
 
 | | Section | Lessons |
 |---|---------|---------|
-| 🔌 | [WebSocket Fundamentals](./1-websocket-fundamentals/) | 2 lessons |
+| 🔌 | [WebSocket Fundamentals](./1-websocket-fundamentals/) | 3 lessons |
 | 📺 | [Building Channels](./2-building-channels/) | 3 lessons |
-| 📢 | [Broadcasting Patterns](./3-broadcasting-patterns/) | 2 lessons |
-| 📈 | [Scaling Action Cable](./4-scaling-action-cable/) | 2 lessons |
-| 🧪 | [Testing Action Cable](./5-testing-action-cable/) | 1 lesson |
+| 📢 | [Broadcasting Patterns](./3-broadcasting-patterns/) | 3 lessons |
+| 📈 | [Scaling Action Cable](./4-scaling-action-cable/) | 3 lessons |
+| 🧪 | [Testing Action Cable](./5-testing-action-cable/) | 3 lessons |
 
-**10 lessons** · **10 interactive challenges**
+**15 lessons** · **24 interactive challenges**
 
 ## Want the Interactive Experience?
 

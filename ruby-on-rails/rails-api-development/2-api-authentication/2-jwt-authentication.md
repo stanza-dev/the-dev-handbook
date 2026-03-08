@@ -5,160 +5,131 @@ source_lesson: "rails-api-development-jwt-authentication"
 
 # JWT Authentication
 
-JSON Web Tokens (JWTs) are a popular, self-contained token format that includes user data and expiration.
+## Introduction
+JSON Web Tokens (JWT) are a stateless authentication mechanism where the server encodes user data into a signed token. The client stores this token and sends it with each request. Unlike database-backed tokens, JWTs don't require a database lookup on every request.
 
-## What is JWT?
+## Key Concepts
+- **JWT (JSON Web Token)**: A self-contained token with three parts: header, payload, and signature.
+- **Stateless Authentication**: The server doesn't store session data. All information is encoded in the token.
+- **Token Expiration**: JWTs include an `exp` claim that sets when the token becomes invalid.
+- **Refresh Tokens**: Long-lived tokens used to obtain new access tokens without re-authenticating.
 
-A JWT has three parts separated by dots:
-- **Header**: Algorithm and token type
-- **Payload**: Data (claims) like user_id and expiration
-- **Signature**: Verifies the token hasn't been tampered with
+## Real World Context
+JWTs are popular for APIs serving mobile apps and SPAs where session cookies aren't available. They scale well because any server can verify the token without hitting a database. However, they can't be revoked without additional infrastructure.
 
-```
-eyJhbGciOiJIUzI1NiJ9.          # Header
-eyJ1c2VyX2lkIjoxLCJleHAiOjE2...# Payload
-.dBjftJeZ4CVP-mB92K27uhbUJU1p1... # Signature
-```
+## Deep Dive
+### Setting Up JWT
 
-## Setup
-
-Add the `jwt` gem:
+Add the jwt gem:
 
 ```ruby
 # Gemfile
-gem 'jwt'
+gem "jwt"
 ```
 
-## JWT Service
+Create a JWT service:
 
 ```ruby
-# app/services/json_web_token.rb
-class JsonWebToken
-  SECRET_KEY = Rails.application.credentials.secret_key_base
+# app/services/jwt_service.rb
+class JwtService
+  SECRET = Rails.application.credentials.secret_key_base
+  ALGORITHM = "HS256"
 
-  def self.encode(payload, exp = 24.hours.from_now)
+  def self.encode(payload, exp: 24.hours.from_now)
     payload[:exp] = exp.to_i
-    JWT.encode(payload, SECRET_KEY)
+    JWT.encode(payload, SECRET, ALGORITHM)
   end
 
   def self.decode(token)
-    decoded = JWT.decode(token, SECRET_KEY)[0]
-    HashWithIndifferentAccess.new(decoded)
-  rescue JWT::ExpiredSignature
-    raise AuthenticationError, "Token has expired"
-  rescue JWT::DecodeError
-    raise AuthenticationError, "Invalid token"
-  end
-end
-
-# app/errors/authentication_error.rb
-class AuthenticationError < StandardError; end
-```
-
-## Authentication Controller
-
-```ruby
-module Api
-  module V1
-    class AuthenticationController < BaseController
-      skip_before_action :authenticate_user!, only: [:create]
-
-      def create
-        user = User.find_by(email: params[:email])
-
-        if user&.authenticate(params[:password])
-          token = JsonWebToken.encode(user_id: user.id)
-          exp_time = 24.hours.from_now
-
-          render json: {
-            token: token,
-            exp: exp_time.strftime("%Y-%m-%d %H:%M"),
-            user: UserSerializer.new(user)
-          }
-        else
-          render json: { error: "Invalid credentials" }, status: :unauthorized
-        end
-      end
-
-      # Refresh token endpoint
-      def refresh
-        token = JsonWebToken.encode(user_id: current_user.id)
-        render json: { token: token }
-      end
-    end
+    decoded = JWT.decode(token, SECRET, true, algorithm: ALGORITHM)
+    decoded.first.with_indifferent_access
+  rescue JWT::DecodeError, JWT::ExpiredSignature
+    nil
   end
 end
 ```
 
-## Base Controller
+The service encodes user data with an expiration and decodes/verifies tokens. It uses the app's secret key base for signing.
+
+### Login Endpoint
 
 ```ruby
-module Api
-  module V1
-    class BaseController < ApplicationController
-      before_action :authenticate_user!
-
-      rescue_from AuthenticationError, with: :handle_auth_error
-
-      private
-
-      def authenticate_user!
-        render json: { error: "Unauthorized" }, status: :unauthorized unless current_user
-      end
-
-      def current_user
-        @current_user ||= find_user_from_token
-      end
-
-      def find_user_from_token
-        header = request.headers["Authorization"]
-        return nil unless header
-
-        token = header.split(" ").last
-        decoded = JsonWebToken.decode(token)
-        User.find_by(id: decoded[:user_id])
-      end
-
-      def handle_auth_error(exception)
-        render json: { error: exception.message }, status: :unauthorized
-      end
-    end
-  end
-end
-```
-
-## Token Refresh Strategy
-
-```ruby
-# Include refresh token for longer sessions
 def create
-  user = User.find_by(email: params[:email])
+  user = User.authenticate_by(
+    email: params[:email],
+    password: params[:password]
+  )
 
-  if user&.authenticate(params[:password])
-    access_token = JsonWebToken.encode(
-      { user_id: user.id },
-      15.minutes.from_now  # Short-lived
-    )
-
-    refresh_token = JsonWebToken.encode(
-      { user_id: user.id, type: "refresh" },
-      7.days.from_now  # Long-lived
-    )
-
-    render json: {
-      access_token: access_token,
-      refresh_token: refresh_token,
-      expires_in: 900  # seconds
-    }
+  if user
+    token = JwtService.encode(user_id: user.id)
+    render json: { token: token, expires_in: 24.hours.to_i }
   else
     render json: { error: "Invalid credentials" }, status: :unauthorized
   end
 end
 ```
 
+The login endpoint returns a signed JWT containing the user ID.
+
+### Verifying Tokens
+
+```ruby
+class ApplicationController < ActionController::API
+  private
+
+  def authenticate_user!
+    token = request.headers["Authorization"]&.remove("Bearer ")
+    payload = JwtService.decode(token)
+    @current_user = User.find_by(id: payload&.dig(:user_id))
+
+    render json: { error: "Unauthorized" }, status: :unauthorized unless @current_user
+  end
+end
+```
+
+Each request extracts the token, decodes it, and finds the user. If the token is expired or invalid, `decode` returns nil.
+
+## Common Pitfalls
+1. **No revocation strategy** — JWTs are valid until they expire. If a token is compromised, you can't invalidate it without maintaining a blocklist (which defeats the stateless benefit).
+2. **Storing JWTs in localStorage** — Vulnerable to XSS attacks. Use httpOnly cookies for browser clients.
+
+## Best Practices
+1. **Set short expiration times** — 15-60 minutes for access tokens, use refresh tokens for longer sessions.
+2. **Include only necessary claims** — Don't put sensitive data in the JWT payload. It's encoded, not encrypted.
+
+## Summary
+- JWTs are stateless tokens encoding user data with a signature.
+- The `jwt` gem handles encoding and decoding with HMAC signing.
+- Tokens include expiration claims for automatic invalidation.
+- JWTs scale well but can't be individually revoked without a blocklist.
+- Use short-lived access tokens with refresh tokens for security.
+
+## Code Examples
+
+**A JWT service class for encoding user data into signed tokens and decoding them with expiration handling**
+
+```ruby
+class JwtService
+  SECRET = Rails.application.credentials.secret_key_base
+
+  def self.encode(payload, exp: 24.hours.from_now)
+    payload[:exp] = exp.to_i
+    JWT.encode(payload, SECRET, "HS256")
+  end
+
+  def self.decode(token)
+    JWT.decode(token, SECRET, true, algorithm: "HS256")
+       .first.with_indifferent_access
+  rescue JWT::DecodeError, JWT::ExpiredSignature
+    nil
+  end
+end
+```
+
+
 ## Resources
 
-- [JWT.io](https://jwt.io/introduction) — Introduction to JSON Web Tokens
+- [JWT Ruby Gem](https://github.com/jwt/ruby-jwt) — The ruby-jwt gem documentation for encoding and decoding JSON Web Tokens
 
 ---
 

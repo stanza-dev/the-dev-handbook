@@ -3,152 +3,129 @@ source_course: "rails-api-development"
 source_lesson: "rails-api-development-filtering-sorting"
 ---
 
-# Filtering and Sorting
+# Query Filtering and Scoping
 
-Give clients the power to filter and sort API results.
+## Introduction
+API clients need to filter collections by various criteria: category, price range, status, date range, and more. Rails scopes and query objects provide clean, composable patterns for building filtered queries from request parameters.
 
-## Basic Filtering
+## Key Concepts
+- **Scope**: A named query fragment on a model that can be chained.
+- **Query Object**: A dedicated class that builds complex queries from parameters.
+- **Composable Queries**: Building queries by chaining multiple conditions.
+- **Parameter Whitelisting**: Only allowing known filter parameters to prevent SQL injection.
+
+## Real World Context
+Real APIs need flexible filtering: "Show me products in the Electronics category, priced under $50, that are in stock." Scopes make this composable: each filter is independent and can be applied in any combination.
+
+## Deep Dive
+### Model Scopes
 
 ```ruby
-class Api::V1::ArticlesController < Api::V1::BaseController
-  def index
-    @articles = Article.all
-    @articles = apply_filters(@articles)
-    @articles = apply_sorting(@articles)
-    @articles = @articles.page(params[:page])
-
-    render json: ArticleSerializer.new(@articles).as_json
-  end
-
-  private
-
-  def apply_filters(scope)
-    scope = scope.where(published: true) if params[:published] == "true"
-    scope = scope.where(published: false) if params[:published] == "false"
-    scope = scope.where(author_id: params[:author_id]) if params[:author_id]
-    scope = scope.where(category_id: params[:category_id]) if params[:category_id]
-
-    if params[:created_after]
-      scope = scope.where("created_at >= ?", params[:created_after])
-    end
-
-    if params[:search]
-      scope = scope.where("title ILIKE ?", "%#{params[:search]}%")
-    end
-
-    scope
-  end
-
-  def apply_sorting(scope)
-    allowed_sorts = %w[created_at title views_count]
-    sort_by = allowed_sorts.include?(params[:sort]) ? params[:sort] : "created_at"
-    direction = params[:direction] == "asc" ? :asc : :desc
-
-    scope.order(sort_by => direction)
-  end
+class Product < ApplicationRecord
+  scope :by_category, ->(category_id) { where(category_id: category_id) }
+  scope :price_range, ->(min, max) { where(price: min..max) }
+  scope :in_stock, -> { where("stock_count > 0") }
+  scope :search, ->(query) { where("name ILIKE ?", "%#{sanitize_sql_like(query)}%") }
+  scope :recent, -> { order(created_at: :desc) }
 end
 ```
 
-## Filter Object Pattern
+Each scope is a chainable query fragment. They compose cleanly:
 
 ```ruby
-# app/filters/article_filter.rb
-class ArticleFilter
+Product.by_category(3).price_range(1000, 5000).in_stock.recent
+```
+
+### Controller Filtering
+
+```ruby
+def index
+  products = Product.all
+  products = products.by_category(params[:category_id]) if params[:category_id]
+  products = products.price_range(params[:min_price], params[:max_price]) if params[:min_price] && params[:max_price]
+  products = products.in_stock if params[:in_stock] == "true"
+  products = products.search(params[:q]) if params[:q].present?
+
+  pagy, products = pagy(products)
+  render json: { data: products, meta: pagy_metadata(pagy) }
+end
+```
+
+Each parameter conditionally applies a scope. The query is only as complex as the filters requested.
+
+### Query Object Pattern
+
+For complex filtering, extract to a query object:
+
+```ruby
+class ProductQuery
+  ALLOWED_FILTERS = %w[category_id min_price max_price in_stock q sort].freeze
+
   def initialize(params)
-    @params = params
+    @params = params.slice(*ALLOWED_FILTERS)
   end
 
-  def apply(scope)
+  def call
+    scope = Product.all
+    scope = scope.by_category(@params[:category_id]) if @params[:category_id]
+    scope = scope.price_range(@params[:min_price], @params[:max_price]) if @params[:min_price]
+    scope = scope.in_stock if @params[:in_stock] == "true"
+    scope = scope.search(@params[:q]) if @params[:q].present?
+    scope = apply_sort(scope)
     scope
-      .then { |s| filter_by_published(s) }
-      .then { |s| filter_by_author(s) }
-      .then { |s| filter_by_category(s) }
-      .then { |s| filter_by_date_range(s) }
-      .then { |s| filter_by_search(s) }
-      .then { |s| filter_by_tags(s) }
   end
 
   private
 
-  def filter_by_published(scope)
-    return scope unless @params[:published].present?
-    scope.where(published: @params[:published] == "true")
-  end
-
-  def filter_by_author(scope)
-    return scope unless @params[:author_id].present?
-    scope.where(author_id: @params[:author_id])
-  end
-
-  def filter_by_category(scope)
-    return scope unless @params[:category_id].present?
-    scope.where(category_id: @params[:category_id])
-  end
-
-  def filter_by_date_range(scope)
-    scope = scope.where("created_at >= ?", @params[:from]) if @params[:from]
-    scope = scope.where("created_at <= ?", @params[:to]) if @params[:to]
-    scope
-  end
-
-  def filter_by_search(scope)
-    return scope unless @params[:q].present?
-
-    query = "%#{@params[:q]}%"
-    scope.where("title ILIKE ? OR body ILIKE ?", query, query)
-  end
-
-  def filter_by_tags(scope)
-    return scope unless @params[:tags].present?
-
-    tag_ids = @params[:tags].split(",")
-    scope.joins(:tags).where(tags: { id: tag_ids }).distinct
-  end
-end
-
-# Usage
-class Api::V1::ArticlesController < Api::V1::BaseController
-  def index
-    @articles = ArticleFilter.new(filter_params).apply(Article.all)
-    @articles = ArticleSorter.new(sort_params).apply(@articles)
-    @articles = @articles.page(params[:page])
-
-    render json: ArticleSerializer.new(@articles).as_json
-  end
-
-  private
-
-  def filter_params
-    params.permit(:published, :author_id, :category_id, :from, :to, :q, :tags)
+  def apply_sort(scope)
+    case @params[:sort]
+    when "price_asc" then scope.order(price: :asc)
+    when "price_desc" then scope.order(price: :desc)
+    when "newest" then scope.order(created_at: :desc)
+    else scope.order(:id)
+    end
   end
 end
 ```
 
-## API Usage Examples
+Usage: `products = ProductQuery.new(params).call`.
 
+## Common Pitfalls
+1. **SQL injection through filters** — Always use parameterized queries. Never interpolate params into SQL strings.
+2. **Not whitelisting filter params** — Accept only known parameters to prevent unexpected query behavior.
+
+## Best Practices
+1. **Use `sanitize_sql_like` for LIKE queries** — Prevents special characters (%, _) in user input from acting as wildcards.
+2. **Extract query objects for complex filtering** — When a controller has more than 3-4 filter conditions, move to a query object.
+
+## Summary
+- Model scopes define reusable, chainable query fragments.
+- Controllers apply scopes conditionally based on request parameters.
+- Query objects centralize complex filtering logic with parameter whitelisting.
+- Always sanitize LIKE queries and whitelist filter parameters.
+
+## Code Examples
+
+**Composable scopes that can be chained in any combination for flexible API filtering**
+
+```ruby
+# Composable model scopes for API filtering
+class Product < ApplicationRecord
+  scope :by_category, ->(id) { where(category_id: id) }
+  scope :price_range, ->(min, max) { where(price: min..max) }
+  scope :in_stock, -> { where("stock_count > 0") }
+  scope :search, ->(q) {
+    where("name ILIKE ?", "%#{sanitize_sql_like(q)}%")
+  }
+end
+
+# Chain them: Product.by_category(3).in_stock.search("phone")
 ```
-# Filter by author
-GET /api/v1/articles?author_id=5
 
-# Filter by multiple criteria
-GET /api/v1/articles?published=true&category_id=3
-
-# Search
-GET /api/v1/articles?q=rails+tutorial
-
-# Date range
-GET /api/v1/articles?from=2024-01-01&to=2024-06-30
-
-# Sort
-GET /api/v1/articles?sort=views_count&direction=desc
-
-# Combine everything
-GET /api/v1/articles?published=true&sort=created_at&direction=desc&page=1&per_page=10
-```
 
 ## Resources
 
-- [Ransack Gem](https://github.com/activerecord-hackery/ransack) — Advanced search and filtering for Rails
+- [Active Record Query Interface](https://guides.rubyonrails.org/active_record_querying.html) — Rails guide on scopes, where clauses, and query methods
 
 ---
 

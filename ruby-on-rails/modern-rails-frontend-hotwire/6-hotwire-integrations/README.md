@@ -1,18 +1,22 @@
-# undefined Hotwire Integrations
+# 🔧 Advanced Hotwire Patterns
 
 > Part of [Modern Rails Frontend with Hotwire](https://stanza.dev/courses/modern-rails-frontend-hotwire)
 
-Integrate Hotwire with other Rails features.
+Combine Turbo Frames, Streams, and Stimulus for complex real-time features, optimistic UI, and production-grade Hotwire applications.
 
 ## Lessons
 
-1. [Hotwire Active Storage](./1-active-storage.md)
-2. [Hotwire Action Cable](./2-action-cable.md)
+1. [Combining Frames and Streams](./1-active-storage.md)
+2. [Stimulus and Turbo Integration](./2-action-cable.md)
+3. [Building Real-Time Features](./3-realtime-features.md)
 
 ## Practice Challenges
 
-This section includes **1 interactive challenge** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
-- 🧩 Challenge: Hotwire Integration Challenge
+- 🔗 Matching: Hotwire Pattern Selection
+- 🧩 Challenge: Real-Time Features
+- 🧩 Challenge: Turbo Stream Action Types
+- 🧩 Multiple Choice: Turbo 8 Morphing
 
 → [Practice in your IDE](https://stanza.dev/courses/modern-rails-frontend-hotwire)

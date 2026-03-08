@@ -5,182 +5,127 @@ source_lesson: "rails-api-development-versioning-strategies"
 
 # API Versioning Strategies
 
-As your API evolves, you need strategies to maintain backwards compatibility while adding new features.
+## Introduction
+As APIs evolve, you need to make breaking changes without disrupting existing clients. API versioning lets you run multiple versions simultaneously, giving clients time to migrate.
 
-## Why Version?
+## Key Concepts
+- **URL Versioning**: Version in the URL path (`/api/v1/products`). Most common and explicit.
+- **Header Versioning**: Version in a custom header (`Api-Version: 2`). Cleaner URLs but less discoverable.
+- **Namespace Versioning**: Using Rails modules to organize versioned controllers.
+- **Deprecation**: Marking old versions as deprecated before removal.
 
-- Clients depend on specific response formats
-- Breaking changes would break existing apps
-- Different clients may need different versions
-- Allows gradual migration to new versions
+## Real World Context
+GitHub uses URL versioning, Stripe uses API version dates in headers, and Twilio uses URL versioning. URL versioning is the most common because it's explicit, easy to test, and works with all HTTP clients without special header configuration.
 
-## Strategy 1: URL Path Versioning
-
-Most common and explicit:
+## Deep Dive
+### URL Versioning with Namespaces
 
 ```ruby
 # config/routes.rb
 Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
-      resources :articles
+      resources :products
+      resources :users
     end
 
     namespace :v2 do
-      resources :articles
+      resources :products
+      resources :users
     end
   end
 end
 ```
 
-```
-GET /api/v1/articles
-GET /api/v2/articles
-```
-
-**Pros**: Clear, cacheable, easy to understand  
-**Cons**: Duplicates routes, pollutes URLs
-
-## Strategy 2: Header Versioning
+Controllers live in separate modules:
 
 ```ruby
-# config/routes.rb
-namespace :api do
-  scope module: :v2, constraints: ApiVersion.new(2) do
-    resources :articles
-  end
-
-  scope module: :v1, constraints: ApiVersion.new(1, default: true) do
-    resources :articles
-  end
-end
-
-# lib/api_version.rb
-class ApiVersion
-  def initialize(version, default: false)
-    @version = version
-    @default = default
-  end
-
-  def matches?(request)
-    @default || check_headers(request)
-  end
-
-  private
-
-  def check_headers(request)
-    accept = request.headers["Accept"]
-    accept&.include?("version=#{@version}")
-  end
-end
-```
-
-Client sends:
-```
-GET /api/articles
-Accept: application/vnd.myapi+json; version=2
-```
-
-**Pros**: Clean URLs  
-**Cons**: Less visible, harder to test
-
-## Strategy 3: Query Parameter
-
-```ruby
-namespace :api do
-  scope module: :v2, constraints: ->(req) { req.params[:version] == "2" } do
-    resources :articles
-  end
-
-  scope module: :v1 do
-    resources :articles
-  end
-end
-```
-
-```
-GET /api/articles?version=2
-```
-
-**Pros**: Easy to test, no URL changes  
-**Cons**: Easy to forget, not RESTful
-
-## Managing Version Code
-
-### Inheritance Pattern
-
-```ruby
-# V1 - Original
+# app/controllers/api/v1/products_controller.rb
 module Api::V1
-  class ArticlesController < BaseController
+  class ProductsController < ApplicationController
     def index
-      render json: Article.all
+      render json: Product.all.as_json(only: [:id, :name, :price])
     end
   end
 end
 
-# V2 - Inherits and overrides
+# app/controllers/api/v2/products_controller.rb
 module Api::V2
-  class ArticlesController < Api::V1::ArticlesController
-    # Override only what changed
+  class ProductsController < ApplicationController
     def index
-      render json: ArticleSerializer.new(Article.all).as_json
+      render json: ProductSerializer.new(Product.all).serializable_hash
     end
-
-    # Inherited methods work as-is
   end
 end
 ```
 
-### Adapter Pattern
+V1 uses simple as_json, V2 uses a serializer with a richer format. Both run simultaneously.
+
+### Sharing Logic Between Versions
 
 ```ruby
-# Core logic in one place
-class ArticlesService
-  def self.list(filters)
-    Article.where(filters).order(:created_at)
+# app/controllers/concerns/product_actions.rb
+module ProductActions
+  extend ActiveSupport::Concern
+
+  def set_product
+    @product = Product.find(params[:id])
+  end
+
+  def product_params
+    params.require(:product).permit(:name, :price, :description)
   end
 end
 
-# Version-specific presentation
+# Both versions include shared logic
 module Api::V1
-  class ArticlesController < BaseController
-    def index
-      articles = ArticlesService.list(filter_params)
-      render json: V1::ArticleSerializer.new(articles)
-    end
-  end
-end
-
-module Api::V2
-  class ArticlesController < BaseController
-    def index
-      articles = ArticlesService.list(filter_params)
-      render json: V2::ArticleSerializer.new(articles)
-    end
+  class ProductsController < ApplicationController
+    include ProductActions
   end
 end
 ```
 
-## Deprecation
+Concerns prevent code duplication between versions.
+
+## Common Pitfalls
+1. **Not versioning from day one** — Adding versioning later requires restructuring all controllers and routes.
+2. **Too many active versions** — Maintain at most 2-3 versions. Deprecate and remove old ones.
+
+## Best Practices
+1. **Start with `/api/v1/` from the beginning** — Even if you think you won't need v2.
+2. **Share logic via concerns** — Don't duplicate business logic across versions.
+
+## Summary
+- URL versioning (`/api/v1/`) is the most common and explicit strategy.
+- Rails namespaces map cleanly to versioned controller modules.
+- Share common logic between versions using concerns.
+- Deprecate old versions before removing them.
+- Start versioning from day one.
+
+## Code Examples
+
+**Namespaced routes supporting multiple API versions running simultaneously**
 
 ```ruby
-class Api::V1::BaseController < ApplicationController
-  before_action :add_deprecation_warning
-
-  private
-
-  def add_deprecation_warning
-    response.headers["Deprecation"] = "true"
-    response.headers["Sunset"] = "Sat, 31 Dec 2024 23:59:59 GMT"
-    response.headers["Link"] = '</api/v2>; rel="successor-version"'
+# config/routes.rb — Multi-version API routing
+Rails.application.routes.draw do
+  namespace :api do
+    namespace :v1 do
+      resources :products
+    end
+    namespace :v2 do
+      resources :products
+    end
   end
 end
+# /api/v1/products → Api::V1::ProductsController
+# /api/v2/products → Api::V2::ProductsController
 ```
+
 
 ## Resources
 
-- [API Versioning Best Practices](https://guides.rubyonrails.org/api_app.html) — Rails API documentation
+- [Rails Routing Namespaces](https://guides.rubyonrails.org/routing.html#controller-namespaces-and-routing) — Guide on namespace routing for API versioning
 
 ---
 

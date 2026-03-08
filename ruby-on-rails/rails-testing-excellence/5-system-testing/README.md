@@ -1,4 +1,4 @@
-# undefined System Testing with Capybara
+# 🖥️ System Testing with Capybara
 
 > Part of [Rails Testing Excellence](https://stanza.dev/courses/rails-testing-excellence)
 
@@ -12,8 +12,10 @@ Write browser-based tests that simulate real user interactions.
 
 ## Practice Challenges
 
-This section includes **1 interactive challenge** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
 - 🔗 Matching: System Test Challenge
+- 🧩 Multiple Choice: Capybara Actions Quiz
+- 🧩 Challenge: System Test Execution Order
 
 → [Practice in your IDE](https://stanza.dev/courses/rails-testing-excellence)

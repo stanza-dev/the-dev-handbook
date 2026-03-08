@@ -1,19 +1,22 @@
-# undefined Turbo Frames
+# 🖼️ Turbo Frames
 
 > Part of [Modern Rails Frontend with Hotwire](https://stanza.dev/courses/modern-rails-frontend-hotwire)
 
-Create partial page updates with Turbo Frames.
+Create partial page updates with Turbo Frames for in-place editing, scoped navigation, and lazy-loaded content.
 
 ## Lessons
 
-1. [Turbo Frames Basics](./1-frames-basics.md)
-2. [Lazy Loading Frames](./2-loading-frames.md)
-3. [Advanced Frame Patterns](./3-frame-patterns.md)
+1. [The Turbo Frame Tag](./1-frames-basics.md)
+2. [Lazy Loading with Turbo Frames](./2-loading-frames.md)
+3. [Frame Navigation and Targeting](./3-frame-patterns.md)
 
 ## Practice Challenges
 
-This section includes **1 interactive challenge** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
-- 🔗 Matching: Turbo Frames Challenge
+- 🧩 Multiple Choice: Frame ID Matching
+- ✏️ Fill in the Blank: Lazy Loading Syntax
+- 🧩 Challenge: Building a Tabbed Interface
+- 🧩 Multiple Choice: Frame Scoping Behavior
 
 → [Practice in your IDE](https://stanza.dev/courses/modern-rails-frontend-hotwire)

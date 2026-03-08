@@ -3,96 +3,149 @@ source_course: "modern-rails-frontend-hotwire"
 source_lesson: "rails-hotwire-hotwire-action-cable"
 ---
 
-# Hotwire Action Cable
+# Stimulus and Turbo Integration
 
-While Turbo Streams has built-in broadcasting, custom channels offer more control.
+## Introduction
+Stimulus and Turbo are designed to work together seamlessly. Stimulus controllers enhance Turbo-driven pages with JavaScript behavior that survives page transitions, while Turbo events trigger Stimulus actions.
 
-## Custom Channel
+## Key Concepts
+- **Morphing Compatibility**: Stimulus controllers persist through Turbo morph updates because morph preserves DOM elements.
+- **Turbo Events**: Custom events like `turbo:submit-start` and `turbo:frame-load` can trigger Stimulus actions.
+- **Auto-reconnection**: When Turbo swaps page content, Stimulus automatically disconnects old controllers and connects new ones.
 
-```ruby
-# app/channels/presence_channel.rb
-class PresenceChannel < ApplicationCable::Channel
-  def subscribed
-    stream_from "presence_#{params[:room_id]}"
-    
-    # Announce arrival
-    ActionCable.server.broadcast(
-      "presence_#{params[:room_id]}",
-      type: 'join',
-      user: current_user.as_json(only: [:id, :name])
-    )
-  end
-  
-  def unsubscribed
-    ActionCable.server.broadcast(
-      "presence_#{params[:room_id]}",
-      type: 'leave',
-      user_id: current_user.id
-    )
-  end
-end
-```
+## Real World Context
+A real application needs both Turbo and Stimulus working together. Turbo handles navigation and partial updates. Stimulus handles UI behaviors: dropdowns, modals, form validation, animations, and third-party library integration. The key is understanding how they interact during page transitions.
 
-## Stimulus + Action Cable
+## Deep Dive
+### Listening to Turbo Events
+
+Stimulus controllers can react to Turbo lifecycle events:
 
 ```javascript
-// controllers/presence_controller.js
-import { Controller } from '@hotwired/stimulus'
-import { createConsumer } from '@rails/actioncable'
+import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ['users']
-  static values = { roomId: Number }
-  
   connect() {
-    this.channel = createConsumer().subscriptions.create(
-      { channel: 'PresenceChannel', room_id: this.roomIdValue },
-      {
-        received: data => this.handleMessage(data)
-      }
-    )
+    this.element.addEventListener("turbo:submit-start", this.onSubmitStart)
+    this.element.addEventListener("turbo:submit-end", this.onSubmitEnd)
   }
-  
+
   disconnect() {
-    this.channel.unsubscribe()
+    this.element.removeEventListener("turbo:submit-start", this.onSubmitStart)
+    this.element.removeEventListener("turbo:submit-end", this.onSubmitEnd)
   }
-  
-  handleMessage(data) {
-    switch (data.type) {
-      case 'join':
-        this.addUser(data.user)
-        break
-      case 'leave':
-        this.removeUser(data.user_id)
-        break
-    }
+
+  onSubmitStart = () => {
+    this.element.classList.add("opacity-50")
   }
-  
-  addUser(user) {
-    const element = document.createElement('div')
-    element.id = `user_${user.id}`
-    element.textContent = user.name
-    this.usersTarget.appendChild(element)
-  }
-  
-  removeUser(userId) {
-    document.getElementById(`user_${userId}`)?.remove()
+
+  onSubmitEnd = () => {
+    this.element.classList.remove("opacity-50")
   }
 }
 ```
 
-## Combining with Turbo Streams
+This controller dims a form during Turbo submission and restores it when complete. The Turbo events bubble, so the controller catches them on its element.
+
+### Frame Load Events
 
 ```javascript
-// Receive HTML via custom channel, insert with Turbo
-import { Turbo } from '@hotwired/turbo-rails'
+// React when a Turbo Frame finishes loading
+import { Controller } from "@hotwired/stimulus"
 
-received(data) {
-  if (data.turbo_stream) {
-    Turbo.renderStreamMessage(data.turbo_stream)
+export default class extends Controller {
+  handleFrameLoad() {
+    // Re-initialize anything after frame content is swapped
+    this.element.querySelectorAll("[data-animate]").forEach(el => {
+      el.classList.add("animate-fade-in")
+    })
   }
 }
 ```
+
+```html
+<turbo-frame id="results"
+             data-controller="frame-handler"
+             data-action="turbo:frame-load->frame-handler#handleFrameLoad">
+</turbo-frame>
+```
+
+The `turbo:frame-load` event fires after a frame's content is swapped, letting Stimulus run post-load logic.
+
+### Triggering Turbo Frame Reloads from Stimulus
+
+```javascript
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static values = { interval: Number }
+
+  connect() {
+    this.timer = setInterval(() => {
+      const frame = document.querySelector("turbo-frame#notifications")
+      if (frame && frame.src) {
+        frame.reload()
+      }
+    }, this.intervalValue)
+  }
+
+  disconnect() {
+    clearInterval(this.timer)
+  }
+}
+```
+
+Stimulus can programmatically reload Turbo Frames using the `reload()` method. This enables auto-refreshing sections without full-page polling.
+
+## Common Pitfalls
+1. **Manually querying DOM after Turbo swap** — After Turbo replaces content, old DOM references are stale. Use Stimulus targets instead of cached querySelector results.
+2. **Event listeners without cleanup** — If you add event listeners in `connect()`, always remove them in `disconnect()`. Turbo's page transitions mean controllers connect/disconnect frequently.
+
+## Best Practices
+1. **Use data-action for Turbo events** — Instead of manual addEventListener, use `data-action="turbo:submit-start->form#disable"` for cleaner code.
+2. **Let Turbo handle data fetching** — Use frames and streams for loading data from the server. Reserve Stimulus for client-side behavior that doesn't need server interaction.
+
+## Summary
+- Stimulus controllers survive Turbo morph updates and reconnect automatically after page swaps.
+- Turbo custom events (submit-start, submit-end, frame-load) can trigger Stimulus actions.
+- Stimulus can programmatically reload Turbo Frames for auto-refreshing patterns.
+- Always clean up event listeners in disconnect() to prevent leaks during Turbo navigation.
+- Use data-action for Turbo events instead of manual addEventListener.
+
+## Code Examples
+
+**A Stimulus controller that hooks into Turbo form submission events to show/hide a loading spinner**
+
+```javascript
+// A form controller that integrates with Turbo submission events
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static targets = ["submit", "spinner"]
+
+  disableOnSubmit() {
+    this.submitTarget.disabled = true
+    this.spinnerTarget.classList.remove("hidden")
+  }
+
+  enableAfterSubmit() {
+    this.submitTarget.disabled = false
+    this.spinnerTarget.classList.add("hidden")
+  }
+}
+
+// <form data-controller="form-status"
+//       data-action="turbo:submit-start->form-status#disableOnSubmit
+//                    turbo:submit-end->form-status#enableAfterSubmit">
+//   <button data-form-status-target="submit">Save</button>
+//   <span data-form-status-target="spinner" class="hidden">⏳</span>
+// </form>
+```
+
+
+## Resources
+
+- [Turbo Reference Events](https://turbo.hotwired.dev/reference/events) — Complete list of Turbo events that can be used with Stimulus
 
 ---
 

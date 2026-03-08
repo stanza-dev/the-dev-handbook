@@ -1,19 +1,21 @@
-# undefined Hotwire Fundamentals
+# ⚡ Hotwire Fundamentals
 
 > Part of [Modern Rails Frontend with Hotwire](https://stanza.dev/courses/modern-rails-frontend-hotwire)
 
-Understand the Hotwire philosophy and its components.
+Understand the Hotwire philosophy and how Turbo Drive transforms page navigation and form handling.
 
 ## Lessons
 
-1. [Introduction To Hotwire](./1-to-hotwire.md)
-2. [Turbo Drive](./2-turbo-drive.md)
-3. [Turbo Drive Forms](./3-drive-forms.md)
+1. [What Is Hotwire](./1-to-hotwire.md)
+2. [Turbo Drive Basics](./2-turbo-drive.md)
+3. [Forms with Turbo Drive](./3-drive-forms.md)
 
 ## Practice Challenges
 
-This section includes **1 interactive challenge** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Challenge: Turbo Drive Challenge
+- 🧩 Multiple Choice: Hotwire Component Roles
+- ✏️ Fill in the Blank: Turbo Form Status Codes
+- 🔗 Matching: Hotwire Stack Components
 
 → [Practice in your IDE](https://stanza.dev/courses/modern-rails-frontend-hotwire)
