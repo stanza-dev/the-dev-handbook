@@ -1,4 +1,4 @@
-# undefined Monitoring and Scaling
+# 📡 Monitoring and Scaling
 
 > Part of [Rails Deployment and DevOps](https://stanza.dev/courses/rails-deployment-devops)
 
@@ -13,8 +13,10 @@ Monitor production applications and scale to handle growth.
 
 ## Practice Challenges
 
-This section includes **1 interactive challenge** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
+- 🧩 Multiple Choice: Production Logging
 - 🔗 Matching: Monitoring Scaling Challenge
+- 🧩 Challenge: Incident Response Steps
 
 → [Practice in your IDE](https://stanza.dev/courses/rails-deployment-devops)

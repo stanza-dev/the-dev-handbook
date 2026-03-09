@@ -5,51 +5,43 @@ source_lesson: "rails-performance-russian-doll-caching"
 
 # Russian Doll Caching
 
-Russian doll caching nests cached fragments inside each other.
+## Introduction
+Russian doll caching nests cached fragments inside each other, so when an inner fragment changes, only that fragment and its direct parents are invalidated — siblings remain cached. This dramatically reduces cache misses.
 
-## The Pattern
+## Key Concepts
+- **Nested Caching**: Cache fragments contain other cache fragments, forming a hierarchy.
+- **Touch Propagation**: When a child record updates, `touch: true` propagates the timestamp change up the chain.
+- **Cache Digest**: Rails includes a template digest in cache keys, so template changes automatically invalidate caches.
+
+## Real World Context
+An e-commerce category page with 100 products, each showing reviews: when one review is added, only that product's cache invalidates. The other 99 products serve from cache instantly.
+
+## Deep Dive
+
+### The Pattern
 
 ```erb
-<!-- Outer cache: entire post list -->
 <% cache ['posts', @posts.maximum(:updated_at)] do %>
   <% @posts.each do |post| %>
-    
-    <!-- Middle cache: individual post -->
     <% cache post do %>
       <article>
         <h2><%= post.title %></h2>
-        
-        <!-- Inner cache: comments -->
-        <% cache [post, 'comments', post.comments.maximum(:updated_at)] do %>
+        <% cache [post, 'comments'] do %>
           <div class="comments">
             <% post.comments.each do |comment| %>
-              
-              <!-- Innermost cache: single comment -->
               <% cache comment do %>
                 <p><%= comment.body %></p>
               <% end %>
-              
             <% end %>
           </div>
         <% end %>
-        
       </article>
     <% end %>
-    
   <% end %>
 <% end %>
 ```
 
-## How It Works
-
-1. When a comment changes, only that comment's cache invalidates
-2. The comments container cache invalidates (new `maximum(:updated_at)`)
-3. The post cache invalidates (`touch: true` on comment)
-4. The posts list cache invalidates (new `maximum(:updated_at)`)
-
-But cached siblings stay cached!
-
-## Setting Up Touch
+### Setting Up Touch Propagation
 
 ```ruby
 class Comment < ApplicationRecord
@@ -62,27 +54,62 @@ class Post < ApplicationRecord
 end
 ```
 
-## Cache Dependencies
+When a comment changes:
+1. Comment's cache invalidates
+2. Post's `updated_at` updates via `touch: true`
+3. Post's cache invalidates
+4. Sibling posts remain cached
+
+### Template Digest Keys
+
+Rails automatically includes a digest of the template in cache keys:
 
 ```erb
-<!-- Include all dependencies in key -->
-<% cache [post, post.author, post.comments.maximum(:updated_at)] do %>
-  <h2><%= post.title %></h2>
-  <p>By <%= post.author.name %></p>
-  <span><%= post.comments.count %> comments</span>
-<% end %>
-```
-
-## Digest-Based Keys
-
-Rails automatically includes template digest in cache keys:
-
-```erb
-<!-- If template changes, cache automatically invalidates -->
 <% cache post do %>
-  <%= post.title %>  <!-- Change this, cache refreshes -->
+  <%= post.title %>  <!-- Change this template, cache auto-refreshes -->
 <% end %>
 ```
+
+## Common Pitfalls
+1. **Missing touch declarations** — If you forget `touch: true` on the child association, parent caches won't invalidate when children change.
+2. **Too many nesting levels** — More than 3-4 levels of nesting adds complexity without much benefit. Keep it practical.
+
+## Best Practices
+1. **Always add touch: true on belongs_to** — Any association whose parent is cached should propagate timestamp changes.
+2. **Use maximum(:updated_at) for collection keys** — This ensures the outer cache invalidates when any item in the collection changes.
+
+## Summary
+- Russian doll caching nests fragments so siblings stay cached when one changes.
+- `touch: true` propagates timestamp changes up the association chain.
+- Rails auto-includes template digests in cache keys.
+- Keep nesting to 3-4 levels maximum for maintainability.
+
+## Code Examples
+
+**Setting up touch propagation — changes bubble up from comment to post to category, invalidating caches at each level**
+
+```ruby
+# Touch propagation setup
+class Comment < ApplicationRecord
+  belongs_to :post, touch: true
+end
+
+class Post < ApplicationRecord
+  belongs_to :category, touch: true
+  has_many :comments
+end
+
+# When a comment is saved:
+# 1. comment.updated_at changes
+# 2. post.updated_at changes (touch)
+# 3. category.updated_at changes (touch)
+# All related caches invalidate automatically
+```
+
+
+## Resources
+
+- [Russian Doll Caching](https://guides.rubyonrails.org/caching_with_rails.html#russian-doll-caching) — Official Rails guide on nested fragment caching with touch propagation
 
 ---
 

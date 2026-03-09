@@ -185,10 +185,10 @@ Maintained by [Stanza](https://stanza.dev) — Learn coding faster right in your
 - 🗃️ [Active Record Mastery](./ruby-on-rails/rails-active-record-mastery/) — 24 lessons
 - 🔌 [Building RESTful APIs with Rails](./ruby-on-rails/rails-api-development/) — 18 lessons
 - ⚡ [Background Processing in Rails](./ruby-on-rails/rails-background-jobs/) — 24 lessons
-- 🚀 [Rails Deployment and DevOps](./ruby-on-rails/rails-deployment-devops/) — 12 lessons
+- 🚀 [Rails Deployment and DevOps](./ruby-on-rails/rails-deployment-devops/) — 16 lessons
 - 🛤️ [Rails Foundations](./ruby-on-rails/rails-foundations/) — 28 lessons
 - ⚡ [Modern Rails Frontend with Hotwire](./ruby-on-rails/modern-rails-frontend-hotwire/) — 18 lessons
-- 🏎️ [Rails Performance Optimization](./ruby-on-rails/rails-performance-optimization/) — 14 lessons
+- 🏎️ [Rails Performance Optimization](./ruby-on-rails/rails-performance-optimization/) — 18 lessons
 - 🔒 [Rails Security Hardening](./ruby-on-rails/rails-security-hardening/) — 18 lessons
 - 🧪 [Rails Testing Excellence](./ruby-on-rails/rails-testing-excellence/) — 19 lessons
 

@@ -1,4 +1,4 @@
-# undefined Database Query Optimization
+# 🔍 Database Query Optimization
 
 > Part of [Rails Performance Optimization](https://stanza.dev/courses/rails-performance-optimization)
 
@@ -12,8 +12,10 @@ Optimize Active Record queries for maximum performance.
 
 ## Practice Challenges
 
-This section includes **1 interactive challenge** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
+- 🧩 Multiple Choice: Eager Loading Methods
 - 🧩 Challenge: N Plus One Challenge
+- ✏️ Fill in the Blank: Counter Cache Setup
 
 → [Practice in your IDE](https://stanza.dev/courses/rails-performance-optimization)

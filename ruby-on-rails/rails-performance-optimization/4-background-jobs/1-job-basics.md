@@ -5,28 +5,29 @@ source_lesson: "rails-performance-active-job-basics"
 
 # Active Job Basics
 
-Background jobs improve response times by deferring slow work.
+## Introduction
+Background jobs improve response times by deferring slow work — sending emails, processing uploads, calling APIs — to a separate process. In Rails 8, Active Job is backed by Solid Queue by default, a database-backed queue that requires no additional infrastructure.
 
-## When to Use Background Jobs
+## Key Concepts
+- **Active Job**: Rails' built-in framework for declaring and running background jobs with a unified API across queue backends.
+- **Solid Queue**: Rails 8's default queue backend — stores jobs in the database, supports priorities, concurrency controls, and delayed execution.
+- **perform_later vs perform_now**: `perform_later` enqueues the job for background processing; `perform_now` runs it immediately (blocking).
 
-- Sending emails
-- Processing uploads
-- Calling external APIs
-- Generating reports
-- Data imports/exports
-- Any operation taking > 100ms
+## Real World Context
+A user registration that sends a welcome email, creates a Stripe customer, and syncs to a CRM takes 3 seconds synchronously. Moving those to background jobs reduces the response to 50ms — the user sees an instant redirect while jobs process behind the scenes.
 
-## Creating a Job
+## Deep Dive
+
+### Creating a Job
 
 ```bash
 bin/rails generate job ProcessImage
 ```
 
 ```ruby
-# app/jobs/process_image_job.rb
 class ProcessImageJob < ApplicationJob
   queue_as :default
-  
+
   def perform(image_id)
     image = Image.find(image_id)
     image.create_thumbnails
@@ -36,47 +37,33 @@ class ProcessImageJob < ApplicationJob
 end
 ```
 
-## Enqueuing Jobs
+### Enqueuing Jobs
 
 ```ruby
-# Process later (in background queue)
+# Process in background
 ProcessImageJob.perform_later(image.id)
 
-# Process at specific time
+# Delay execution
 ProcessImageJob.set(wait: 5.minutes).perform_later(image.id)
 ProcessImageJob.set(wait_until: Date.tomorrow.noon).perform_later(image.id)
-
-# Process immediately (blocking - for testing)
-ProcessImageJob.perform_now(image.id)
 ```
 
-## Queue Configuration
+### Configuring Solid Queue (Rails 8 Default)
 
 ```ruby
-class ProcessImageJob < ApplicationJob
-  queue_as :images
-  
-  # Or dynamically
-  queue_as do
-    if self.arguments.first.priority == 'high'
-      :urgent
-    else
-      :default
-    end
-  end
-end
+# config/environments/production.rb
+config.active_job.queue_adapter = :solid_queue
+config.solid_queue.connects_to = { database: { writing: :queue } }
 ```
 
-## Configuring Backend
+Solid Queue can run embedded in Puma (no separate process needed):
 
-```ruby
-# config/application.rb
-config.active_job.queue_adapter = :sidekiq
-
-# Other options: :async, :inline, :delayed_job, :resque
+```bash
+# Set in environment or config/deploy.yml
+SOLID_QUEUE_IN_PUMA=true
 ```
 
-## Passing Arguments
+### Passing Arguments
 
 Jobs serialize arguments, so pass simple types:
 
@@ -84,11 +71,47 @@ Jobs serialize arguments, so pass simple types:
 # GOOD: Pass IDs
 OrderEmailJob.perform_later(order.id)
 
-# AVOID: Passing ActiveRecord objects
+# AVOID: Passing full ActiveRecord objects
 # OrderEmailJob.perform_later(order)  # Works but fragile
 ```
 
-See [Active Job Guide](https://guides.rubyonrails.org/active_job_basics.html).
+## Common Pitfalls
+1. **Passing ActiveRecord objects instead of IDs** — Objects can change between enqueue and execution. Always pass IDs and re-fetch the record in the job.
+2. **Not handling RecordNotFound** — The record might be deleted between enqueue and execution. Use `discard_on ActiveRecord::RecordNotFound` or handle it gracefully.
+
+## Best Practices
+1. **Use Solid Queue for most apps** — It's the Rails 8 default, requires no Redis, and handles most workloads. Only reach for Sidekiq if you need sub-second latency at massive scale.
+2. **Move any operation over 100ms to a background job** — Email delivery, file processing, API calls, and report generation should all be async.
+
+## Summary
+- Active Job provides a unified API for background processing across queue backends.
+- Rails 8 defaults to Solid Queue — database-backed, no Redis needed.
+- Use `perform_later` to enqueue jobs asynchronously.
+- Pass record IDs, not full objects, as job arguments.
+- Solid Queue can run embedded in Puma with `SOLID_QUEUE_IN_PUMA=true`.
+
+## Code Examples
+
+**A simple background job that sends a welcome email — the controller responds instantly while the email sends in the background**
+
+```ruby
+class WelcomeEmailJob < ApplicationJob
+  queue_as :default
+
+  def perform(user_id)
+    user = User.find(user_id)
+    UserMailer.welcome(user).deliver_now
+  end
+end
+
+# Enqueue in controller
+WelcomeEmailJob.perform_later(@user.id)
+```
+
+
+## Resources
+
+- [Active Job Basics](https://guides.rubyonrails.org/active_job_basics.html) — Official Rails guide on Active Job including Solid Queue configuration
 
 ---
 

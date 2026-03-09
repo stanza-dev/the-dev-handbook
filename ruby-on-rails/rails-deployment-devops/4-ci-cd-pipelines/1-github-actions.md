@@ -3,11 +3,22 @@ source_course: "rails-deployment-devops"
 source_lesson: "rails-deployment-github-actions"
 ---
 
-# Github Actions
+# GitHub Actions for Rails
 
-GitHub Actions automates testing and deployment.
+## Introduction
+GitHub Actions automates testing and deployment. A well-configured CI pipeline catches bugs, security issues, and style violations before code reaches production.
 
-## CI Workflow
+## Key Concepts
+- **Workflow**: A YAML file defining automated steps triggered by events like push or pull request.
+- **Service Container**: A Docker container (PostgreSQL, Redis) that runs alongside your tests.
+- **Matrix Strategy**: Running tests across multiple Ruby versions or configurations in parallel.
+
+## Real World Context
+Without CI, bugs slip into production because developers forget to run the full test suite locally. With GitHub Actions, every push automatically runs tests, linting, and security scans — nothing reaches main without passing.
+
+## Deep Dive
+
+### CI Workflow
 
 ```yaml
 # .github/workflows/ci.yml
@@ -15,81 +26,66 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
     branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    
     services:
       postgres:
-        image: postgres:16
+        image: postgres:17
         env:
           POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
+        ports: ['5432:5432']
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-    
+
     env:
       RAILS_ENV: test
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/test
-      REDIS_URL: redis://localhost:6379/1
-    
+
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.3'
+          ruby-version: '3.4'
           bundler-cache: true
-      
-      - name: Setup database
-        run: bin/rails db:setup
-      
-      - name: Run tests
-        run: bin/rails test
-      
-      - name: Run system tests
-        run: bin/rails test:system
-      
-      - name: Lint
-        run: bundle exec rubocop
+      - run: bin/rails db:setup
+      - run: bin/rails test
+      - run: bin/rails test:system
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+      - run: bundle exec rubocop
 
   security:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.3'
+          ruby-version: '3.4'
           bundler-cache: true
-      
-      - name: Security audit
-        run: |
-          bundle exec bundler-audit check --update
-          bundle exec brakeman -q
+      - run: bundle exec bundler-audit check --update
+      - run: bundle exec brakeman -q
 ```
 
-## Deployment Workflow
+### Deployment Workflow
 
 ```yaml
 # .github/workflows/deploy.yml
 name: Deploy
-
 on:
   push:
     branches: [main]
@@ -97,35 +93,59 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    needs: [test, security]  # Requires CI to pass
-    
+    needs: [test, lint, security]
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.3'
-      
-      - name: Install Kamal
-        run: gem install kamal
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
-      - name: Deploy with Kamal
+          ruby-version: '3.4'
+      - run: gem install kamal
+      - uses: docker/setup-buildx-action@v3
+      - run: kamal deploy
         env:
           KAMAL_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
           RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
-        run: kamal deploy
 ```
 
-## Branch Protection
+## Common Pitfalls
+1. **Not using `bundler-cache: true`** — Without gem caching, every CI run installs all gems from scratch, adding 2-5 minutes.
+2. **Running deploy without requiring CI to pass** — Always use `needs: [test, lint, security]` so deploys only happen after all checks pass.
 
-Configure branch protection rules:
-- Require status checks to pass
-- Require pull request reviews
-- Require up-to-date branches
+## Best Practices
+1. **Run lint, tests, and security in parallel** — These jobs are independent and can run simultaneously, cutting CI time.
+2. **Cache Ruby gems with `bundler-cache: true`** — The ruby/setup-ruby action handles this automatically.
+
+## Summary
+- GitHub Actions automates tests, linting, and security scans on every push.
+- Service containers provide PostgreSQL for tests without external dependencies.
+- Deployment workflow uses `needs:` to require all checks before deploying.
+- Parallel jobs and gem caching keep CI fast.
+
+## Code Examples
+
+**CI pipeline structure — tests, linting, and security run in parallel, deployment requires all to pass**
+
+```yaml
+# Parallel CI jobs — lint, test, and security run simultaneously
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    # ...
+  lint:
+    runs-on: ubuntu-latest
+    # ...
+  security:
+    runs-on: ubuntu-latest
+    # ...
+  deploy:
+    needs: [test, lint, security]  # Only deploy if all pass
+    # ...
+```
+
+
+## Resources
+
+- [GitHub Actions Documentation](https://docs.github.com/en/actions) — Official GitHub Actions documentation for CI/CD workflows
 
 ---
 

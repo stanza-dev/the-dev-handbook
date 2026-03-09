@@ -3,37 +3,43 @@ source_course: "rails-deployment-devops"
 source_lesson: "rails-deployment-backup-restore"
 ---
 
-# Backup Restore
+# Database Backups and Recovery
 
-Regular backups are essential for data protection.
+## Introduction
+Regular backups are your safety net against data loss from hardware failures, human error, or security incidents. A backup strategy that isn't tested is no strategy at all.
 
-## PostgreSQL Backups
+## Key Concepts
+- **pg_dump**: PostgreSQL's built-in tool for creating logical backups — exports data as SQL or a custom binary format.
+- **Point-in-Time Recovery (PITR)**: Restoring to any moment in time using base backups plus Write-Ahead Log (WAL) archives.
+- **Backup Verification**: Periodically restoring backups to a test database to ensure they're valid and complete.
 
-### Manual Backup
+## Real World Context
+A developer accidentally runs `DELETE FROM orders` without a WHERE clause. Without tested backups, that data is gone forever. With daily backups and WAL archiving, you can restore to one minute before the mistake.
+
+## Deep Dive
+
+### Manual PostgreSQL Backup
 
 ```bash
-# Full backup
+# Custom format (compressed, supports parallel restore)
 pg_dump -h localhost -U postgres -d myapp_production -F c -f backup.dump
 
-# With compression
+# SQL format (human-readable)
 pg_dump -h localhost -U postgres -d myapp_production | gzip > backup.sql.gz
 ```
 
-### Automated Backups
+### Automated Backup Job
 
 ```ruby
-# app/jobs/database_backup_job.rb
 class DatabaseBackupJob < ApplicationJob
   queue_as :maintenance
-  
+
   def perform
     timestamp = Time.current.strftime('%Y%m%d_%H%M%S')
     filename = "backup_#{timestamp}.dump"
-    
-    # Create backup
+
     system("pg_dump -F c -f /tmp/#{filename} $DATABASE_URL")
-    
-    # Upload to S3
+
     File.open("/tmp/#{filename}") do |file|
       S3_BUCKET.put_object(
         key: "backups/#{filename}",
@@ -41,25 +47,8 @@ class DatabaseBackupJob < ApplicationJob
         storage_class: 'STANDARD_IA'
       )
     end
-    
-    # Cleanup old backups
-    cleanup_old_backups
-    
-    # Cleanup local file
+
     FileUtils.rm("/tmp/#{filename}")
-  end
-  
-  private
-  
-  def cleanup_old_backups
-    # Keep last 30 days
-    cutoff = 30.days.ago
-    
-    S3_BUCKET.objects(prefix: 'backups/').each do |object|
-      if object.last_modified < cutoff
-        object.delete
-      end
-    end
   end
 end
 ```
@@ -67,51 +56,49 @@ end
 ### Restore from Backup
 
 ```bash
-# Download backup
-aws s3 cp s3://mybucket/backups/backup_20240115.dump ./backup.dump
-
-# Restore
 pg_restore -h localhost -U postgres -d myapp_production -c backup.dump
-
-# Or for SQL format
-psql -h localhost -U postgres -d myapp_production < backup.sql
 ```
 
-## Point-in-Time Recovery
-
-For PostgreSQL with WAL archiving:
+### Backup via Kamal
 
 ```bash
-# Enable WAL archiving in postgresql.conf
-archive_mode = on
-archive_command = 'aws s3 cp %p s3://mybucket/wal/%f'
-
-# Restore to specific point
-restore_command = 'aws s3 cp s3://mybucket/wal/%f %p'
-recovery_target_time = '2024-01-15 14:30:00'
+# Execute pg_dump inside the database accessory
+kamal accessory exec db 'pg_dump -U postgres myapp_production -F c' > backup.dump
 ```
 
-## Testing Backups
+## Common Pitfalls
+1. **Never testing restores** — A backup you've never restored might be corrupt or incomplete. Test restores monthly.
+2. **Storing backups on the same server** — If the server fails, you lose both the database and the backups. Always use off-site storage (S3, GCS).
 
-```ruby
-class BackupVerificationJob < ApplicationJob
-  def perform
-    # Download latest backup
-    latest = S3_BUCKET.objects(prefix: 'backups/').max_by(&:last_modified)
-    
-    # Restore to test database
-    system("pg_restore -d myapp_backup_test #{latest.key}")
-    
-    # Verify record counts
-    test_db = ActiveRecord::Base.establish_connection(:backup_test)
-    
-    %w[users orders products].each do |table|
-      count = test_db.connection.select_value("SELECT COUNT(*) FROM #{table}")
-      Rails.logger.info "Backup verification: #{table} has #{count} records"
-    end
-  end
-end
+## Best Practices
+1. **Automate daily backups** — Schedule `DatabaseBackupJob` to run daily and upload to S3 with lifecycle policies.
+2. **Retain at least 30 days** — Keep daily backups for a month, weekly backups for a year, to handle late-discovered issues.
+
+## Summary
+- Use pg_dump with custom format (-F c) for efficient, restorable backups.
+- Automate backups with a background job uploading to S3.
+- Test restores regularly — untested backups are unreliable.
+- Store backups off-site and retain at least 30 days.
+
+## Code Examples
+
+**PostgreSQL backup and restore commands — use custom format (-F c) for efficient compressed backups**
+
+```bash
+# Create backup
+pg_dump -F c -d myapp_production -f backup.dump
+
+# Restore backup (drops and recreates objects)
+pg_restore -d myapp_production -c backup.dump
+
+# Backup via Kamal accessory
+kamal accessory exec db 'pg_dump -U postgres myapp' > backup.dump
 ```
+
+
+## Resources
+
+- [PostgreSQL Backup and Restore](https://www.postgresql.org/docs/current/backup.html) — Official PostgreSQL documentation on backup strategies
 
 ---
 

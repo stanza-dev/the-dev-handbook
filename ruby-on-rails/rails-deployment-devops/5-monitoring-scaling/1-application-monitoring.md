@@ -3,49 +3,36 @@ source_course: "rails-deployment-devops"
 source_lesson: "rails-deployment-application-monitoring"
 ---
 
-# Application Monitoring
+# Application Performance Monitoring
 
-Monitoring provides visibility into application health and performance.
+## Introduction
+Monitoring provides continuous visibility into application health. While profiling is for diagnosing specific problems, APM tools track performance over time, revealing trends and catching regressions.
 
-## Key Metrics to Track
+## Key Concepts
+- **APM (Application Performance Monitoring)**: Tools like New Relic or Scout that continuously track response times, error rates, and throughput in production.
+- **Percentiles**: Response time metrics (p50, p95, p99) that show the distribution of request speeds, revealing outliers that averages hide.
+- **Instrumentation**: Rails' built-in event system that fires notifications for SQL queries, controller actions, and view rendering.
 
-- **Response Time**: p50, p95, p99 percentiles
-- **Throughput**: Requests per minute/second
-- **Error Rate**: Percentage of failed requests
-- **Apdex Score**: User satisfaction metric (0-1)
-- **Database Time**: Time spent in queries
-- **Queue Latency**: Background job wait times
+## Real World Context
+Your average response time is 200ms, but monitoring reveals p99 is 12 seconds. 1% of users — potentially hundreds per day — experience terrible performance. Without percentile monitoring, this goes undetected.
 
-## Rails Built-in Instrumentation
+## Deep Dive
+
+### Rails Built-in Instrumentation
 
 ```ruby
-# Subscribe to Rails events
 ActiveSupport::Notifications.subscribe('process_action.action_controller') do |*args|
   event = ActiveSupport::Notifications::Event.new(*args)
-  
   Rails.logger.info({
     path: event.payload[:path],
-    method: event.payload[:method],
     status: event.payload[:status],
     duration: event.duration,
-    db_time: event.payload[:db_runtime],
-    view_time: event.payload[:view_runtime]
+    db_time: event.payload[:db_runtime]
   }.to_json)
-end
-
-# SQL query monitoring
-ActiveSupport::Notifications.subscribe('sql.active_record') do |*args|
-  event = ActiveSupport::Notifications::Event.new(*args)
-  
-  if event.duration > 100  # Log slow queries
-    Rails.logger.warn "Slow query (#{event.duration}ms): #{event.payload[:sql]}"
-  end
 end
 ```
 
-## APM Solutions
-
-### New Relic
+### New Relic Setup
 
 ```ruby
 # Gemfile
@@ -57,44 +44,56 @@ gem 'newrelic_rpm'
 production:
   license_key: <%= ENV['NEW_RELIC_LICENSE_KEY'] %>
   app_name: My Rails App
-  log_level: info
 ```
 
-### Scout APM
+### Custom Metrics with StatsD
 
 ```ruby
-# Gemfile
-gem 'scout_apm'
-```
-
-```yaml
-# config/scout_apm.yml
-production:
-  key: <%= ENV['SCOUT_KEY'] %>
-  name: My Rails App
-  monitor: true
-```
-
-## Custom Metrics with StatsD
-
-```ruby
-# config/initializers/statsd.rb
-STATSD = Statsd.new(ENV['STATSD_HOST'], 8125)
-
-# Usage in application
 class OrdersController < ApplicationController
   def create
     start_time = Time.current
     @order = Order.create!(order_params)
-    
-    STATSD.increment('orders.created')
-    STATSD.timing('orders.create_time', (Time.current - start_time) * 1000)
+    StatsD.increment('orders.created')
+    StatsD.timing('orders.create_time', (Time.current - start_time) * 1000)
   rescue => e
-    STATSD.increment('orders.failed')
+    StatsD.increment('orders.failed')
     raise
   end
 end
 ```
+
+## Common Pitfalls
+1. **Only tracking averages** — Averages hide outliers. Track p95 and p99 to catch the worst user experiences.
+2. **Not monitoring Solid Queue latency** — A healthy web server with a backed-up job queue means emails aren't sending and imports aren't processing.
+
+## Best Practices
+1. **Set alerts on p95 response time** — Alert when response times exceed your SLA threshold.
+2. **Monitor error rates** — A sudden spike in 500 errors after a deploy indicates a problem. Set alerts at > 1% error rate.
+
+## Summary
+- APM tools provide continuous production monitoring.
+- Track percentiles (p50, p95, p99), not just averages.
+- Use Rails' built-in instrumentation for custom event tracking.
+- Monitor both web response times and job queue latency.
+
+## Code Examples
+
+**Subscribing to Rails events to automatically log slow SQL queries over 100ms**
+
+```ruby
+# Log slow SQL queries automatically
+ActiveSupport::Notifications.subscribe('sql.active_record') do |*args|
+  event = ActiveSupport::Notifications::Event.new(*args)
+  if event.duration > 100
+    Rails.logger.warn "SLOW QUERY (#{event.duration.round}ms): #{event.payload[:sql]}"
+  end
+end
+```
+
+
+## Resources
+
+- [Active Support Instrumentation](https://guides.rubyonrails.org/active_support_instrumentation.html) — Official Rails guide on built-in instrumentation events
 
 ---
 

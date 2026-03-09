@@ -1,4 +1,4 @@
-# undefined Caching Strategies
+# 💾 Caching Strategies
 
 > Part of [Rails Performance Optimization](https://stanza.dev/courses/rails-performance-optimization)
 
@@ -12,8 +12,10 @@ Implement effective caching to reduce database load and response times.
 
 ## Practice Challenges
 
-This section includes **1 interactive challenge** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
-- 🔗 Matching: Caching Challenge
+- 🧩 Multiple Choice: Default Cache Store
+- 🧩 Multiple Choice: Russian Doll Caching
+- 🧩 Challenge: Cache Invalidation Flow
 
 → [Practice in your IDE](https://stanza.dev/courses/rails-performance-optimization)
