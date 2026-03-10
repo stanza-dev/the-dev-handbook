@@ -28,6 +28,8 @@ Validation failures have caused major breaches:
 
 ### Comprehensive DTO Validation
 
+Combine multiple decorators on each field to enforce type, length, and format constraints. Custom error messages make debugging easier for API consumers.
+
 ```typescript
 import {
   IsString,
@@ -67,7 +69,11 @@ export class CreateUserDto {
 }
 ```
 
+The `@Matches()` regex on the name field whitelists only alphabetic characters, spaces, hyphens, and apostrophes — blocking injection attempts at the DTO level.
+
 ### Custom Validators
+
+Create reusable custom validators for domain-specific rules like SQL injection detection. This adds defense in depth alongside parameterized queries.
 
 ```typescript
 import {
@@ -103,7 +109,11 @@ export class SearchDto {
 }
 ```
 
+This validator catches common injection patterns like `OR 1=1`, `UNION SELECT`, and comment-based bypasses. Apply it to any free-text search fields.
+
 ### Global Validation Configuration
+
+Configure the global `ValidationPipe` with strict settings. The `whitelist` option strips unexpected fields, and `forbidNonWhitelisted` rejects them outright.
 
 ```typescript
 app.useGlobalPipes(
@@ -129,7 +139,11 @@ app.useGlobalPipes(
 );
 ```
 
+The custom `exceptionFactory` returns all validation errors at once, so API consumers can fix multiple issues in a single request round-trip.
+
 ### Array and Nested Validation
+
+Use `@ValidateNested()` with `@Type()` to validate objects inside arrays. Always set array size limits to prevent DoS via massive payloads.
 
 ```typescript
 import { Type } from 'class-transformer';
@@ -154,6 +168,8 @@ export class CreateOrderDto {
 }
 ```
 
+The `@Type(() => OrderItemDto)` is critical — without it, `class-transformer` cannot instantiate the nested objects, and validation decorators on `OrderItemDto` will be silently ignored.
+
 ## Common Pitfalls
 
 1. **Client-side only validation**: Always validate server-side. Client validation is UX, not security.
@@ -170,7 +186,54 @@ export class CreateOrderDto {
 
 ## Summary
 
-Advanced validation uses whitelisting, custom validators, and proper transformation. Enable `whitelist` and `forbidNonWhitelisted` globally. Create custom validators for domain-specific rules. Validate nested objects and arrays with proper decorators.
+- Enable `whitelist` and `forbidNonWhitelisted` globally to strip or reject unexpected properties
+- Create custom validators for domain-specific rules like SQL injection detection
+- Validate nested objects with `@ValidateNested()` and arrays with `@ArrayMinSize()`/`@ArrayMaxSize()`
+- Always validate server-side—client-side validation is for UX, not security
+
+## Code Examples
+
+**Advanced ValidationPipe configuration with custom error formatting**
+
+```typescript
+import {
+  IsString,
+  IsEmail,
+  MinLength,
+  MaxLength,
+  Matches,
+  IsUUID,
+  IsOptional,
+  ValidateIf,
+} from 'class-validator';
+
+export class CreateUserDto {
+  @IsEmail({}, { message: 'Invalid email format' })
+  @MaxLength(255)
+  email: string;
+
+  @IsString()
+  @MinLength(8, { message: 'Password must be at least 8 characters' })
+  @MaxLength(128)
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
+    message: 'Password must contain uppercase, lowercase, and number',
+  })
+  password: string;
+
+  @IsString()
+  @MinLength(1)
+  @MaxLength(100)
+  @Matches(/^[a-zA-Z\s'-]+$/, {
+    message: 'Name contains invalid characters',
+  })
+  name: string;
+
+  @IsOptional()
+  @IsUUID('4')
+  referralCode?: string;
+}
+```
+
 
 ## Resources
 

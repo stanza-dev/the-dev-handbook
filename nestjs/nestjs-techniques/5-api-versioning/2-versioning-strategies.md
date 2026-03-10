@@ -28,6 +28,8 @@ Versioning strategy decisions:
 
 ### Strategy 1: Separate Controllers
 
+Create dedicated controller classes per version, each injecting the same shared service.
+
 ```typescript
 // v1/users.controller.ts
 @Controller({ path: 'users', version: '1' })
@@ -52,7 +54,11 @@ export class UsersV2Controller {
 }
 ```
 
+This approach provides the cleanest separation but results in more files as the number of versions grows.
+
 ### Strategy 2: Shared Controller with Branching
+
+Keep both versions in a single controller and use `@Version()` on individual methods to differentiate response formats.
 
 ```typescript
 @Controller('users')
@@ -73,7 +79,11 @@ export class UsersController {
 }
 ```
 
+Both methods call the same service; only the DTO mapping differs, keeping business logic DRY.
+
 ### Strategy 3: Version in Service Layer
+
+Push version awareness into the service layer when the data transformation logic is complex.
 
 ```typescript
 @Injectable()
@@ -97,7 +107,11 @@ export class UsersController {
 }
 ```
 
+This centralizes version-specific logic but couples the service to version details, making it harder to test.
+
 ### Deprecation with Sunset Header
+
+Build an interceptor that adds RFC 8594 `Sunset` and `Deprecation` headers to responses from old versions.
 
 ```typescript
 @Injectable()
@@ -117,7 +131,11 @@ export class DeprecationInterceptor implements NestInterceptor {
 }
 ```
 
+The `Link` header with `rel="successor-version"` tells clients exactly where to migrate.
+
 ### Versioning with Different DTOs
+
+Create separate DTO classes per version to isolate response shape changes.
 
 ```typescript
 // User remains same, DTOs differ per version
@@ -134,7 +152,11 @@ export class UserV2Dto {
 }
 ```
 
+V2 splits the `name` field into `firstName` and `lastName` while adding a computed `fullName` for convenience.
+
 ### Module Organization
+
+Organize versioned code in subdirectories with a shared service at the domain root.
 
 ```
 src/
@@ -149,7 +171,11 @@ src/
 │   └── users.module.ts
 ```
 
+Keeping DTOs in version-specific folders prevents accidental imports across versions.
+
 ### Version Negotiation
+
+Implement custom middleware to resolve the version from multiple sources with a priority chain.
 
 ```typescript
 @Injectable()
@@ -167,6 +193,8 @@ export class VersionNegotiationMiddleware implements NestMiddleware {
 }
 ```
 
+Defaulting to the latest version encourages clients to upgrade and reduces support burden for old versions.
+
 ## Common Pitfalls
 
 1. **Version proliferation**: Too many versions increase maintenance.
@@ -183,7 +211,40 @@ export class VersionNegotiationMiddleware implements NestMiddleware {
 
 ## Summary
 
-Versioning strategies range from separate controllers to shared services with branching. Use deprecation headers to notify clients, organize code by version, and maintain clear migration paths. Choose strategy based on change frequency and client needs.
+- Choose between separate controllers, shared controllers with branching, or service-layer versioning
+- Use Sunset and Deprecation headers to notify clients of upcoming version removal
+- Organize code by version folders with shared services for common business logic
+- Provide clear migration guides and support at least the N-1 version
+- Set explicit end-of-life dates and monitor old version usage before removal
+
+## Code Examples
+
+**Using separate versioned controllers for v1 and v2 of the same resource**
+
+```typescript
+// v1/users.controller.ts
+@Controller({ path: 'users', version: '1' })
+export class UsersV1Controller {
+  constructor(private usersService: UsersService) {}
+
+  @Get()
+  findAll() {
+    return this.usersService.findAllLegacy();
+  }
+}
+
+// v2/users.controller.ts
+@Controller({ path: 'users', version: '2' })
+export class UsersV2Controller {
+  constructor(private usersService: UsersService) {}
+
+  @Get()
+  findAll() {
+    return this.usersService.findAllWithPagination();
+  }
+}
+```
+
 
 ## Resources
 

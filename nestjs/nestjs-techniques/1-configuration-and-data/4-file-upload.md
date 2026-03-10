@@ -16,9 +16,15 @@ Many applications need to handle file uploads—images, documents, media. NestJS
 - **FilesInterceptor**: Handles multiple files
 - **ParseFilePipe**: Validates file type and size
 
+## Real World Context
+
+File uploads are everywhere: user avatars, document attachments, CSV imports, image galleries. Without proper handling, uploads can exhaust server memory, allow malicious files, or corrupt data. NestJS's multer integration handles streaming, size limits, and file type filtering.
+
 ## Deep Dive
 
 ### Single File Upload
+
+Wrap a controller method with `FileInterceptor` to handle a single file field from a multipart form.
 
 ```typescript
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -32,7 +38,11 @@ uploadFile(@UploadedFile() file: Express.Multer.File) {
 }
 ```
 
+The string `'file'` passed to `FileInterceptor` must match the form field name used by the client.
+
 ### Multiple Files
+
+Use `FilesInterceptor` with a max count argument to accept multiple files under the same field name.
 
 ```typescript
 @Post('uploads')
@@ -42,7 +52,11 @@ uploadFiles(@UploadedFiles() files: Express.Multer.File[]) {
 }
 ```
 
+The second argument (`10`) limits the number of files accepted per request.
+
 ### File Validation
+
+Pass a `ParseFilePipe` with validators to `@UploadedFile()` to enforce size and type constraints.
 
 ```typescript
 @Post('upload')
@@ -62,7 +76,11 @@ uploadFile(
 }
 ```
 
+Validation runs before the handler executes, so rejected files never reach your business logic.
+
 ### Custom Storage
+
+Configure `diskStorage` to control where files are saved and how filenames are generated.
 
 ```typescript
 import { diskStorage } from 'multer';
@@ -83,6 +101,8 @@ uploadFile(@UploadedFile() file: Express.Multer.File) {
 }
 ```
 
+Generating unique filenames with timestamps prevents overwrites when users upload files with identical names.
+
 ## Common Pitfalls
 
 1. **No file size limits**: Default has no limit—easy DoS attack vector.
@@ -98,7 +118,28 @@ uploadFile(@UploadedFile() file: Express.Multer.File) {
 
 ## Summary
 
-NestJS handles file uploads via FileInterceptor and multer. Use ParseFilePipe for validation, configure storage for custom destinations, and always validate file size and type for security.
+- NestJS handles file uploads via FileInterceptor built on top of multer
+- Use ParseFilePipe with MaxFileSizeValidator and FileTypeValidator for security
+- Configure custom storage destinations with diskStorage or cloud providers
+- Always validate file size and type to prevent malicious uploads
+- Use FilesInterceptor for handling multiple file uploads
+
+## Code Examples
+
+**Handling file uploads with @UseInterceptors and FileInterceptor from @nestjs/platform-express**
+
+```typescript
+import { FileInterceptor } from '@nestjs/platform-express';
+import { UploadedFile, UseInterceptors } from '@nestjs/common';
+
+@Post('upload')
+@UseInterceptors(FileInterceptor('file'))
+uploadFile(@UploadedFile() file: Express.Multer.File) {
+  console.log(file);
+  return { filename: file.originalname, size: file.size };
+}
+```
+
 
 ## Resources
 

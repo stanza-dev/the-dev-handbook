@@ -16,7 +16,7 @@ Advanced API security including API keys, OAuth2, and security headers.
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: API Key Storage
-- 🧩 Multiple Choice: OAuth2 Authorization Code Flow
+- 🧩 Challenge: OAuth2 Authorization Code Flow
 - ✏️ Fill in the Blank: Content Security Policy
 
 → [Practice in your IDE](https://stanza.dev/courses/nestjs-security)

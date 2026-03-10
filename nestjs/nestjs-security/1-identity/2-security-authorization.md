@@ -30,6 +30,8 @@ RBAC simplifies this by assigning permissions to roles rather than individual us
 
 ### Define Roles
 
+Start by defining an enum of all roles in your system. This serves as the single source of truth for role names.
+
 ```typescript
 export enum Role {
   User = 'user',
@@ -38,7 +40,11 @@ export enum Role {
 }
 ```
 
+Using an enum prevents typos and provides autocompletion when assigning roles throughout your codebase.
+
 ### Roles Decorator
+
+Create a custom decorator that attaches role metadata to route handlers. NestJS's `Reflector.createDecorator` is the cleanest way to define metadata decorators.
 
 ```typescript
 import { Reflector } from '@nestjs/core';
@@ -46,7 +52,11 @@ import { Reflector } from '@nestjs/core';
 export const Roles = Reflector.createDecorator<Role[]>();
 ```
 
+This decorator can now be used as `@Roles([Role.Admin])` on any route handler or controller.
+
 ### Roles Guard
+
+The RolesGuard reads the role metadata from the handler and checks if the authenticated user has at least one of the required roles.
 
 ```typescript
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
@@ -70,7 +80,11 @@ export class RolesGuard implements CanActivate {
 }
 ```
 
+Note that when no roles are required (no `@Roles()` decorator), the guard returns `true` to allow unrestricted access.
+
 ### Using the Roles Decorator
+
+Apply `@Roles()` at the method level to set different role requirements for each endpoint within the same controller.
 
 ```typescript
 @Controller('admin')
@@ -90,11 +104,15 @@ export class AdminController {
 }
 ```
 
+Here `createProduct` allows both Admin and SuperAdmin, while `deleteUser` is restricted to SuperAdmin only — following the principle of least privilege.
+
 ### Combining Guards
 
 Guards execute in order. Typically:
 1. AuthGuard (verify identity)
 2. RolesGuard (check permissions)
+
+List guards in execution order — AuthGuard must run first so `req.user` is populated before the RolesGuard checks roles.
 
 ```typescript
 @UseGuards(AuthGuard, RolesGuard)
@@ -102,7 +120,11 @@ Guards execute in order. Typically:
 export class AdminController {}
 ```
 
+If the AuthGuard rejects the request, the RolesGuard never runs, keeping the response time fast for unauthenticated requests.
+
 ### Global Guard Registration
+
+Register guards globally to protect all routes by default. The module-based approach using `APP_GUARD` is preferred because it supports dependency injection.
 
 ```typescript
 // main.ts
@@ -117,6 +139,8 @@ app.useGlobalGuards(new AuthGuard(), new RolesGuard());
 })
 export class AppModule {}
 ```
+
+The `APP_GUARD` provider approach is strongly recommended — guards registered with `useGlobalGuards()` in `main.ts` cannot inject dependencies since they live outside any module.
 
 ## Common Pitfalls
 
@@ -134,7 +158,23 @@ export class AppModule {}
 
 ## Summary
 
-RBAC in NestJS uses custom decorators to attach role requirements to routes and Guards to enforce them. The Reflector service reads decorator metadata. Combine AuthGuard and RolesGuard for complete access control.
+- Use custom decorators (e.g., `@Roles()`) to attach role requirements to route handlers
+- Implement a RolesGuard that reads decorator metadata via the Reflector service
+- Combine AuthGuard and RolesGuard to enforce both identity verification and permission checks
+- Keep role definitions in a central enum and follow the principle of least privilege
+
+## Code Examples
+
+**Defining a Role enum for role-based access control**
+
+```typescript
+export enum Role {
+  User = 'user',
+  Admin = 'admin',
+  SuperAdmin = 'super_admin',
+}
+```
+
 
 ## Resources
 

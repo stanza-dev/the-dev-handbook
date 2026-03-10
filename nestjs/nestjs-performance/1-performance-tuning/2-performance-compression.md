@@ -16,6 +16,10 @@ Response compression reduces payload sizes by 70-90%, dramatically improving loa
 - **Threshold**: Minimum response size before compression
 - **Content-Type filtering**: Only compress text-based responses
 
+## Real World Context
+
+A typical JSON API response might be 50KB uncompressed. With gzip at level 6, it drops to around 8KB — an 84% reduction. For mobile users on 3G connections, this means pages load in seconds instead of timing out.
+
 ## Deep Dive
 
 ### Express Compression
@@ -54,7 +58,7 @@ app.use(compression({
 ### Fastify Compression
 
 ```typescript
-import fastifyCompress from '@fastify/compress';
+import compression from '@fastify/compress';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -62,7 +66,7 @@ async function bootstrap() {
     new FastifyAdapter(),
   );
   
-  await app.register(fastifyCompress, {
+  await app.register(compression, {
     encodings: ['gzip', 'deflate'],
     threshold: 1024,
   });
@@ -70,6 +74,22 @@ async function bootstrap() {
   await app.listen(3000, '0.0.0.0');
 }
 ```
+
+### Brotli Compression
+
+By default, `@fastify/compress` uses **Brotli** compression on Node >= 11.7.0 when browsers indicate support. Brotli achieves better compression ratios than gzip but is more CPU-intensive. You can tune the quality parameter (0-11, default 11):
+
+```typescript
+import { constants } from 'node:zlib';
+
+await app.register(compression, {
+  brotliOptions: {
+    params: { [constants.BROTLI_PARAM_QUALITY]: 4 }, // Faster compression
+  },
+});
+```
+
+Set a lower quality (e.g. 4) for a good balance between compression ratio and CPU usage. Quality 11 produces the smallest output but is significantly slower.
 
 ### When NOT to Compress
 
@@ -92,7 +112,29 @@ async function bootstrap() {
 
 ## Summary
 
-Compression reduces response sizes significantly. Use compression middleware for Express or @fastify/compress for Fastify. Set appropriate thresholds and avoid compressing already-compressed content.
+Compression reduces response sizes significantly. Use compression middleware for Express or @fastify/compress for Fastify. Brotli is the default for Fastify on modern Node.js and offers better ratios than gzip — tune its quality level for your workload. Set appropriate thresholds and avoid compressing already-compressed content.
+
+## Code Examples
+
+**Registering @fastify/compress with Brotli quality tuning — lower quality (e.g. 4) trades compression ratio for speed**
+
+```typescript
+import compression from '@fastify/compress';
+import { constants } from 'node:zlib';
+
+// Inside bootstrap()
+const app = await NestFactory.create<NestFastifyApplication>(
+  AppModule,
+  new FastifyAdapter(),
+);
+
+await app.register(compression, {
+  brotliOptions: {
+    params: { [constants.BROTLI_PARAM_QUALITY]: 4 },
+  },
+});
+```
+
 
 ## Resources
 

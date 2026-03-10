@@ -27,6 +27,8 @@ Refresh tokens power:
 
 ### Token Pair Generation
 
+Generate both tokens in parallel using `Promise.all`. Each token uses a different secret and expiration to separate concerns.
+
 ```typescript
 @Injectable()
 export class AuthService {
@@ -58,7 +60,11 @@ export class AuthService {
 }
 ```
 
+Using separate secrets (`JWT_ACCESS_SECRET` vs. `JWT_REFRESH_SECRET`) ensures that a leaked access token cannot be used to generate new tokens.
+
 ### Refresh Token Storage
+
+Store refresh tokens hashed in the database with a token family identifier. The family enables detecting reuse of old tokens, which signals a potential breach.
 
 ```typescript
 @Injectable()
@@ -110,7 +116,11 @@ export class RefreshTokenService {
 }
 ```
 
+When an already-revoked token is reused, `revokeFamily()` invalidates the entire token chain — this is the breach detection mechanism.
+
 ### Refresh Endpoint
+
+The refresh endpoint verifies the old token, rotates it, and issues a new token pair. Each step must succeed for the refresh to complete.
 
 ```typescript
 @Controller('auth')
@@ -141,7 +151,11 @@ export class AuthController {
 }
 ```
 
+The old refresh token is invalidated before the new one is stored, ensuring each token can only be used once.
+
 ### Token Family for Breach Detection
+
+A new token family is created on each login. All refresh tokens generated from that login share the same family ID, enabling chain-based revocation.
 
 ```typescript
 async login(email: string, password: string) {
@@ -160,6 +174,8 @@ async login(email: string, password: string) {
 }
 ```
 
+If an attacker steals and uses a refresh token, the legitimate user's next refresh attempt triggers a reuse detection, revoking the entire family.
+
 ## Common Pitfalls
 
 1. **Storing refresh tokens in JWT only**: Store in database to enable revocation.
@@ -176,7 +192,46 @@ async login(email: string, password: string) {
 
 ## Summary
 
-Refresh tokens enable long-lived sessions with short-lived access tokens. Store refresh tokens hashed in database, rotate on every use, and use token families for breach detection. Revoke entire families when reuse is detected.
+- Pair short-lived access tokens (15 min) with long-lived refresh tokens (7 days) for seamless sessions
+- Store refresh tokens hashed in the database and rotate them on every use
+- Use token families to detect breach attempts—revoke the entire family if reuse is detected
+- Use different secrets for access and refresh tokens
+
+## Code Examples
+
+**Implementing refresh token rotation with secure storage and verification**
+
+```typescript
+@Injectable()
+export class AuthService {
+  constructor(
+    private jwtService: JwtService,
+    private configService: ConfigService,
+  ) {}
+
+  async generateTokens(userId: string) {
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(
+        { sub: userId, type: 'access' },
+        {
+          secret: this.configService.get('JWT_ACCESS_SECRET'),
+          expiresIn: '15m',
+        },
+      ),
+      this.jwtService.signAsync(
+        { sub: userId, type: 'refresh' },
+        {
+          secret: this.configService.get('JWT_REFRESH_SECRET'),
+          expiresIn: '7d',
+        },
+      ),
+    ]);
+
+    return { accessToken, refreshToken };
+  }
+}
+```
+
 
 ## Resources
 

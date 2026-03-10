@@ -15,8 +15,8 @@ Managing application configuration and database connections.
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- ✏️ Fill in the Blank: Challenge Config Module Import
+- ✏️ Fill in the Blank: Config Module Import
 - 🧩 Multiple Choice: Async DB Config
-- 🧩 Multiple Choice: Configuration Validation
+- 🧩 Challenge: Configuration Validation
 
 → [Practice in your IDE](https://stanza.dev/courses/nestjs-techniques)

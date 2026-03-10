@@ -215,6 +215,34 @@ kubectl delete deployment nestjs-blue
 
 Load balancing distributes traffic for availability and scalability. Use Nginx or cloud load balancers, implement health checks, and configure Kubernetes for auto-scaling. Design stateless to avoid sticky sessions.
 
+## Code Examples
+
+**Docker Compose setup with two NestJS instances behind an Nginx load balancer**
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  app1:
+    build: .
+    environment:
+      - NODE_ENV=production
+  app2:
+    build: .
+    environment:
+      - NODE_ENV=production
+  nginx:
+    image: nginx:alpine
+    ports:
+      - '80:80'
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - app1
+      - app2
+```
+
+
 ## Resources
 
 - [Health Checks](https://docs.nestjs.com/recipes/terminus) — Health checks for load balancers

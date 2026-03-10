@@ -183,6 +183,28 @@ export class ExportService {
 
 Batch operations use bulk insert/update, chunked processing, and streams for efficiency. Process large datasets in manageable chunks, use upsert for sync operations, and stream data for exports.
 
+## Code Examples
+
+**Bulk insert vs loop insert — a single INSERT statement is dramatically faster than N individual ones**
+
+```typescript
+@Injectable()
+export class UsersService {
+  // BAD: One query per user
+  async createManyBad(dtos: CreateUserDto[]): Promise<User[]> {
+    for (const dto of dtos) {
+      await this.usersRepo.save(dto); // N separate INSERTs
+    }
+  }
+
+  // GOOD: Single bulk insert
+  async bulkInsert(dtos: CreateUserDto[]): Promise<void> {
+    await this.usersRepo.insert(dtos); // 1 INSERT statement
+  }
+}
+```
+
+
 ## Resources
 
 - [Database](https://docs.nestjs.com/techniques/database) — Database operations

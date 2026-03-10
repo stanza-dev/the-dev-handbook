@@ -28,9 +28,13 @@ Rate limiting protects against:
 
 ### Installation & Basic Setup
 
+Install the official NestJS throttler package.
+
 ```bash
 npm install @nestjs/throttler
 ```
+
+Configure the module with a throttler definition and register the guard globally using `APP_GUARD`.
 
 ```typescript
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -38,10 +42,12 @@ import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
-    ThrottlerModule.forRoot([{
-      ttl: 60000,    // 60 seconds
-      limit: 10,     // 10 requests per TTL
-    }]),
+    ThrottlerModule.forRoot({
+      throttlers: [{
+        ttl: 60000,    // 60 seconds
+        limit: 10,     // 10 requests per TTL
+      }],
+    }),
   ],
   providers: [
     {
@@ -53,7 +59,11 @@ import { APP_GUARD } from '@nestjs/core';
 export class AppModule {}
 ```
 
+Registering `ThrottlerGuard` as `APP_GUARD` applies rate limiting to every route automatically — no need to add `@UseGuards()` individually.
+
 ### Multiple Rate Limit Tiers
+
+Define multiple named throttlers to enforce different rate limits simultaneously — a request must pass all tiers to proceed.
 
 ```typescript
 ThrottlerModule.forRoot([
@@ -75,7 +85,11 @@ ThrottlerModule.forRoot([
 ])
 ```
 
+This layered approach catches both burst abuse (short tier) and sustained abuse (long tier), providing more nuanced protection.
+
 ### Skip Rate Limiting
+
+Exempt specific routes or entire controllers from rate limiting using the `@SkipThrottle()` decorator — useful for health checks and public endpoints.
 
 ```typescript
 import { SkipThrottle } from '@nestjs/throttler';
@@ -95,7 +109,11 @@ export class HealthController {
 export class PublicController {}
 ```
 
+Applying `@SkipThrottle()` at the controller level exempts all routes within that controller.
+
 ### Custom Throttle per Route
+
+Override the global rate limit on sensitive routes using the `@Throttle()` decorator to apply stricter limits.
 
 ```typescript
 import { Throttle } from '@nestjs/throttler';
@@ -110,18 +128,26 @@ export class AuthController {
 }
 ```
 
+Login endpoints are prime targets for brute-force attacks, so applying a much tighter limit (3 per minute vs. the global 10) is a critical hardening step.
+
 ### Custom Storage (Redis)
 
-For distributed applications:
+For distributed applications running multiple server instances, use Redis-backed storage so rate limits are shared across all nodes.
 
 ```typescript
 import { ThrottlerStorageRedisService } from '@nestjs/throttler-storage-redis';
+import Redis from 'ioredis';
 
 ThrottlerModule.forRoot({
-  throttlers: [{ limit: 10, ttl: 60000 }],
-  storage: new ThrottlerStorageRedisService(redisClient),
+  throttlers: [
+    { name: 'short', ttl: 1000, limit: 3 },
+    { name: 'long', ttl: 60000, limit: 100 },
+  ],
+  storage: new ThrottlerStorageRedisService(new Redis()),
 })
 ```
+
+Without Redis, each server instance tracks limits independently — an attacker could multiply their allowed requests by the number of instances behind the load balancer.
 
 ## Common Pitfalls
 
@@ -139,7 +165,38 @@ ThrottlerModule.forRoot({
 
 ## Summary
 
-The @nestjs/throttler module provides rate limiting with configurable TTL and limit values. Apply globally with ThrottlerGuard, customize per-route with @Throttle(), or skip with @SkipThrottle(). Use distributed storage like Redis for production deployments.
+- Use `@nestjs/throttler` to configure rate limiting with TTL (time window) and limit (max requests)
+- Apply globally via `APP_GUARD` with `ThrottlerGuard`, or customize per-route with `@Throttle()`
+- Skip rate limiting on specific routes or controllers using `@SkipThrottle()`
+- Use Redis-backed storage for distributed/multi-instance production deployments
+
+## Code Examples
+
+**Configuring ThrottlerModule with rate limit settings and applying ThrottlerGuard globally**
+
+```typescript
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+
+@Module({
+  imports: [
+    ThrottlerModule.forRoot({
+      throttlers: [{
+        ttl: 60000,    // 60 seconds
+        limit: 10,     // 10 requests per TTL
+      }],
+    }),
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
+})
+export class AppModule {}
+```
+
 
 ## Resources
 

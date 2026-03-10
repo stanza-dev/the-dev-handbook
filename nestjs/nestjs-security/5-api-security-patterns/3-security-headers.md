@@ -28,6 +28,8 @@ Security headers protect against:
 
 ### Comprehensive Helmet Configuration
 
+This production-ready configuration sets all major security headers with explicit directives tailored to a typical web application.
+
 ```typescript
 import helmet from 'helmet';
 
@@ -59,6 +61,8 @@ app.use(
 );
 ```
 
+The HSTS `preload: true` option allows your domain to be included in browser preload lists, ensuring HTTPS is enforced even on the first visit.
+
 ### Content-Security-Policy Explained
 
 | Directive | Purpose | Example |
@@ -72,6 +76,8 @@ app.use(
 | `report-uri` | URL to send violation reports | `/csp-report` |
 
 ### CSP Report-Only Mode
+
+Deploy CSP in report-only mode first to discover which resources would be blocked without actually breaking functionality.
 
 ```typescript
 app.use(
@@ -97,7 +103,11 @@ export class CspController {
 }
 ```
 
+Monitor the CSP reports for a few days to identify legitimate resources that need to be whitelisted before switching to enforcement mode.
+
 ### Permissions-Policy (Feature-Policy)
+
+Disable browser features your application does not use to reduce the attack surface. This prevents embedded scripts from accessing these APIs.
 
 ```typescript
 app.use((req, res, next) => {
@@ -109,7 +119,11 @@ app.use((req, res, next) => {
 });
 ```
 
+The empty parentheses `()` disable the feature entirely. If you need camera access for specific origins, use `camera=(self "https://video.example.com")`.
+
 ### Custom Security Headers
+
+Use an interceptor to remove identifying headers and disable caching on sensitive endpoints.
 
 ```typescript
 @Injectable()
@@ -132,7 +146,11 @@ export class SecurityHeadersInterceptor implements NestInterceptor {
 }
 ```
 
+Removing `X-Powered-By` hides your tech stack from attackers. The `no-store` cache directive prevents browsers and proxies from caching sensitive responses.
+
 ### Environment-Specific Configuration
+
+Disable restrictive headers in development to avoid frustrating debugging sessions. Apply full strictness only in production.
 
 ```typescript
 const isProduction = process.env.NODE_ENV === 'production';
@@ -150,6 +168,8 @@ app.use(
 );
 ```
 
+HSTS must be disabled in development since local servers typically use HTTP. Enabling it on localhost would break your dev environment by forcing non-existent HTTPS.
+
 ## Common Pitfalls
 
 1. **CSP breaking functionality**: Start with report-only mode to identify issues.
@@ -166,7 +186,46 @@ app.use(
 
 ## Summary
 
-Security headers provide browser-level protection. Use Helmet for sensible defaults, customize CSP for your resource needs, and enable HSTS in production. Test with report-only mode before enforcing strict policies.
+- Security headers instruct browsers on safe content handling—CSP, HSTS, X-Frame-Options, and more
+- Use Helmet for sensible defaults and customize CSP directives for your specific resource needs
+- Enable HSTS in production to force HTTPS and use report-only mode during development
+- Remove identifying headers like `X-Powered-By` and set `Cache-Control: no-store` for sensitive endpoints
+
+## Code Examples
+
+**Configuring Content-Security-Policy and other security headers**
+
+```typescript
+import helmet from 'helmet';
+
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"], // Adjust based on needs
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'", 'https://api.example.com'],
+        frameSrc: ["'none'"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: [],
+      },
+    },
+    hsts: {
+      maxAge: 31536000, // 1 year
+      includeSubDomains: true,
+      preload: true,
+    },
+    frameguard: { action: 'deny' },
+    noSniff: true,
+    xssFilter: true,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  }),
+);
+```
+
 
 ## Resources
 

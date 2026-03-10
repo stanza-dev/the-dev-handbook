@@ -13,10 +13,11 @@ Optimizing the runtime performance by switching to Fastify and enabling compress
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Challenge Fastify Adapter
-- 🧩 Multiple Choice: Challenge Compression Purpose
-- 🧩 Multiple Choice: Lazy Loading Use Case
+- 🧩 Multiple Choice: Compression Tradeoff
+- 🔗 Matching: Lazy Loading Use Case
+- ✏️ Fill in the Blank: Brotli Compression
 
 → [Practice in your IDE](https://stanza.dev/courses/nestjs-performance)

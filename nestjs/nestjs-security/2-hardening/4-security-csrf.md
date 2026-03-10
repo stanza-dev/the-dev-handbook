@@ -22,39 +22,73 @@ Imagine a user is logged into their bank. They visit a malicious site that submi
 
 ## Deep Dive
 
-### Cookie-Based CSRF Protection
+### Cookie-Based CSRF Protection (Express)
+
+> **Note:** The `csurf` package is deprecated and no longer maintained. The NestJS docs now recommend `csrf-csrf` for Express or `@fastify/csrf-protection` for Fastify.
+
+Install the `csrf-csrf` package alongside `cookie-parser` for the double-submit cookie pattern.
 
 ```bash
-npm install csurf cookie-parser
+npm install csrf-csrf cookie-parser
 ```
+
+Configure the CSRF middleware with a secret and secure cookie options. The double-submit pattern compares a cookie value against a request header.
 
 ```typescript
 import * as cookieParser from 'cookie-parser';
-import * as csurf from 'csurf';
+import { doubleCsrf } from 'csrf-csrf';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
   app.use(cookieParser());
-  app.use(csurf({ cookie: true }));
+  
+  const { doubleCsrfProtection, generateToken } = doubleCsrf({
+    getSecret: () => process.env.CSRF_SECRET,
+    cookieName: '__csrf',
+    cookieOptions: { sameSite: 'strict', secure: true },
+  });
+  app.use(doubleCsrfProtection);
   
   await app.listen(3000);
 }
 ```
 
+The `sameSite: 'strict'` and `secure: true` options ensure the CSRF cookie is only sent over HTTPS and never in cross-site requests.
+
+### Fastify CSRF Protection
+
+If you use Fastify instead of Express, install the official Fastify CSRF plugin.
+
+```bash
+npm install @fastify/csrf-protection
+```
+
+The Fastify plugin provides equivalent protection with Fastify-native session and cookie handling.
+
 ### Getting CSRF Token
 
+With `csrf-csrf`, expose an endpoint that generates and returns the CSRF token to your frontend. The frontend must include this token in subsequent state-changing requests.
+
 ```typescript
+import { doubleCsrf } from 'csrf-csrf';
+const { generateToken } = doubleCsrf(doubleCsrfOptions);
+
 @Controller()
 export class AppController {
   @Get('csrf-token')
-  getCsrfToken(@Req() req): { csrfToken: string } {
-    return { csrfToken: req.csrfToken() };
+  getCsrfToken(@Req() req, @Res({ passthrough: true }) res): { csrfToken: string } {
+    const token = generateToken(req, res);
+    return { csrfToken: token };
   }
 }
 ```
 
+The frontend should call this endpoint on page load and attach the token as a header (e.g., `X-CSRF-Token`) in POST/PUT/DELETE requests.
+
 ### SameSite Cookies (Modern Approach)
+
+Modern browsers support the `SameSite` cookie attribute, which provides built-in CSRF protection by restricting when cookies are sent cross-site.
 
 ```typescript
 import { CookieOptions } from 'express';
@@ -67,6 +101,8 @@ const cookieOptions: CookieOptions = {
 
 res.cookie('session', token, cookieOptions);
 ```
+
+With `SameSite: 'strict'`, the browser never sends the cookie in cross-site requests, effectively eliminating most CSRF attack vectors.
 
 ### SameSite Values
 
@@ -87,6 +123,8 @@ headers: {
 }
 ```
 
+Since JavaScript on a different origin cannot read or set the Authorization header for your domain, Bearer token authentication is inherently immune to CSRF.
+
 ## Common Pitfalls
 
 1. **Applying CSRF to stateless APIs**: Pure JWT APIs don't need CSRF. It's for cookie-based sessions.
@@ -103,7 +141,34 @@ headers: {
 
 ## Summary
 
-CSRF protection is essential for cookie-based authentication. Use SameSite cookies as the first line of defense, and implement CSRF tokens for additional security. Token-based APIs (Bearer tokens) don't need CSRF protection since tokens can't be automatically sent cross-site.
+- CSRF protection is essential for cookie-based authentication but unnecessary for Bearer-token APIs
+- Use SameSite cookies (Strict or Lax) as the primary defense against cross-site request forgery
+- Implement double-submit CSRF tokens with `csrf-csrf` for additional protection (replaces deprecated `csurf`)
+- Only apply CSRF protection to state-changing methods (POST, PUT, DELETE)—GET should be idempotent
+
+## Code Examples
+
+**Implementing CSRF protection with csrf-csrf double-submit cookie pattern (replaces deprecated csurf)**
+
+```typescript
+import * as cookieParser from 'cookie-parser';
+import { doubleCsrf } from 'csrf-csrf';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  
+  app.use(cookieParser());
+  const { doubleCsrfProtection } = doubleCsrf({
+    getSecret: () => process.env.CSRF_SECRET,
+    cookieName: '__csrf',
+    cookieOptions: { sameSite: 'strict', secure: true },
+  });
+  app.use(doubleCsrfProtection);
+  
+  await app.listen(3000);
+}
+```
+
 
 ## Resources
 

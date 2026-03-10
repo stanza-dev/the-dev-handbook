@@ -13,10 +13,11 @@ Application metrics, performance profiling, and observability.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Liveness vs Readiness
-- 🧩 Multiple Choice: Metric Types
-- 🧩 Multiple Choice: Distributed Tracing
+- 🧩 Challenge: Prometheus Metric Types
+- 🔗 Matching: Distributed Tracing Concepts
+- ✏️ Fill in the Blank: OpenTelemetry Exporter
 
 → [Practice in your IDE](https://stanza.dev/courses/nestjs-performance)

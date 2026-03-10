@@ -93,11 +93,41 @@ fastifyInstance.addHook('onRequest', (request, reply, done) => {
 | `res.send()` | Same |
 | Helmet middleware | @fastify/helmet plugin |
 
+### NestJS 11 Platform Changes
+
+NestJS 11 requires **Node.js v20+** and ships with **Fastify v5** and **Express v5** support.
+
+**Middleware wildcards** changed in both platforms:
+
+```typescript
+// Fastify v5: named wildcard
+consumer.apply(LoggerMiddleware).forRoutes('*splat');
+
+// Express v5: named wildcard with braces
+consumer.apply(LoggerMiddleware).forRoutes('{*splat}');
+
+// Previously (NestJS 10): .forRoutes('(.*)');
+```
+
+**Fastify v5 CORS**: By default, only CORS-safelisted methods (GET, HEAD, POST) are allowed. You must explicitly configure methods like PUT, PATCH, and DELETE:
+
+```typescript
+const app = await NestFactory.create<NestFastifyApplication>(
+  AppModule,
+  new FastifyAdapter(),
+);
+app.enableCors({
+  origin: 'https://your-frontend.com',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+});
+```
+
 ## Common Pitfalls
 
-1. **Express middleware incompatibility**: Most Express middleware won't work. Use Fastify alternatives.
+1. **Express middleware incompatibility**: Most Express middleware won't work with Fastify. Use Fastify alternatives.
 2. **Forgetting '0.0.0.0'**: Fastify binds to localhost by default—breaks containers.
 3. **@Res() decorator**: Using @Res() directly bypasses Fastify's optimizations.
+4. **Fastify v5 CORS**: Only safelisted HTTP methods are allowed by default — configure explicitly.
 
 ## Best Practices
 
@@ -109,6 +139,30 @@ fastifyInstance.addHook('onRequest', (request, reply, done) => {
 ## Summary
 
 Fastify provides significant performance improvements over Express. Use FastifyAdapter for the switch, register Fastify plugins instead of Express middleware, and remember to bind to 0.0.0.0 for containerized deployments.
+
+## Code Examples
+
+**Bootstrapping a NestJS app with FastifyAdapter — pass it as the second argument to NestFactory.create()**
+
+```typescript
+import { NestFactory } from '@nestjs/core';
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from '@nestjs/platform-fastify';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter(),
+  );
+  // Fastify requires explicit host for Docker/K8s
+  await app.listen(3000, '0.0.0.0');
+}
+bootstrap();
+```
+
 
 ## Resources
 

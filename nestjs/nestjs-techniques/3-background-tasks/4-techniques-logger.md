@@ -16,9 +16,15 @@ Logging is essential for debugging, monitoring, and auditing. NestJS provides a 
 - **Context**: Identifies which component logged the message
 - **Custom Logger**: Replace built-in with external libraries
 
+## Real World Context
+
+Console.log in production is a debugging nightmare—no timestamps, no log levels, no structured output. A proper logger enables filtering by severity, adds context (which module, which request), and integrates with log aggregation services like Datadog or CloudWatch.
+
 ## Deep Dive
 
 ### Built-in Logger
+
+Create a `Logger` instance with the class name as context so every log line identifies its source.
 
 ```typescript
 import { Logger, Injectable } from '@nestjs/common';
@@ -36,7 +42,11 @@ export class UsersService {
 }
 ```
 
+Passing the class name (`UsersService.name`) to the constructor adds a `[UsersService]` prefix to every log entry.
+
 ### Global Logger Configuration
+
+Filter log levels at bootstrap to control verbosity per environment.
 
 ```typescript
 async function bootstrap() {
@@ -51,7 +61,11 @@ const app = await NestFactory.create(AppModule, {
 });
 ```
 
+Passing an array of level names enables only those levels; omitting `debug` and `verbose` keeps production logs concise.
+
 ### Custom Logger (Winston)
+
+Implement the `LoggerService` interface to replace the built-in logger with Winston or any other library.
 
 ```typescript
 import { LoggerService } from '@nestjs/common';
@@ -92,7 +106,11 @@ export class WinstonLogger implements LoggerService {
 app.useLogger(new WinstonLogger());
 ```
 
+Once set with `app.useLogger()`, all NestJS internal logs (e.g., route registration) also flow through Winston.
+
 ### Request Logging
+
+Build an interceptor that records the duration of each HTTP request for monitoring.
 
 ```typescript
 @Injectable()
@@ -114,6 +132,8 @@ export class LoggingInterceptor implements NestInterceptor {
 }
 ```
 
+The `tap()` operator runs after the response completes, giving an accurate end-to-end duration.
+
 ## Common Pitfalls
 
 1. **Logging sensitive data**: Never log passwords, tokens, or PII.
@@ -129,7 +149,32 @@ export class LoggingInterceptor implements NestInterceptor {
 
 ## Summary
 
-NestJS Logger provides contextual logging with multiple levels. Replace with Winston or Pino for production features like file output and structured logging. Include correlation IDs for distributed tracing.
+- NestJS Logger provides contextual logging with levels: error, warn, log, debug, verbose
+- Replace the built-in logger with Winston or Pino for production-grade features
+- Use structured JSON logging for integration with log aggregation services
+- Include correlation IDs for request tracing in distributed systems
+- Never log sensitive data such as passwords, tokens, or PII
+
+## Code Examples
+
+**Using the built-in Logger service with context-aware log messages**
+
+```typescript
+import { Logger, Injectable } from '@nestjs/common';
+
+@Injectable()
+export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
+  create(dto: CreateUserDto) {
+    this.logger.log(\`Creating user: \${dto.email}\`);
+    this.logger.debug('Debug details here');
+    this.logger.warn('This might be a problem');
+    this.logger.error('Something went wrong', error.stack);
+  }
+}
+```
+
 
 ## Resources
 

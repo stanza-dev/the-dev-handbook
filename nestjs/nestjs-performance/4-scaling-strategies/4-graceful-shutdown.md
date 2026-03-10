@@ -196,6 +196,7 @@ services:
 1. **Not enabling hooks**: Shutdown hooks are disabled by default.
 2. **No timeout**: Waiting forever for hung requests.
 3. **Wrong shutdown order**: Close external connections before database.
+4. **Reverse execution order**: In NestJS 11, termination hooks execute in reverse initialization order. For a dependency chain A→B→C: `OnModuleInit` runs C→B→A, while `OnModuleDestroy` runs A→B→C. Plan your cleanup accordingly.
 
 ## Best Practices
 
@@ -208,6 +209,32 @@ services:
 ## Summary
 
 Graceful shutdown completes pending work before terminating. Enable shutdown hooks, implement cleanup in lifecycle methods, and set appropriate timeouts. Stop accepting new requests and close connections in the correct order.
+
+## Code Examples
+
+**The three shutdown lifecycle hooks in execution order — onModuleDestroy, beforeApplicationShutdown, onApplicationShutdown**
+
+```typescript
+@Injectable()
+export class DatabaseService
+  implements OnModuleDestroy, BeforeApplicationShutdown, OnApplicationShutdown {
+
+  async onModuleDestroy() {
+    console.log('Module destroying...');
+  }
+
+  async beforeApplicationShutdown(signal?: string) {
+    console.log(`Received signal: ${signal}`);
+    await this.flushPendingWrites();
+  }
+
+  async onApplicationShutdown(signal?: string) {
+    await this.dataSource.destroy();
+    console.log('Database connection closed');
+  }
+}
+```
+
 
 ## Resources
 

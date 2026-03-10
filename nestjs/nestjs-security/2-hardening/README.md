@@ -15,8 +15,8 @@ Protecting against common web vulnerabilities.
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Challenge Helmet Benefit
-- 🧩 Multiple Choice: Challenge Throttler Limit
-- 🧩 Multiple Choice: CORS Origin Configuration
+- 🔗 Matching: Helmet Benefit
+- 🧩 Multiple Choice: Throttler Limit
+- 🧩 Challenge: CORS Origin Configuration
 
 → [Practice in your IDE](https://stanza.dev/courses/nestjs-security)

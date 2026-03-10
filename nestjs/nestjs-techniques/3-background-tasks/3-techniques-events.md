@@ -16,13 +16,21 @@ Events decouple components. Instead of directly calling methods, emit events tha
 - **Emit**: Publish an event
 - **Wildcards**: Match multiple event types with patterns
 
+## Real World Context
+
+Tightly coupled code is hard to maintain. When a user signs up, you need to send a welcome email, create default settings, and log the event. Instead of calling three services from the registration handler, emit a 'user.created' event and let each service react independently.
+
 ## Deep Dive
 
 ### Setup
 
+Install the event emitter package and register it in your root module.
+
 ```bash
 npm install @nestjs/event-emitter
 ```
+
+Calling `forRoot()` initializes the underlying `EventEmitter2` instance with wildcard and async support.
 
 ```typescript
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -33,7 +41,11 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 export class AppModule {}
 ```
 
+Once registered, you can inject `EventEmitter2` in any service to emit events.
+
 ### Emitting Events
+
+Inject `EventEmitter2` and call `emit()` with a namespaced event name and a payload object.
 
 ```typescript
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -55,7 +67,11 @@ export class UsersService {
 }
 ```
 
+The event fires synchronously by default, so all listeners run before `createUser` returns.
+
 ### Event Listeners
+
+Decorate methods with `@OnEvent()` to subscribe to specific events. Multiple listeners can handle the same event.
 
 ```typescript
 import { OnEvent } from '@nestjs/event-emitter';
@@ -77,7 +93,11 @@ export class AnalyticsListener {
 }
 ```
 
+Each listener is independent, so adding new reactions to an event requires no changes to the emitting service.
+
 ### Wildcard Listeners
+
+Use `*` to match a single segment or `**` to match any number of segments in event names.
 
 ```typescript
 @OnEvent('user.*')
@@ -91,7 +111,11 @@ handleAllEvents(payload: any) {
 }
 ```
 
+Wildcard listeners are useful for cross-cutting concerns like logging or auditing all events.
+
 ### Async Listeners
+
+Pass `{ async: true }` to `@OnEvent()` so the listener runs asynchronously and does not block the emitter.
 
 ```typescript
 @OnEvent('order.created', { async: true })
@@ -99,6 +123,8 @@ async handleOrderCreated(payload: OrderCreatedEvent) {
   await this.emailService.sendOrderConfirmation(payload);
 }
 ```
+
+Without `async: true`, an `await` inside the listener would block the emitting method until the email is sent.
 
 ## Common Pitfalls
 
@@ -115,7 +141,25 @@ async handleOrderCreated(payload: OrderCreatedEvent) {
 
 ## Summary
 
-Event emitter enables loose coupling through pub/sub patterns. Emit events with EventEmitter2, listen with @OnEvent(). Use wildcards for broad listeners and async for slow operations.
+- EventEmitter2 enables loose coupling through publish/subscribe patterns
+- Emit events from services and listen with @OnEvent() in separate listeners
+- Use wildcards (e.g., 'user.*') to match multiple event types
+- Enable async: true for listeners that perform slow operations
+- Define typed event payloads for type safety across emitters and listeners
+
+## Code Examples
+
+**Emitting and listening to application events with EventEmitter2**
+
+```typescript
+import { EventEmitterModule } from '@nestjs/event-emitter';
+
+@Module({
+  imports: [EventEmitterModule.forRoot()],
+})
+export class AppModule {}
+```
+
 
 ## Resources
 

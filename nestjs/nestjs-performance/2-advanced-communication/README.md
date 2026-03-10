@@ -13,10 +13,11 @@ Real-time and event-based patterns using Server-Sent Events and the HTTP module.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: SSE Return Type
 - ✏️ Fill in the Blank: Challenge HTTP Module Lib
-- ✏️ Fill in the Blank: WebSocket Message Handler
+- 🧩 Challenge: WebSocket Gateway Setup
+- 🧩 Challenge: Real-Time Communication Patterns
 
 → [Practice in your IDE](https://stanza.dev/courses/nestjs-performance)

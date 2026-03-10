@@ -16,6 +16,10 @@ Memory leaks and excessive consumption crash applications and increase costs. Un
 - **Memory Leak**: Unreleased references preventing GC
 - **Request Scoping**: Per-request provider instances
 
+## Real World Context
+
+A production API that caches user sessions in an unbounded Map will slowly consume all available memory. After days of uptime, the container gets OOM-killed and restarts. Proper memory management prevents these silent production failures.
+
 ## Deep Dive
 
 ### Monitor Memory Usage
@@ -124,6 +128,27 @@ export class ExternalService implements OnModuleDestroy {
 ## Summary
 
 Memory optimization involves monitoring usage, using bounded caches, streaming large data, and cleaning up resources. Request-scoped providers help isolate per-request data. Profile with Node.js inspector to find leaks.
+
+## Code Examples
+
+**A bounded in-memory cache that evicts the oldest entry when full — prevents unbounded memory growth**
+
+```typescript
+@Injectable()
+export class BoundedCacheService {
+  private cache = new Map<string, any>();
+  private maxSize = 1000;
+
+  set(key: string, value: any) {
+    if (this.cache.size >= this.maxSize) {
+      const firstKey = this.cache.keys().next().value;
+      this.cache.delete(firstKey);
+    }
+    this.cache.set(key, value);
+  }
+}
+```
+
 
 ## Resources
 

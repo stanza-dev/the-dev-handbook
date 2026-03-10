@@ -28,6 +28,8 @@ Standard responses enable:
 
 ### Standard Response Format
 
+Define a generic envelope class that wraps every successful response with a `success` flag, `data`, and optional metadata.
+
 ```typescript
 export class ApiResponse<T> {
   @ApiProperty()
@@ -44,7 +46,11 @@ export class ApiResponse<T> {
 }
 ```
 
+Clients can always check `response.success` before accessing data, simplifying error handling.
+
 ### Response Transformation Interceptor
+
+A global interceptor wraps every controller return value into the standard envelope automatically.
 
 ```typescript
 @Injectable()
@@ -64,7 +70,11 @@ export class TransformInterceptor<T> implements NestInterceptor<T, ApiResponse<T
 app.useGlobalInterceptors(new TransformInterceptor());
 ```
 
+The `map()` operator transforms the response after the handler completes but before it is sent to the client.
+
 ### Standard Error Response
+
+Pair the success envelope with a consistent error format using a global exception filter.
 
 ```typescript
 export class ErrorResponse {
@@ -116,7 +126,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 }
 ```
 
+The `@Catch()` decorator with no arguments catches every exception type, including non-HTTP errors.
+
 ### Pagination Response
+
+Define reusable pagination metadata and a helper function to build paginated responses consistently.
 
 ```typescript
 export class PaginationMeta {
@@ -172,7 +186,11 @@ export function createPaginatedResponse<T>(
 }
 ```
 
+The `hasNextPage` and `hasPreviousPage` booleans let clients implement pagination controls without calculating page counts.
+
 ### Usage in Controller
+
+Call the helper function in your controller to return a fully formatted paginated response.
 
 ```typescript
 @Get()
@@ -190,6 +208,8 @@ async findAll(
 }
 ```
 
+The service returns a tuple of `[data, total]`, keeping pagination logic out of the data access layer.
+
 ## Common Pitfalls
 
 1. **Inconsistent formats**: All endpoints should use the same structure.
@@ -206,7 +226,32 @@ async findAll(
 
 ## Summary
 
-Standard API responses use consistent structure for success, error, and paginated data. Use interceptors for automatic wrapping, exception filters for error formatting, and helper functions for pagination. Document formats in Swagger.
+- Use a consistent response envelope with success, data, and optional meta fields
+- Apply a TransformInterceptor globally to wrap all responses automatically
+- Standardize error responses with GlobalExceptionFilter for consistent error formatting
+- Create helper functions for paginated responses with metadata (page, total, hasNext)
+- Document all response formats in Swagger for clear API contracts
+
+## Code Examples
+
+**Defining a generic ApiResponse class with success, data, message, and meta fields**
+
+```typescript
+export class ApiResponse<T> {
+  @ApiProperty()
+  success: boolean;
+
+  @ApiProperty()
+  data: T;
+
+  @ApiPropertyOptional()
+  message?: string;
+
+  @ApiPropertyOptional()
+  meta?: Record<string, any>;
+}
+```
+
 
 ## Resources
 

@@ -190,6 +190,31 @@ scrape_configs:
 
 Metrics quantify application behavior with counters, gauges, and histograms. Use prom-client for Prometheus integration, interceptors for HTTP metrics, and custom metrics for business KPIs. Monitor dashboards and set alerts.
 
+## Code Examples
+
+**Prometheus metrics service with a histogram for HTTP request latency — buckets define the distribution ranges**
+
+```typescript
+import * as client from 'prom-client';
+
+@Injectable()
+export class MetricsService implements OnModuleInit {
+  public httpRequestDuration: client.Histogram;
+
+  onModuleInit() {
+    client.collectDefaultMetrics();
+
+    this.httpRequestDuration = new client.Histogram({
+      name: 'http_request_duration_seconds',
+      help: 'HTTP request duration in seconds',
+      labelNames: ['method', 'path', 'status'],
+      buckets: [0.01, 0.05, 0.1, 0.5, 1, 5],
+    });
+  }
+}
+```
+
+
 ## Resources
 
 - [Performance](https://docs.nestjs.com/techniques/performance) — Performance monitoring

@@ -16,9 +16,15 @@ User input is unpredictable. Validation ensures data meets your expectations bef
 - **Whitelist**: Strip unknown properties from requests
 - **Transform**: Automatically convert types
 
+## Real World Context
+
+Invalid input is the #1 source of bugs and security vulnerabilities. A user submitting an email field with a script tag, a negative quantity on an order, or a missing required field can crash your app or worse. Validation at the API boundary catches these issues before they reach your business logic.
+
 ## Deep Dive
 
 ### Global Validation Setup
+
+Apply `ValidationPipe` globally in `main.ts` so every incoming request is validated automatically.
 
 ```typescript
 // main.ts
@@ -30,7 +36,11 @@ app.useGlobalPipes(new ValidationPipe({
 }));
 ```
 
+The `whitelist` option strips unknown properties, and `forbidNonWhitelisted` rejects requests containing them.
+
 ### DTO with Validation
+
+Decorate DTO properties with `class-validator` decorators to declare constraints declaratively.
 
 ```typescript
 import { IsEmail, IsString, MinLength, IsOptional, IsInt, Min } from 'class-validator';
@@ -54,7 +64,11 @@ export class CreateUserDto {
 }
 ```
 
+Stack multiple decorators on a single property to combine constraints, e.g. `@IsInt()` and `@Min(0)` together.
+
 ### Nested Validation
+
+Use `@ValidateNested()` with `@Type()` from `class-transformer` to validate objects inside arrays or nested fields.
 
 ```typescript
 import { ValidateNested, Type } from 'class-transformer';
@@ -66,7 +80,11 @@ export class CreateOrderDto {
 }
 ```
 
+Without `@Type()`, the nested objects remain plain objects and their decorators are never evaluated.
+
 ### Custom Validation
+
+Create custom validator classes by implementing `ValidatorConstraintInterface` for business-specific rules like uniqueness checks.
 
 ```typescript
 import { ValidatorConstraint, ValidatorConstraintInterface, Validate } from 'class-validator';
@@ -84,6 +102,8 @@ export class CreateUserDto {
 }
 ```
 
+Setting `async: true` in `@ValidatorConstraint` allows the validator to return a Promise, enabling database lookups during validation.
+
 ## Common Pitfalls
 
 1. **Missing transform: true**: Types stay as strings without transformation.
@@ -100,6 +120,21 @@ export class CreateUserDto {
 ## Summary
 
 ValidationPipe validates DTOs using class-validator decorators. Enable globally with whitelist and transform options. Use @ValidateNested for nested objects and custom validators for business rules.
+
+## Code Examples
+
+**Global ValidationPipe setup with whitelist, transform, and strict mode options**
+
+```typescript
+// main.ts
+app.useGlobalPipes(new ValidationPipe({
+  whitelist: true,
+  forbidNonWhitelisted: true,
+  transform: true,
+  transformOptions: { enableImplicitConversion: true },
+}));
+```
+
 
 ## Resources
 

@@ -28,6 +28,8 @@ Schema generation enables:
 
 ### Export OpenAPI Schema
 
+Write the generated OpenAPI document to a JSON file during bootstrap for downstream tooling.
+
 ```typescript
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -48,7 +50,11 @@ async function bootstrap() {
 }
 ```
 
+The exported `openapi.json` can be consumed by code generators, linters, and CI validation tools.
+
 ### Generate TypeScript Client
+
+Use `openapi-generator-cli` to produce a fully typed API client from the exported schema.
 
 ```bash
 npm install -g openapi-generator-cli
@@ -60,7 +66,11 @@ openapi-generator-cli generate \
   -o ./generated/api-client
 ```
 
+The `-g typescript-axios` flag selects the Axios-based TypeScript generator; other options include `typescript-fetch` and `typescript-node`.
+
 ### Usage of Generated Client
+
+Import the generated API class and configuration to make type-safe requests with full autocomplete.
 
 ```typescript
 import { UsersApi, Configuration } from './generated/api-client';
@@ -77,7 +87,11 @@ const users = await usersApi.usersControllerFindAll();
 const user = await usersApi.usersControllerFindOne({ id: '123' });
 ```
 
+Method names follow the pattern `controllerNameMethodName`, derived from your NestJS controller and method names.
+
 ### Programmatic Schema Access
+
+Create a standalone script that boots the app, extracts the schema, and shuts down without starting the HTTP server.
 
 ```typescript
 // Script to generate schema on build
@@ -105,7 +119,11 @@ async function generateSchema() {
 generateSchema();
 ```
 
+Using `app.init()` instead of `app.listen()` loads all modules without binding a port, which is faster for CI.
+
 ### NPM Script Integration
+
+Automate schema generation and client code generation as part of your build pipeline.
 
 ```json
 // package.json
@@ -118,7 +136,11 @@ generateSchema();
 }
 ```
 
+The `postbuild` hook ensures the schema is always regenerated after compilation.
+
 ### Schema Validation Middleware
+
+Add request and response validation against the OpenAPI spec to catch contract violations in development.
 
 ```typescript
 import * as OpenApiValidator from 'express-openapi-validator';
@@ -131,6 +153,8 @@ app.use(
   }),
 );
 ```
+
+Enabling `validateResponses` catches cases where your code returns fields not documented in the schema.
 
 ## Common Pitfalls
 
@@ -149,6 +173,31 @@ app.use(
 ## Summary
 
 OpenAPI schemas enable type-safe client generation. Export schemas during build, generate clients with openapi-generator-cli, and validate requests/responses. This ensures frontend and backend stay synchronized.
+
+## Code Examples
+
+**Exporting the OpenAPI schema to a JSON file during application bootstrap**
+
+```typescript
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  const config = new DocumentBuilder()
+    .setTitle('API')
+    .setVersion('1.0')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+
+  // Export to file
+  const fs = require('fs');
+  fs.writeFileSync('./openapi.json', JSON.stringify(document, null, 2));
+
+  SwaggerModule.setup('api', app, document);
+  await app.listen(3000);
+}
+```
+
 
 ## Resources
 

@@ -27,9 +27,13 @@ Without proper headers, your application is vulnerable to:
 
 ### Installation & Basic Setup
 
+Install the Helmet package from npm.
+
 ```bash
 npm install helmet
 ```
+
+Then apply it as middleware in your bootstrap function. With zero configuration, Helmet sets sensible defaults for all security headers.
 
 ```typescript
 import helmet from 'helmet';
@@ -40,6 +44,8 @@ async function bootstrap() {
   await app.listen(3000);
 }
 ```
+
+This single line of middleware immediately protects against several common attack vectors by setting multiple security headers.
 
 ### Headers Set by Helmet
 
@@ -54,6 +60,8 @@ async function bootstrap() {
 | `X-Permitted-Cross-Domain-Policies` | Adobe cross-domain | none |
 
 ### Custom Configuration
+
+Override specific header directives to match your application's resource loading needs, such as allowing inline styles or images from external sources.
 
 ```typescript
 app.use(
@@ -71,7 +79,11 @@ app.use(
 );
 ```
 
+The `crossOriginEmbedderPolicy: false` option is commonly needed when loading third-party resources like images or fonts that don't set the required CORP headers.
+
 ### Disabling Specific Headers
+
+You can selectively disable headers that conflict with your setup, for example when you manage CSP through a separate middleware or CDN.
 
 ```typescript
 app.use(
@@ -81,6 +93,8 @@ app.use(
   }),
 );
 ```
+
+Always document why a header is disabled — this helps during security audits and onboarding new team members.
 
 ## Common Pitfalls
 
@@ -98,7 +112,25 @@ app.use(
 
 ## Summary
 
-Helmet sets security HTTP headers with sensible defaults. Install it, use it with `app.use(helmet())`, and customize as needed. It's a simple but essential layer of defense against common web vulnerabilities.
+- Helmet sets security HTTP headers (CSP, X-Frame-Options, HSTS, etc.) with sensible defaults
+- Install and apply with `app.use(helmet())`, then customize individual headers as needed
+- Protects against clickjacking, XSS, MIME sniffing, and other common browser-based attacks
+- Test headers using tools like securityheaders.com and document any disabled protections
+
+## Code Examples
+
+**Applying Helmet middleware to set security-related HTTP headers**
+
+```typescript
+import helmet from 'helmet';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  app.use(helmet());
+  await app.listen(3000);
+}
+```
+
 
 ## Resources
 

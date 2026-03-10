@@ -15,8 +15,8 @@ Creating comprehensive API documentation with OpenAPI/Swagger integration.
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- ✏️ Fill in the Blank: Swagger Operation Decorator
+- 🧩 Multiple Choice: Swagger Operation Decorator
+- 🔗 Matching: Swagger Configuration
 - 🧩 Multiple Choice: DTO Property Documentation
-- ✏️ Fill in the Blank: Swagger Authentication
 
 → [Practice in your IDE](https://stanza.dev/courses/nestjs-techniques)

@@ -27,7 +27,7 @@ Output encoding prevents:
 
 ### JSON Response Encoding
 
-NestJS automatically JSON-encodes responses, which handles most cases:
+NestJS automatically JSON-encodes responses, which handles most cases. The script tag below is treated as a harmless string in JSON.
 
 ```typescript
 @Get(':id')
@@ -38,7 +38,11 @@ findOne(@Param('id') id: string) {
 // Output: {"name":"<script>alert(1)</script>"}
 ```
 
+JSON encoding escapes the angle brackets, so even if malicious content is stored, it won't execute when parsed as JSON by the client.
+
 ### Explicit Encoding Utilities
+
+For server-rendered HTML or non-JSON responses, use context-specific encoding functions to neutralize dangerous characters.
 
 ```typescript
 import { escape } from 'html-escaper';
@@ -64,7 +68,11 @@ export class EncodingService {
 }
 ```
 
+Each method targets a different output context — using HTML encoding in a JavaScript context (or vice versa) will not provide adequate protection.
+
 ### Response Transformation
+
+Automate output encoding by applying `@Transform()` decorators on response DTOs. This ensures encoding happens consistently without manual effort in every controller.
 
 ```typescript
 import { Expose, Transform } from 'class-transformer';
@@ -90,7 +98,11 @@ findOne(@Param('id') id: string) {
 }
 ```
 
+The `@Expose()` decorator ensures only explicitly marked fields are included in the response, preventing accidental data leaks.
+
 ### Content Security Policy Headers
+
+CSP headers add a browser-level defense layer. Even if encoding is missed, the browser blocks unauthorized script execution based on these directives.
 
 ```typescript
 import helmet from 'helmet';
@@ -113,7 +125,11 @@ app.use(
 );
 ```
 
+Setting `objectSrc: ["'none'"]` blocks Flash and Java applets, while `upgradeInsecureRequests` automatically rewrites HTTP resource URLs to HTTPS.
+
 ### API Response Standards
+
+Use an interceptor to enforce consistent response headers, including explicit content type and MIME sniffing protection.
 
 ```typescript
 @Injectable()
@@ -132,6 +148,8 @@ export class ResponseInterceptor implements NestInterceptor {
 }
 ```
 
+The `nosniff` header prevents browsers from guessing the content type, which could lead to executing a JSON response as HTML.
+
 ## Common Pitfalls
 
 1. **Double encoding**: Encoding twice corrupts data. Encode once at output.
@@ -148,7 +166,24 @@ export class ResponseInterceptor implements NestInterceptor {
 
 ## Summary
 
-Output encoding provides defense in depth. NestJS JSON serialization handles most API cases. Use CSP headers for browser security. For server-rendered HTML, encode user content appropriately for the context.
+- Output encoding provides defense in depth by escaping dangerous characters at display time
+- NestJS JSON serialization automatically handles encoding for most API response cases
+- Use CSP headers to prevent inline script execution and control resource loading in browsers
+- For server-rendered HTML, apply context-aware encoding (HTML, JavaScript, URL) to user content
+
+## Code Examples
+
+**Encoding output data to prevent injection attacks in different contexts**
+
+```typescript
+@Get(':id')
+findOne(@Param('id') id: string) {
+  const user = { name: '<script>alert(1)</script>' };
+  return user; // Safely encoded as JSON
+}
+// Output: {"name":"<script>alert(1)</script>"}
+```
+
 
 ## Resources
 

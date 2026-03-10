@@ -28,6 +28,8 @@ Audit logging required for:
 
 ### Audit Log Entity
 
+Design the audit log entity to capture who, what, when, where, and the outcome. The `jsonb` metadata column allows storing context-specific details without schema changes.
+
 ```typescript
 @Entity()
 export class AuditLog {
@@ -66,7 +68,11 @@ export class AuditLog {
 }
 ```
 
+The `correlationId` links related events across services, making it possible to trace a complete user journey through a distributed system.
+
 ### Audit Service
+
+The service provides both a generic `log()` method and a convenience `logSecurityEvent()` method that automatically extracts context from the request.
 
 ```typescript
 @Injectable()
@@ -102,7 +108,11 @@ export class AuditService {
 }
 ```
 
+The `request.user?.id` uses optional chaining because some security events (like failed logins) may not have an authenticated user.
+
 ### Audit Decorator and Interceptor
+
+Automate audit logging with a custom `@Audit()` decorator and an interceptor that logs both successful and failed operations with timing data.
 
 ```typescript
 export const Audit = (action: string) =>
@@ -145,7 +155,11 @@ export class AuditInterceptor implements NestInterceptor {
 deleteUser(@Param('id') id: string) { ... }
 ```
 
+The interceptor captures both `tap` (success) and `catchError` (failure) outcomes, and always re-throws the error so normal error handling is not disrupted.
+
 ### Critical Events to Log
+
+Here is a comprehensive list of security events organized by category that should be logged in any production application.
 
 ```typescript
 // Authentication events
@@ -174,7 +188,11 @@ deleteUser(@Param('id') id: string) { ... }
 @Audit('API_KEY_REVOKED')
 ```
 
+At minimum, log all failed authentication attempts (`LOGIN_FAILED`) and permission denials (`PERMISSION_DENIED`) — these are the strongest signals for detecting attacks.
+
 ### Log Retention and Protection
+
+Implement automated retention policies to comply with regulations. Archive logs before deletion to maintain an immutable historical record.
 
 ```typescript
 @Injectable()
@@ -197,6 +215,8 @@ export class AuditRetentionService {
 }
 ```
 
+The two-step archive-then-delete approach ensures logs are never lost — they are moved to cold storage (e.g., S3) before being removed from the database.
+
 ## Common Pitfalls
 
 1. **Logging sensitive data**: Don't log passwords, tokens, or PII.
@@ -214,7 +234,53 @@ export class AuditRetentionService {
 
 ## Summary
 
-Audit logging records security-relevant events. Log authentication, authorization, and sensitive data access. Include correlation IDs, user context, and IP addresses. Store logs securely with appropriate retention policies.
+- Log all security-relevant events: authentication, authorization, and sensitive data access
+- Include correlation IDs, user context, IP addresses, and user-agent for traceability
+- Use a custom `@Audit()` decorator with an interceptor to automate audit logging on routes
+- Store logs immutably with appropriate retention policies for compliance (GDPR, HIPAA, SOC2)
+
+## Code Examples
+
+**Creating an audit logging interceptor to track security-relevant actions**
+
+```typescript
+@Entity()
+export class AuditLog {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column()
+  action: string; // 'USER_LOGIN', 'PASSWORD_CHANGE', etc.
+
+  @Column({ nullable: true })
+  userId: string;
+
+  @Column({ nullable: true })
+  targetId: string; // ID of affected resource
+
+  @Column()
+  targetType: string; // 'User', 'Order', etc.
+
+  @Column('jsonb', { nullable: true })
+  metadata: Record<string, any>;
+
+  @Column()
+  ipAddress: string;
+
+  @Column({ nullable: true })
+  userAgent: string;
+
+  @Column()
+  correlationId: string;
+
+  @Column({ type: 'enum', enum: ['SUCCESS', 'FAILURE'] })
+  outcome: 'SUCCESS' | 'FAILURE';
+
+  @CreateDateColumn()
+  createdAt: Date;
+}
+```
+
 
 ## Resources
 

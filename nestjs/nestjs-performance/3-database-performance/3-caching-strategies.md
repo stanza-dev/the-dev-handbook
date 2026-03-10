@@ -26,6 +26,43 @@ Caching reduces:
 
 ## Deep Dive
 
+### NestJS 11: Keyv Integration
+
+NestJS 11's CacheModule uses **Keyv** under the hood. The `cache-manager` package has migrated to Keyv for a unified key-value storage interface. This provides a cleaner API and better multi-store support.
+
+> **Breaking change in NestJS 11:** Cached data is now stored as `{\"value\": \"yourData\", \"expires\": 1678901234567}` internally. If you're migrating from NestJS 10, previously cached data will be incompatible. Flush your cache stores after upgrading.
+
+For basic in-memory caching, use the simpler `CacheModule.register()` method:
+
+```typescript
+import { CacheModule } from '@nestjs/cache-manager';
+
+@Module({
+  imports: [CacheModule.register()], // In-memory, default settings
+})
+export class AppModule {}
+```
+
+For production with Redis:
+
+```typescript
+import { CacheModule } from '@nestjs/cache-manager';
+import KeyvRedis from '@keyv/redis';
+import { Keyv } from 'keyv';
+import { CacheableMemory } from 'cacheable';
+
+CacheModule.registerAsync({
+  useFactory: async () => ({
+    stores: [
+      new Keyv({
+        store: new CacheableMemory({ ttl: 60000, lruSize: 5000 }),
+      }),
+      new KeyvRedis('redis://localhost:6379'),
+    ],
+  }),
+})
+```
+
 ### Cache Aside Pattern
 
 ```typescript
@@ -213,6 +250,29 @@ export class ProductsController {
 ## Summary
 
 Caching strategies include cache-aside, write-through, and multi-level approaches. Use TTLs for automatic expiration, invalidation on updates, and cache warming for critical data. Monitor hit rates to tune effectiveness.
+
+## Code Examples
+
+**NestJS 11 multi-level caching with Keyv — in-memory LRU as L1 and Redis as L2**
+
+```typescript
+import { CacheModule } from '@nestjs/cache-manager';
+import KeyvRedis from '@keyv/redis';
+import { Keyv } from 'keyv';
+import { CacheableMemory } from 'cacheable';
+
+CacheModule.registerAsync({
+  useFactory: async () => ({
+    stores: [
+      new Keyv({
+        store: new CacheableMemory({ ttl: 60000, lruSize: 5000 }),
+      }),
+      new KeyvRedis('redis://localhost:6379'),
+    ],
+  }),
+});
+```
+
 
 ## Resources
 

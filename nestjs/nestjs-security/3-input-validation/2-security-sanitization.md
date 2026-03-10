@@ -28,10 +28,14 @@ Sanitization scenarios:
 
 ### HTML/XSS Sanitization
 
+Install `sanitize-html` to strip dangerous HTML tags while preserving safe formatting.
+
 ```bash
 npm install sanitize-html
 npm install -D @types/sanitize-html
 ```
+
+Wrap it in a reusable `class-transformer` decorator so it can be applied declaratively to any DTO field.
 
 ```typescript
 import * as sanitizeHtml from 'sanitize-html';
@@ -62,7 +66,11 @@ export class CreatePostDto {
 }
 ```
 
+The `allowedSchemes` option restricts links to `http` and `https`, blocking `javascript:` URIs that could execute code.
+
 ### Strip HTML Completely
+
+For fields that should never contain HTML (like comments or usernames), strip all tags by setting `allowedTags` to an empty array.
 
 ```typescript
 export function StripHtml() {
@@ -82,7 +90,11 @@ export class CommentDto {
 }
 ```
 
+This is the safest option for plain-text fields — any `<script>`, `<img onerror>`, or other injection attempts are completely removed.
+
 ### Trim and Normalize
+
+Create transformer decorators for common cleaning operations like trimming whitespace and normalizing email case.
 
 ```typescript
 import { Transform } from 'class-transformer';
@@ -110,7 +122,11 @@ export class LoginDto {
 }
 ```
 
+Normalizing emails to lowercase prevents users from accidentally creating duplicate accounts with different casing.
+
 ### Path Sanitization
+
+Sanitize user-provided filenames to prevent directory traversal attacks (e.g., `../../etc/passwd`). Always validate the resolved path stays within your upload directory.
 
 ```typescript
 import * as path from 'path';
@@ -146,7 +162,11 @@ export class FileService {
 }
 ```
 
+The `safePath.startsWith(this.uploadDir)` check is the critical line — it prevents path traversal even if the sanitization function misses an edge case.
+
 ### SQL Injection Prevention
+
+Never concatenate user input into SQL strings. Use parameterized queries or ORM methods that handle escaping automatically.
 
 ```typescript
 // WRONG - Vulnerable to SQL injection
@@ -161,6 +181,8 @@ const users = await this.userRepository
 // CORRECT - Repository method
 const user = await this.userRepository.findOne({ where: { name } });
 ```
+
+Both correct approaches bind the `name` value as a parameter, so the database never interprets it as SQL syntax — even if it contains malicious content.
 
 ## Common Pitfalls
 
@@ -178,7 +200,44 @@ const user = await this.userRepository.findOne({ where: { name } });
 
 ## Summary
 
-Sanitization cleans input to remove dangerous content. Use sanitize-html for HTML content, class-transformer for field transformations, and parameterized queries for database operations. Sanitize before storage, not display.
+- Sanitization cleans input to remove dangerous content, complementing validation which rejects it
+- Use `sanitize-html` for HTML/XSS prevention and `class-transformer` decorators for field cleaning
+- Always use parameterized queries (via ORM) instead of string concatenation to prevent SQL injection
+- Sanitize user-generated content before storage, not at display time
+
+## Code Examples
+
+**Sanitizing user input to prevent XSS attacks using class-sanitizer**
+
+```typescript
+import * as sanitizeHtml from 'sanitize-html';
+import { Transform } from 'class-transformer';
+
+export function SanitizeHtml() {
+  return Transform(({ value }) => {
+    if (typeof value !== 'string') return value;
+    return sanitizeHtml(value, {
+      allowedTags: ['b', 'i', 'em', 'strong', 'a', 'p', 'br'],
+      allowedAttributes: {
+        a: ['href', 'title'],
+      },
+      allowedSchemes: ['http', 'https'],
+    });
+  });
+}
+
+export class CreatePostDto {
+  @IsString()
+  @MaxLength(100)
+  title: string;
+
+  @IsString()
+  @MaxLength(10000)
+  @SanitizeHtml()
+  content: string;
+}
+```
+
 
 ## Resources
 

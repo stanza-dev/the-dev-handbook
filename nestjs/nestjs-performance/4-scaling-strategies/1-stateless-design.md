@@ -168,6 +168,23 @@ export class HealthController {
 
 Stateless design stores no state in the application instance. Use JWTs for auth, Redis for caching/sessions, and databases for persistence. This enables horizontal scaling and zero-downtime deployments.
 
+## Code Examples
+
+**Stateless auth with JWT — the token contains all needed info, so any server instance can verify it**
+
+```typescript
+// Stateful (bad for scaling): session in server memory
+request.session.userId = user.id;
+
+// Stateless (good for scaling): self-contained JWT
+const token = jwt.sign(
+  { sub: user.id, email: user.email, roles: user.roles },
+  secret,
+  { expiresIn: '1h' },
+);
+```
+
+
 ## Resources
 
 - [Health Checks](https://docs.nestjs.com/recipes/terminus) — Health checks for scaling

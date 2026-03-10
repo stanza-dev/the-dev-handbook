@@ -16,9 +16,15 @@ Database queries, API calls, and complex computations take time. Caching stores 
 - **@CacheKey()**: Custom cache key
 - **@CacheTTL()**: Custom time-to-live
 
+## Real World Context
+
+Database queries and external API calls are the main performance bottlenecks in web applications. A product listing page hitting the database on every request wastes resources when the data changes once per hour. Caching stores frequently accessed data in memory for instant retrieval.
+
 ## Deep Dive
 
 ### Basic Setup
+
+Import and register `CacheModule` to enable in-memory caching with default settings.
 
 ```typescript
 import { CacheModule } from '@nestjs/cache-manager';
@@ -29,7 +35,11 @@ import { CacheModule } from '@nestjs/cache-manager';
 export class AppModule {}
 ```
 
+By default this uses an in-memory store, which is suitable for development and single-instance deployments.
+
 ### Auto-Caching with Interceptor
+
+Apply `CacheInterceptor` at the controller level to automatically cache all GET responses.
 
 ```typescript
 @Controller('products')
@@ -49,7 +59,11 @@ export class ProductsController {
 }
 ```
 
+Use `@CacheTTL()` to override the default time-to-live on specific endpoints.
+
 ### Manual Cache Access
+
+Inject `CACHE_MANAGER` directly for fine-grained control over cache reads, writes, and invalidation.
 
 ```typescript
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -78,20 +92,48 @@ export class ProductsService {
 }
 ```
 
-### Redis Store
+Notice how `update()` calls `del()` to invalidate the cached entry, preventing stale data.
+
+### Redis Store (Keyv)
+
+Since `cache-manager` v5, stores use Keyv adapters. Install the Redis adapter:
+
+```bash
+npm install @keyv/redis
+```
+
+Register the Redis store with `registerAsync()` and pass a connection URL.
 
 ```typescript
-import { redisStore } from 'cache-manager-redis-yet';
+import KeyvRedis from '@keyv/redis';
 
 CacheModule.registerAsync({
   useFactory: async () => ({
-    store: await redisStore({
-      socket: { host: 'localhost', port: 6379 },
-      ttl: 60000,
-    }),
+    stores: [
+      new KeyvRedis('redis://localhost:6379'),
+    ],
   }),
 })
 ```
+
+You can also combine multiple stores (in-memory primary + Redis fallback):
+
+```typescript
+import KeyvRedis from '@keyv/redis';
+import { Keyv } from 'keyv';
+import { CacheableMemory } from 'cacheable';
+
+CacheModule.registerAsync({
+  useFactory: async () => ({
+    stores: [
+      new Keyv({ store: new CacheableMemory({ ttl: 60000, lruSize: 5000 }) }),
+      new KeyvRedis('redis://localhost:6379'),
+    ],
+  }),
+})
+```
+
+With a tiered setup, reads hit the fast in-memory store first and fall back to Redis on a miss.
 
 ## Common Pitfalls
 
@@ -109,6 +151,20 @@ CacheModule.registerAsync({
 ## Summary
 
 NestJS caching uses CacheModule with in-memory or Redis stores. Use CacheInterceptor for automatic response caching, or inject CACHE_MANAGER for manual control. Always invalidate cache when data changes.
+
+## Code Examples
+
+**Registering the CacheModule with default in-memory cache settings**
+
+```typescript
+import { CacheModule } from '@nestjs/cache-manager';
+
+@Module({
+  imports: [CacheModule.register()],
+})
+export class AppModule {}
+```
+
 
 ## Resources
 

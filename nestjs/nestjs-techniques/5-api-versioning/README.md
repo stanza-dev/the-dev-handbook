@@ -15,8 +15,8 @@ Strategies for versioning APIs and managing breaking changes.
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- ✏️ Fill in the Blank: URI Versioning
-- 🧩 Multiple Choice: Version-Neutral Endpoints
+- 🧩 Multiple Choice: URI Versioning
+- 🧩 Challenge: Version-Neutral Endpoints
 - 🧩 Multiple Choice: Breaking Change Identification
 
 → [Practice in your IDE](https://stanza.dev/courses/nestjs-techniques)

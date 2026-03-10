@@ -16,6 +16,10 @@ As applications grow, monoliths become hard to scale and maintain. Microservices
 - **Server/Microservice**: Service that receives and handles messages
 - **Message Pattern**: Request/response or event-based communication
 
+## Real World Context
+
+When a single monolith handles user management, payments, and notifications, scaling is all-or-nothing. With microservices, you can scale the payment service independently during Black Friday without scaling the notification service.
+
 ## Deep Dive
 
 ### Creating a Microservice
@@ -132,6 +136,30 @@ export class CalcService {
 ## Summary
 
 NestJS microservices communicate via various transports. Use @MessagePattern for request/response, @EventPattern for events. Register clients with ClientsModule and call services with ClientProxy. Choose transport based on your scaling needs.
+
+## Code Examples
+
+**Message patterns for request/response and event-based communication in NestJS microservices**
+
+```typescript
+import { MessagePattern, EventPattern, Payload } from '@nestjs/microservices';
+
+@Controller()
+export class AppController {
+  // Request/response pattern
+  @MessagePattern({ cmd: 'sum' })
+  sum(@Payload() data: number[]): number {
+    return data.reduce((a, b) => a + b, 0);
+  }
+
+  // Event pattern (fire and forget)
+  @EventPattern('user_created')
+  handleUserCreated(@Payload() data: { userId: string }) {
+    console.log('User created:', data.userId);
+  }
+}
+```
+
 
 ## Resources
 

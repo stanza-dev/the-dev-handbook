@@ -16,6 +16,10 @@ Most applications need to call external APIs. NestJS wraps Axios in the HttpModu
 - **Observable**: Returns Observables (convert to Promise if needed)
 - **Interceptors**: Axios interceptors for request/response modification
 
+## Real World Context
+
+Modern backends often aggregate data from multiple external APIs — payment gateways, email services, analytics. HttpModule provides a consistent, testable interface for all outbound HTTP calls with built-in timeout and retry capabilities.
+
 ## Deep Dive
 
 ### Setup
@@ -150,6 +154,28 @@ export class ApiService implements OnModuleInit {
 ## Summary
 
 HttpModule provides HttpService for making HTTP requests. It returns Observables—use firstValueFrom() for Promise-style code. Configure timeouts, base URLs, and headers. Handle errors gracefully and use interceptors for cross-cutting concerns.
+
+## Code Examples
+
+**Using HttpService with firstValueFrom() to convert the Observable response into a Promise**
+
+```typescript
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+
+@Injectable()
+export class ExternalApiService {
+  constructor(private httpService: HttpService) {}
+
+  async getData(): Promise<Data> {
+    const { data } = await firstValueFrom(
+      this.httpService.get<Data>('https://api.example.com/data'),
+    );
+    return data;
+  }
+}
+```
+
 
 ## Resources
 

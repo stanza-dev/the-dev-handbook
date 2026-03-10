@@ -16,9 +16,15 @@ Large files shouldn't be loaded entirely into memory. Streaming sends data in ch
 - **Server-Sent Events**: One-way streaming to clients
 - **Content-Disposition**: Header for file downloads
 
+## Real World Context
+
+Large files—reports, exports, media—can't be loaded entirely into memory. A CSV export with 100,000 rows would consume gigabytes of RAM if buffered. Streaming sends data in chunks, keeping memory usage constant regardless of file size.
+
 ## Deep Dive
 
 ### File Download
+
+Use `StreamableFile` with `createReadStream()` to send files without buffering them entirely in memory.
 
 ```typescript
 import { StreamableFile } from '@nestjs/common';
@@ -40,7 +46,11 @@ getFile(
 }
 ```
 
+The `passthrough: true` option is required so NestJS can still set status codes and headers alongside the stream.
+
 ### Server-Sent Events
+
+Return an `Observable<MessageEvent>` from a method decorated with `@Sse()` to push real-time updates to clients.
 
 ```typescript
 import { Sse, MessageEvent } from '@nestjs/common';
@@ -57,7 +67,11 @@ sendEvents(): Observable<MessageEvent> {
 }
 ```
 
+Clients connect with the browser's `EventSource` API and receive each emitted object as a text event.
+
 ### Streaming from Database
+
+For large exports, pipe a database cursor stream directly to the response to keep memory usage constant.
 
 ```typescript
 @Get('export')
@@ -69,6 +83,8 @@ async exportData(@Res() res: Response) {
   stream.pipe(res);
 }
 ```
+
+Using `@Res()` without `passthrough` gives you full control over the response but bypasses NestJS interceptors.
 
 ## Common Pitfalls
 
@@ -86,6 +102,31 @@ async exportData(@Res() res: Response) {
 ## Summary
 
 Streaming sends data in chunks rather than buffering entirely in memory. Use StreamableFile for file downloads, SSE for real-time events, and handle stream errors properly. Set Content-Disposition for downloads.
+
+## Code Examples
+
+**Using StreamableFile to stream file data as a response with proper headers**
+
+```typescript
+import { StreamableFile } from '@nestjs/common';
+import { createReadStream } from 'fs';
+
+@Get('download/:filename')
+getFile(
+  @Param('filename') filename: string,
+  @Res({ passthrough: true }) res: Response,
+): StreamableFile {
+  const file = createReadStream(\`./uploads/\${filename}\`);
+  
+  res.set({
+    'Content-Type': 'application/pdf',
+    'Content-Disposition': \`attachment; filename="\${filename}"\`,
+  });
+  
+  return new StreamableFile(file);
+}
+```
+
 
 ## Resources
 

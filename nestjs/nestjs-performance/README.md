@@ -2,7 +2,7 @@
 
 > Unlock the full potential of your NestJS applications. Optimization techniques, Fastify migration, and advanced communication patterns.
 
-**NestJS 11** · Advanced
+**NestJS 11.1** · Advanced
 
 ## Sections
 
@@ -14,7 +14,7 @@
 | 📈 | [Scaling Strategies](./4-scaling-strategies/) | 4 lessons |
 | 📊 | [Monitoring & Profiling](./5-monitoring-profiling/) | 4 lessons |
 
-**20 lessons** · **15 interactive challenges**
+**20 lessons** · **20 interactive challenges**
 
 ## Want the Interactive Experience?
 

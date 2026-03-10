@@ -28,6 +28,8 @@ API keys power:
 
 ### API Key Generation
 
+Generate API keys with a recognizable prefix (`sk_live_`) followed by cryptographically random bytes. Hash the key before storing it.
+
 ```typescript
 import * as crypto from 'crypto';
 
@@ -60,7 +62,11 @@ export class ApiKeyService {
 }
 ```
 
+The full key is returned only once at creation time. Storing a short prefix allows users to identify which key is which without exposing the secret.
+
 ### API Key Guard
+
+The guard checks for the API key in the `X-API-Key` header first, then falls back to the `Authorization: Bearer` header for flexibility.
 
 ```typescript
 @Injectable()
@@ -101,7 +107,11 @@ export class ApiKeyGuard implements CanActivate {
 }
 ```
 
+Attaching `keyData` to the request allows downstream guards and handlers to access the key's scopes, owner, and metadata.
+
 ### Scope-Based Authorization
+
+Implement fine-grained permissions using scopes. The `@RequiredScopes()` decorator specifies which scopes an endpoint needs, and the guard enforces them.
 
 ```typescript
 export const RequiredScopes = (...scopes: string[]) =>
@@ -141,7 +151,11 @@ export class ApiScopesGuard implements CanActivate {
 findAllUsers() { ... }
 ```
 
+The guard uses `every()` to require all listed scopes — a key must have `users:read` AND any other required scopes, not just one of them.
+
 ### Key Rotation
+
+Support zero-downtime key rotation by creating a new key and marking the old one as deprecated with a grace period.
 
 ```typescript
 @Injectable()
@@ -172,6 +186,8 @@ export class ApiKeyService {
 }
 ```
 
+The `previousKeyId` and `replacedByKeyId` fields create a chain of key versions, making it easy to track rotation history during audits.
+
 ## Common Pitfalls
 
 1. **Storing keys in plaintext**: Always hash API keys.
@@ -189,7 +205,47 @@ export class ApiKeyService {
 
 ## Summary
 
-API keys authenticate applications, not users. Generate cryptographically secure keys, store them hashed, and implement scope-based authorization. Support key rotation for security and use headers (not URLs) for key transmission.
+- API keys authenticate applications (not users) for machine-to-machine communication
+- Generate keys with `crypto.randomBytes`, hash with SHA-256 before storage, and show the full key only once
+- Implement scope-based authorization to grant fine-grained permissions per key
+- Support key rotation with grace periods and always transmit keys via headers, never URLs
+
+## Code Examples
+
+**Implementing API key authentication with a custom guard and hashed storage**
+
+```typescript
+import * as crypto from 'crypto';
+
+@Injectable()
+export class ApiKeyService {
+  async generateApiKey(): Promise<{ key: string; hashedKey: string }> {
+    const key = `sk_live_${crypto.randomBytes(32).toString('hex')}`;
+    const hashedKey = crypto
+      .createHash('sha256')
+      .update(key)
+      .digest('hex');
+    
+    return { key, hashedKey };
+  }
+
+  async createApiKey(userId: string, name: string, scopes: string[]) {
+    const { key, hashedKey } = await this.generateApiKey();
+    
+    await this.apiKeyRepo.save({
+      userId,
+      name,
+      hashedKey,
+      scopes,
+      prefix: key.substring(0, 12), // Store prefix for identification
+    });
+    
+    // Return full key ONLY ONCE - user must save it
+    return { key, prefix: key.substring(0, 12) };
+  }
+}
+```
+
 
 ## Resources
 

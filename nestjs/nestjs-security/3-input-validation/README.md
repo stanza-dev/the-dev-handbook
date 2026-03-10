@@ -16,7 +16,7 @@ Protecting against injection attacks through proper input validation and sanitiz
 This section includes **3 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: Whitelist Mode
-- 🧩 Multiple Choice: SQL Injection Prevention
+- 🧩 Challenge: SQL Injection Prevention
 - 🧩 Multiple Choice: Request Size Limit
 
 → [Practice in your IDE](https://stanza.dev/courses/nestjs-security)

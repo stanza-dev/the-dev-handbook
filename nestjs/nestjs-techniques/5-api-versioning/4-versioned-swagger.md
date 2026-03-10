@@ -28,6 +28,8 @@ Versioned documentation helps:
 
 ### Multiple Swagger Documents
 
+Generate separate Swagger documents per major version by filtering modules with the `include` option.
+
 ```typescript
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -64,7 +66,11 @@ async function bootstrap() {
 }
 ```
 
+Each document is mounted at a different URL path (`/api/v1/docs` vs `/api/v2/docs`) for clear separation.
+
 ### Version Tags in Single Document
+
+If you prefer a single Swagger document, use version-prefixed tags to group endpoints visually.
 
 ```typescript
 const config = new DocumentBuilder()
@@ -82,7 +88,11 @@ export class UsersV1Controller { ... }
 export class UsersV2Controller { ... }
 ```
 
+Tag descriptions appear in the Swagger UI sidebar, making it easy to identify deprecated groups.
+
 ### Deprecation in Swagger
+
+Set `deprecated: true` in `@ApiOperation()` to render the endpoint with a strikethrough in Swagger UI.
 
 ```typescript
 @Controller('users')
@@ -103,7 +113,11 @@ export class UsersController {
 }
 ```
 
+The `description` field is a good place to include the sunset date and a direct link to the replacement endpoint.
+
 ### Schema Versioning
+
+Register both DTO versions as extra models and reference the correct one per versioned endpoint.
 
 ```typescript
 // Register both DTO versions
@@ -123,7 +137,11 @@ findAllV1() { ... }
 findAllV2() { ... }
 ```
 
+This ensures each version's documentation shows the exact response shape clients should expect.
+
 ### Documentation Landing Page
+
+Provide a root endpoint that lists all available API versions, their status, and documentation URLs.
 
 ```typescript
 @Controller()
@@ -160,7 +178,11 @@ export class ApiVersionsController {
 }
 ```
 
+The landing page doubles as a discovery endpoint for automated tools that need to find the latest API version.
+
 ### Version-Specific Examples
+
+Add `example` values to `@ApiProperty()` that reflect each version's actual response format.
 
 ```typescript
 export class UserV1Dto {
@@ -183,6 +205,8 @@ export class UserV2Dto {
 }
 ```
 
+Version-specific examples make the migration path obvious when developers compare v1 and v2 side by side.
+
 ## Common Pitfalls
 
 1. **Single doc for all versions**: Confusing when schemas differ.
@@ -200,6 +224,47 @@ export class UserV2Dto {
 ## Summary
 
 Versioned Swagger documentation uses multiple documents or tags for different versions. Mark deprecated endpoints, include version-specific examples, and provide a landing page listing available versions with their status.
+
+## Code Examples
+
+**Generating separate Swagger documents for each API version**
+
+```typescript
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  app.enableVersioning({
+    type: VersioningType.URI,
+  });
+
+  // V1 Documentation
+  const v1Config = new DocumentBuilder()
+    .setTitle('API v1')
+    .setDescription('Version 1 of the API (Deprecated)')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const v1Document = SwaggerModule.createDocument(app, v1Config, {
+    include: [UsersV1Module, ProductsV1Module],
+  });
+  SwaggerModule.setup('api/v1/docs', app, v1Document);
+
+  // V2 Documentation
+  const v2Config = new DocumentBuilder()
+    .setTitle('API v2')
+    .setDescription('Version 2 of the API (Current)')
+    .setVersion('2.0')
+    .addBearerAuth()
+    .build();
+  const v2Document = SwaggerModule.createDocument(app, v2Config, {
+    include: [UsersV2Module, ProductsV2Module],
+  });
+  SwaggerModule.setup('api/v2/docs', app, v2Document);
+
+  await app.listen(3000);
+}
+```
+
 
 ## Resources
 

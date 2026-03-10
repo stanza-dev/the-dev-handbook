@@ -27,6 +27,8 @@ Cookie security prevents:
 
 ### Secure Cookie Configuration
 
+Set all security flags when creating cookies. The `path` option scopes the cookie to only be sent to the refresh endpoint, minimizing exposure.
+
 ```typescript
 import { Response } from 'express';
 
@@ -53,7 +55,11 @@ export class AuthService {
 }
 ```
 
+When clearing cookies, you must pass the same `path`, `domain`, and other options used when setting them — otherwise the browser won't match and remove the cookie.
+
 ### Cookie Parser Setup
+
+Register `cookie-parser` middleware with a secret to enable signed cookie verification.
 
 ```typescript
 import * as cookieParser from 'cookie-parser';
@@ -65,7 +71,11 @@ async function bootstrap() {
 }
 ```
 
+The `COOKIE_SECRET` is used to create an HMAC signature for signed cookies, allowing the server to detect client-side tampering.
+
 ### Signed Cookies
+
+Signed cookies include an HMAC signature that the server verifies on each request. If the cookie value is modified, the signature check fails.
 
 ```typescript
 // Setting a signed cookie
@@ -85,6 +95,8 @@ profile(@Req() request: Request) {
 }
 ```
 
+Access signed cookies via `request.signedCookies` (not `request.cookies`). Tampered values return `false`, making integrity verification straightforward.
+
 ### SameSite Options Explained
 
 | Value | Behavior | Use Case |
@@ -94,6 +106,8 @@ profile(@Req() request: Request) {
 | `none` | Always sent (requires Secure) | Cross-site APIs, third-party widgets |
 
 ### Cookie-Based Authentication Flow
+
+This pattern keeps the refresh token in an httpOnly cookie (invisible to JavaScript) and returns the short-lived access token in the response body.
 
 ```typescript
 @Controller('auth')
@@ -134,6 +148,8 @@ export class AuthController {
 }
 ```
 
+The `{ passthrough: true }` option on `@Res()` is critical — without it, NestJS skips automatic serialization and you must manually call `response.json()`.
+
 ## Common Pitfalls
 
 1. **Missing HttpOnly**: Tokens accessible to JavaScript can be stolen via XSS.
@@ -151,7 +167,41 @@ export class AuthController {
 
 ## Summary
 
-Secure cookies use HttpOnly (no JS access), Secure (HTTPS only), and SameSite (CSRF protection). Store refresh tokens in httpOnly cookies, access tokens in memory. Always clear cookies with the same options used to set them.
+- Set `HttpOnly` to prevent JavaScript access, `Secure` for HTTPS-only, and `SameSite` for CSRF protection
+- Store refresh tokens in httpOnly cookies and keep access tokens in memory
+- Scope cookies to specific paths (e.g., `/auth/refresh`) to limit exposure
+- Always clear cookies on logout using the same options (path, domain) used to set them
+
+## Code Examples
+
+**Setting secure cookie options: HttpOnly, Secure, SameSite, and expiration**
+
+```typescript
+import { Response } from 'express';
+
+@Injectable()
+export class AuthService {
+  setRefreshTokenCookie(response: Response, token: string) {
+    response.cookie('refreshToken', token, {
+      httpOnly: true,        // No JavaScript access
+      secure: process.env.NODE_ENV === 'production', // HTTPS only
+      sameSite: 'strict',    // CSRF protection
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/auth/refresh', // Only sent to refresh endpoint
+    });
+  }
+
+  clearRefreshTokenCookie(response: Response) {
+    response.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/auth/refresh',
+    });
+  }
+}
+```
+
 
 ## Resources
 

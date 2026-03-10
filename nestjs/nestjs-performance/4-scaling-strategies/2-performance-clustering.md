@@ -184,6 +184,29 @@ pm2 monit
 
 Clustering spawns multiple workers to utilize all CPU cores. Use PM2 for easy cluster management, implement graceful shutdown, and handle scheduled jobs with distributed locks. This multiplies throughput without code changes.
 
+## Code Examples
+
+**PM2 cluster configuration — 'max' instances spawns one worker per CPU core with graceful shutdown support**
+
+```javascript
+// ecosystem.config.js
+module.exports = {
+  apps: [{
+    name: 'nestjs-app',
+    script: 'dist/main.js',
+    instances: 'max',       // Use all CPU cores
+    exec_mode: 'cluster',
+    env: {
+      NODE_ENV: 'production',
+    },
+    kill_timeout: 5000,
+    wait_ready: true,
+    listen_timeout: 10000,
+  }],
+};
+```
+
+
 ## Resources
 
 - [Performance](https://docs.nestjs.com/techniques/performance) — Performance optimization

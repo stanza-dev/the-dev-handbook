@@ -15,6 +15,10 @@ Not all features are used by all users. Lazy loading defers module initializatio
 - **Cold Start**: Initial application startup time
 - **Code Splitting**: Loading code on demand vs upfront
 
+## Real World Context
+
+Imagine a SaaS application with an admin dashboard that uses Puppeteer for PDF report generation. Loading Puppeteer adds 200ms to cold start for every request, even though only 2% of users are admins. Lazy loading this module eliminates the penalty for the other 98%.
+
 ## Deep Dive
 
 ### Setup
@@ -80,7 +84,8 @@ export class PdfService {
 
 1. **First-request latency**: Initial load of lazy module takes time.
 2. **Not caching**: Repeatedly loading adds overhead—cache the moduleRef.
-3. **Circular imports**: Dynamic imports can still create issues.
+3. **Lifecycle hooks not invoked**: `OnModuleInit`, `OnModuleDestroy`, and other lifecycle hooks are NOT called in lazy-loaded modules and services.
+4. **Controllers and gateways ignored**: Controllers, resolvers, and WebSocket gateways registered inside lazy-loaded modules will not behave as expected — they won't register routes or listeners.
 
 ## Best Practices
 
@@ -88,10 +93,32 @@ export class PdfService {
 - Pre-warm frequently-used lazy modules during idle time
 - Monitor first-request latency for lazy routes
 - Use for genuinely optional, heavy features
+- Only lazy-load service-based modules (not modules with controllers or gateways)
 
 ## Summary
 
 Lazy loading with LazyModuleLoader defers module initialization until needed. This reduces startup time and memory for features not all users need. Cache loaded modules and pre-warm critical lazy features.
+
+## Code Examples
+
+**Lazy loading a module on demand — the module is only initialized when generateReport() is first called**
+
+```typescript
+import { LazyModuleLoader } from '@nestjs/core';
+
+@Injectable()
+export class ReportService {
+  constructor(private lazyModuleLoader: LazyModuleLoader) {}
+
+  async generateReport(): Promise<Report> {
+    const { ReportModule } = await import('./report/report.module');
+    const moduleRef = await this.lazyModuleLoader.load(() => ReportModule);
+    const reportGenerator = moduleRef.get(ReportGeneratorService);
+    return reportGenerator.generate();
+  }
+}
+```
+
 
 ## Resources
 

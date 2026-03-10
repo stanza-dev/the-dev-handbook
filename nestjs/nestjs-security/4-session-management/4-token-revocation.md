@@ -28,6 +28,8 @@ Revocation scenarios:
 
 ### Token Versioning Strategy
 
+Embed a `tokenVersion` number in the JWT payload. On each verification, compare it against the user's current version in the database.
+
 ```typescript
 // User entity
 @Entity()
@@ -66,7 +68,11 @@ export class AuthService {
 }
 ```
 
+Incrementing the version by one instantly invalidates every existing token for that user without needing to track individual tokens.
+
 ### Redis Token Blacklist
+
+For individual token revocation, store blacklisted tokens in Redis with a TTL matching the token's remaining lifetime. Redis provides O(1) lookups.
 
 ```typescript
 import { Injectable } from '@nestjs/common';
@@ -108,7 +114,11 @@ export class JwtAuthGuard implements CanActivate {
 }
 ```
 
+The `setex` TTL ensures blacklisted tokens are automatically cleaned up when they expire, preventing the blacklist from growing indefinitely.
+
 ### Logout All Devices
+
+Combine token versioning with refresh token revocation to immediately invalidate all sessions across every device.
 
 ```typescript
 @Controller('auth')
@@ -127,7 +137,11 @@ export class AuthController {
 }
 ```
 
+Both operations are needed — revoking access tokens prevents immediate API access, while revoking refresh tokens prevents obtaining new access tokens.
+
 ### Hybrid Approach (Recommended)
+
+The most practical strategy combines short-lived access tokens (which naturally expire) with database-backed refresh tokens (which are easily revocable).
 
 ```typescript
 @Injectable()
@@ -154,6 +168,8 @@ export class AuthService {
 }
 ```
 
+With 15-minute access tokens, the maximum window of exposure after a refresh token revocation is 15 minutes — often an acceptable tradeoff to avoid per-request blacklist checks.
+
 ## Common Pitfalls
 
 1. **Blacklist grows indefinitely**: Only store until token's original expiration.
@@ -170,7 +186,53 @@ export class AuthService {
 
 ## Summary
 
-Token revocation overcomes JWT's stateless nature. Use token versioning for global revocation, Redis blacklists for individual tokens, and database-stored refresh tokens for granular control. Combine short access tokens with revocable refresh tokens for the best balance.
+- Token versioning enables global revocation by incrementing a version number checked during verification
+- Use Redis-backed blacklists for fast, individual token revocation until natural expiration
+- Store refresh tokens in the database for easy, granular revocation
+- Combine short-lived access tokens with revocable refresh tokens for the best security balance
+
+## Code Examples
+
+**Implementing token blacklisting with version-based invalidation strategy**
+
+```typescript
+// User entity
+@Entity()
+export class User {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ default: 0 })
+  tokenVersion: number;
+}
+
+// Auth service
+@Injectable()
+export class AuthService {
+  async generateAccessToken(user: User) {
+    return this.jwtService.signAsync({
+      sub: user.id,
+      tokenVersion: user.tokenVersion,
+    });
+  }
+
+  async verifyAccessToken(token: string) {
+    const payload = await this.jwtService.verifyAsync(token);
+    const user = await this.usersService.findOne(payload.sub);
+    
+    if (payload.tokenVersion !== user.tokenVersion) {
+      throw new UnauthorizedException('Token has been revoked');
+    }
+    
+    return payload;
+  }
+
+  async revokeAllUserTokens(userId: string) {
+    await this.usersService.incrementTokenVersion(userId);
+  }
+}
+```
+
 
 ## Resources
 

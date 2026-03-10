@@ -14,7 +14,7 @@
 | 📖 | [API Documentation](./4-api-documentation/) | 4 lessons |
 | 🔢 | [API Versioning](./5-api-versioning/) | 4 lessons |
 
-**20 lessons** · **15 interactive challenges**
+**20 lessons** · **16 interactive challenges**
 
 ## Want the Interactive Experience?
 

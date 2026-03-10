@@ -13,10 +13,11 @@ Horizontal scaling, load balancing, and stateless design patterns.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Stateless Design
-- 🧩 Multiple Choice: Node.js Clustering
+- 🧩 Challenge: Clustering Worker Count
 - ✏️ Fill in the Blank: Graceful Shutdown
+- 🧩 Challenge: Shutdown Lifecycle Order
 
 → [Practice in your IDE](https://stanza.dev/courses/nestjs-performance)

@@ -28,6 +28,8 @@ Versioning scenarios:
 
 ### Enabling Versioning
 
+Call `app.enableVersioning()` in your bootstrap function and choose a versioning strategy.
+
 ```typescript
 import { VersioningType } from '@nestjs/common';
 
@@ -43,7 +45,11 @@ async function bootstrap() {
 }
 ```
 
+The `defaultVersion` handles requests that do not specify a version explicitly.
+
 ### URI Versioning (Most Common)
+
+With URI versioning, the version is embedded in the URL path. Each controller declares which version it handles.
 
 ```typescript
 app.enableVersioning({
@@ -74,7 +80,11 @@ export class UsersV2Controller {
 }
 ```
 
+Both controllers share the same `path` but are differentiated by the `version` field in the decorator options.
+
 ### Header Versioning
+
+Header versioning keeps URLs clean by sending the version in a custom HTTP header.
 
 ```typescript
 app.enableVersioning({
@@ -87,7 +97,11 @@ app.enableVersioning({
 // X-API-Version: 2
 ```
 
+This approach is useful for internal APIs where URL aesthetics matter more than browser testability.
+
 ### Method-Level Versioning
+
+Apply the `@Version()` decorator to individual methods instead of the entire controller for finer control.
 
 ```typescript
 @Controller('users')
@@ -106,7 +120,11 @@ export class UsersController {
 }
 ```
 
+This is convenient when only a few methods differ between versions and most logic is shared.
+
 ### Multiple Versions on One Method
+
+Pass an array to `@Version()` to serve the same handler for multiple versions.
 
 ```typescript
 @Controller('users')
@@ -119,7 +137,11 @@ export class UsersController {
 }
 ```
 
+This avoids duplicating handlers when the response format has not changed between versions.
+
 ### Version-Neutral Endpoints
+
+Use `VERSION_NEUTRAL` for endpoints like health checks that should respond regardless of the requested version.
 
 ```typescript
 @Controller({
@@ -133,6 +155,8 @@ export class HealthController {
   }
 }
 ```
+
+Neutral endpoints are accessible at both `/health` and `/v1/health`, making them ideal for monitoring probes.
 
 ### Versioning Types Comparison
 
@@ -159,7 +183,31 @@ export class HealthController {
 
 ## Summary
 
-NestJS versioning supports URI, header, media type, and query strategies. Enable with app.enableVersioning(), apply with @Version() or controller options. URI versioning is most common for public APIs.
+- NestJS supports URI, header, media type, and query versioning strategies
+- Enable versioning globally with app.enableVersioning() and set a defaultVersion
+- Apply versions at controller level or per-method with the @Version() decorator
+- Use VERSION_NEUTRAL for endpoints like health checks that don't change between versions
+- URI versioning is most common for public APIs due to visibility and cacheability
+
+## Code Examples
+
+**Enabling URI versioning in a NestJS application with app.enableVersioning()**
+
+```typescript
+import { VersioningType } from '@nestjs/common';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  app.enableVersioning({
+    type: VersioningType.URI,  // /v1/users, /v2/users
+    defaultVersion: '1',
+  });
+
+  await app.listen(3000);
+}
+```
+
 
 ## Resources
 

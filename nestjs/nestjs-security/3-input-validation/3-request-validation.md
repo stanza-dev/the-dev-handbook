@@ -28,6 +28,8 @@ Request-level attacks include:
 
 ### Body Size Limits
 
+Set maximum request body sizes to prevent attackers from exhausting server memory with oversized payloads.
+
 ```typescript
 // Express
 import * as bodyParser from 'body-parser';
@@ -41,7 +43,11 @@ new FastifyAdapter({
 });
 ```
 
+Choose a limit appropriate for your endpoints — 1MB is reasonable for JSON APIs, but file upload routes may need higher limits configured separately.
+
 ### Query Parameter Validation
+
+Validate query parameters with DTOs just like request bodies. The `@Type(() => Number)` decorator is essential because query strings are always strings.
 
 ```typescript
 import { IsOptional, IsInt, Min, Max, IsEnum, IsDateString } from 'class-validator';
@@ -82,7 +88,11 @@ findAll(@Query() query: PaginationQueryDto) {
 }
 ```
 
+The `@Max(100)` on `limit` prevents clients from requesting unbounded result sets, which could overload the database.
+
 ### Header Validation
+
+Create custom parameter decorators that validate headers and throw descriptive errors for invalid or missing values.
 
 ```typescript
 import { createParamDecorator, ExecutionContext, BadRequestException } from '@nestjs/common';
@@ -106,7 +116,11 @@ findAll(@ApiVersion() version: string) {
 }
 ```
 
+The regex `/^v[1-9]$/` strictly matches version formats like `v1`, `v2`, etc., rejecting any unexpected input in the header.
+
 ### Content-Type Guard
+
+Enforce that requests with bodies use the expected content type. This prevents content-type confusion attacks where attackers send XML or form data to JSON endpoints.
 
 ```typescript
 @Injectable()
@@ -128,7 +142,11 @@ export class JsonContentTypeGuard implements CanActivate {
 }
 ```
 
+GET and DELETE requests are skipped since they typically have no body. The `UnsupportedMediaTypeException` returns a 415 status code.
+
 ### File Upload Validation
+
+Use NestJS's built-in `ParseFilePipe` to validate file size and MIME type before processing the upload.
 
 ```typescript
 import { ParseFilePipe, MaxFileSizeValidator, FileTypeValidator } from '@nestjs/common';
@@ -151,7 +169,11 @@ uploadFile(
 }
 ```
 
+The `FileTypeValidator` regex restricts uploads to JPEG, PNG, and GIF images. Always validate both size and type to prevent abuse.
+
 ### Rate Limiting per Endpoint
+
+Apply different rate limits to different endpoints based on their sensitivity. Login and password reset need much tighter limits than read-only endpoints.
 
 ```typescript
 import { Throttle, SkipThrottle } from '@nestjs/throttler';
@@ -172,6 +194,8 @@ export class AuthController {
 }
 ```
 
+Password reset is limited to 3 per hour to prevent abuse, while email verification is exempt since it is a one-time idempotent action.
+
 ## Common Pitfalls
 
 1. **No body size limits**: Attackers can send gigabyte requests without limits.
@@ -188,7 +212,28 @@ export class AuthController {
 
 ## Summary
 
-Request-level security validates all input vectors: body size, content type, headers, and query parameters. Use DTOs for query validation, guards for header validation, and ParseFilePipe for uploads. Set appropriate size limits and rate limits.
+- Validate all input vectors: body size, content type, headers, query parameters, and file uploads
+- Use DTOs with class-validator for type-safe query parameter validation
+- Apply `ParseFilePipe` with size and type validators for file upload security
+- Set body size limits to prevent payload-based DoS attacks and apply stricter rate limits to sensitive endpoints
+
+## Code Examples
+
+**Configuring request body size limits to prevent payload-based denial-of-service attacks**
+
+```typescript
+// Express
+import * as bodyParser from 'body-parser';
+
+app.use(bodyParser.json({ limit: '1mb' }));
+app.use(bodyParser.urlencoded({ limit: '1mb', extended: true }));
+
+// Fastify
+new FastifyAdapter({
+  bodyLimit: 1048576, // 1MB in bytes
+});
+```
+
 
 ## Resources
 

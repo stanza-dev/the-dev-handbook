@@ -15,8 +15,8 @@ Secure session handling, token refresh, and cookie security.
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Cookie HttpOnly Flag
-- 🧩 Multiple Choice: Session Fixation Prevention
+- 🔗 Matching: Cookie HttpOnly Flag
+- 🧩 Challenge: Token Refresh Calculation
 - 🧩 Multiple Choice: Token Versioning
 
 → [Practice in your IDE](https://stanza.dev/courses/nestjs-security)

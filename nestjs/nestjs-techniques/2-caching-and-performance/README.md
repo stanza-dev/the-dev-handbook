@@ -16,7 +16,7 @@ Improving response times with caching and serialization.
 This section includes **3 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: Using Cache Interceptor
-- 🧩 Multiple Choice: Challenge Exclude Prop
+- 🔗 Matching: Serialization Decorators
 - 🧩 Multiple Choice: Server-Sent Events
 
 → [Practice in your IDE](https://stanza.dev/courses/nestjs-techniques)

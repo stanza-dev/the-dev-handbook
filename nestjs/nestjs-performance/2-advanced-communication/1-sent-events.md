@@ -131,6 +131,29 @@ export class TaskService {
 
 SSE provides simple real-time server-to-client communication. Return an Observable<MessageEvent> from @Sse() endpoints. Use for progress updates, live feeds, and notifications. Remember to handle disconnects and complete streams.
 
+## Code Examples
+
+**An SSE endpoint returning Observable<MessageEvent> — NestJS subscribes and pushes each value to the client**
+
+```typescript
+import { Sse, MessageEvent } from '@nestjs/common';
+import { Observable, interval } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+@Controller()
+export class EventsController {
+  @Sse('events')
+  sendEvents(): Observable<MessageEvent> {
+    return interval(1000).pipe(
+      map(num => ({
+        data: { count: num, timestamp: new Date().toISOString() },
+      })),
+    );
+  }
+}
+```
+
+
 ## Resources
 
 - [Server-Sent Events](https://docs.nestjs.com/techniques/server-sent-events) — Official SSE guide

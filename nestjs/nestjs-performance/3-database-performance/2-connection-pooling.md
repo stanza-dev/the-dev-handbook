@@ -180,6 +180,26 @@ try {
 
 Connection pooling reuses database connections for efficiency. Configure pool size based on workload, monitor usage, and ensure connections are released. Use transactions for multi-query operations and health checks for reliability.
 
+## Code Examples
+
+**Configuring TypeORM connection pool settings — tune max/min connections based on your workload**
+
+```typescript
+TypeOrmModule.forRoot({
+  type: 'postgres',
+  host: 'localhost',
+  port: 5432,
+  database: 'mydb',
+  extra: {
+    max: 20,                       // Maximum connections
+    min: 5,                        // Minimum connections
+    idleTimeoutMillis: 30000,      // Close idle after 30s
+    connectionTimeoutMillis: 2000, // Wait 2s for connection
+  },
+});
+```
+
+
 ## Resources
 
 - [Database](https://docs.nestjs.com/techniques/database) — Connection management

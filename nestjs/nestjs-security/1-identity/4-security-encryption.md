@@ -27,10 +27,14 @@ Security isn't just about authentication—it's about protecting sensitive data.
 
 ### Password Hashing with bcrypt
 
+Install bcrypt and its TypeScript type definitions.
+
 ```bash
 npm install bcrypt
 npm install -D @types/bcrypt
 ```
+
+With the package installed, you can hash passwords on creation and verify them during authentication.
 
 ```typescript
 import * as bcrypt from 'bcrypt';
@@ -54,6 +58,8 @@ export class UsersService {
 }
 ```
 
+The `saltRounds` parameter (10) controls how computationally expensive the hashing is — higher values are slower but more resistant to brute-force attacks.
+
 ### Why bcrypt?
 
 - **Adaptive**: The cost factor can be increased as hardware improves
@@ -61,6 +67,8 @@ export class UsersService {
 - **Slow by design**: Makes brute-force attacks impractical
 
 ### Encryption for Sensitive Data
+
+For data that needs to be retrieved (unlike passwords), use AES-256-GCM encryption. This provides both confidentiality and authenticity through the auth tag.
 
 ```typescript
 import * as crypto from 'crypto';
@@ -100,7 +108,11 @@ export class EncryptionService {
 }
 ```
 
+Always generate a fresh IV for each encryption operation — reusing IVs with GCM mode completely breaks the security guarantees.
+
 ### Secure Random Token Generation
+
+Use `crypto.randomBytes` for generating cryptographically secure tokens. Never use `Math.random()` — it is not cryptographically secure.
 
 ```typescript
 import * as crypto from 'crypto';
@@ -115,6 +127,8 @@ const apiKey = generateSecureToken(32); // 64 hex characters
 // For password reset tokens
 const resetToken = generateSecureToken(16); // 32 hex characters
 ```
+
+The `length` parameter specifies bytes, not hex characters — so 32 bytes produces a 64-character hex string.
 
 ## Common Pitfalls
 
@@ -132,7 +146,37 @@ const resetToken = generateSecureToken(16); // 32 hex characters
 
 ## Summary
 
-Hash passwords with bcrypt (one-way, salted, slow). Encrypt sensitive data with AES-256-GCM. Generate secure tokens with crypto.randomBytes. Never roll your own cryptography—use established libraries.
+- Hash passwords with bcrypt (one-way, salted, deliberately slow) using a cost factor of 10+
+- Encrypt sensitive data at rest using AES-256-GCM with unique IVs per operation
+- Generate secure random tokens with `crypto.randomBytes` for API keys and reset tokens
+- Never roll your own cryptography—use established libraries and store keys in secret managers
+
+## Code Examples
+
+**Hashing passwords with bcrypt and verifying them during authentication**
+
+```typescript
+import * as bcrypt from 'bcrypt';
+
+@Injectable()
+export class UsersService {
+  private readonly saltRounds = 10;
+
+  async createUser(email: string, password: string) {
+    const hashedPassword = await bcrypt.hash(password, this.saltRounds);
+    
+    return this.usersRepository.create({
+      email,
+      password: hashedPassword,
+    });
+  }
+
+  async validatePassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
+    return bcrypt.compare(plainPassword, hashedPassword);
+  }
+}
+```
+
 
 ## Resources
 

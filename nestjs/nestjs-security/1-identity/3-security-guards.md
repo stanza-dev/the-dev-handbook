@@ -28,6 +28,8 @@ Guards handle security decisions:
 
 ### Basic Guard Structure
 
+Every guard implements the `CanActivate` interface with a single method that returns a boolean (or Promise/Observable of boolean).
+
 ```typescript
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Observable } from 'rxjs';
@@ -48,7 +50,11 @@ export class AuthGuard implements CanActivate {
 }
 ```
 
+Returning `true` allows the request to proceed; returning `false` triggers a 403 Forbidden response by default.
+
 ### ExecutionContext Methods
+
+The `ExecutionContext` gives you access to the request, response, handler metadata, and the transport type (HTTP, WebSocket, or RPC).
 
 ```typescript
 // Get request/response objects
@@ -63,7 +69,11 @@ const controller = context.getClass(); // Controller class
 const type = context.getType(); // 'http' | 'ws' | 'rpc'
 ```
 
+`getHandler()` and `getClass()` are especially useful when combined with the Reflector to read decorator metadata.
+
 ### Reading Metadata
+
+Use the `Reflector` service to read custom decorator metadata from the route handler or controller class.
 
 ```typescript
 import { Reflector } from '@nestjs/core';
@@ -87,6 +97,8 @@ export class RolesGuard implements CanActivate {
 }
 ```
 
+`getAllAndOverride` checks the handler first, then falls back to the class — so method-level `@Roles()` takes precedence over controller-level.
+
 ### Guard Execution Order
 
 1. Global guards (in registration order)
@@ -96,6 +108,8 @@ export class RolesGuard implements CanActivate {
 If any guard returns false, the request is rejected with a 403 Forbidden.
 
 ### Async Guards
+
+Guards can be asynchronous, which is essential when you need to validate tokens against a database or external service.
 
 ```typescript
 @Injectable()
@@ -114,6 +128,8 @@ export class ApiKeyGuard implements CanActivate {
 }
 ```
 
+Note the early `return false` when no API key is present — this avoids an unnecessary database call.
+
 ## Common Pitfalls
 
 1. **Throwing vs returning false**: Throwing an exception gives you control over the error response. Returning false gives a generic 403.
@@ -130,7 +146,35 @@ export class ApiKeyGuard implements CanActivate {
 
 ## Summary
 
-Guards implement `CanActivate` and return boolean values to allow or deny requests. They access request context via `ExecutionContext` and read metadata via `Reflector`. Apply guards at method, controller, or global level.
+- Guards implement the `CanActivate` interface and return a boolean to allow or deny requests
+- Use `ExecutionContext` to access request details and `Reflector` to read custom decorator metadata
+- Guards execute in order: global first, then controller-level, then method-level
+- Throw specific exceptions for clear error messages instead of returning false
+
+## Code Examples
+
+**Building a custom CanActivate guard with ExecutionContext and metadata reading**
+
+```typescript
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Observable } from 'rxjs';
+
+@Injectable()
+export class AuthGuard implements CanActivate {
+  canActivate(
+    context: ExecutionContext,
+  ): boolean | Promise<boolean> | Observable<boolean> {
+    const request = context.switchToHttp().getRequest();
+    return this.validateRequest(request);
+  }
+
+  private validateRequest(request: any): boolean {
+    // Your validation logic
+    return true;
+  }
+}
+```
+
 
 ## Resources
 

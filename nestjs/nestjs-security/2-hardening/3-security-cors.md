@@ -24,6 +24,8 @@ Your API runs at api.example.com, your frontend at app.example.com. Without CORS
 
 ### Basic CORS Setup
 
+Enable CORS with a single method call. Without arguments, it allows requests from any origin — fine for development but not for production.
+
 ```typescript
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -32,7 +34,11 @@ async function bootstrap() {
 }
 ```
 
+This default configuration is permissive. For production, always pass an explicit configuration object.
+
 ### Production Configuration
+
+Specify an explicit list of allowed origins, HTTP methods, and headers. Setting `credentials: true` enables cookies and Authorization headers in cross-origin requests.
 
 ```typescript
 app.enableCors({
@@ -44,7 +50,11 @@ app.enableCors({
 });
 ```
 
+The `maxAge: 3600` tells browsers to cache the preflight response for 1 hour, reducing the number of OPTIONS requests.
+
 ### Dynamic Origin Validation
+
+For more flexibility, pass a function that programmatically validates origins — useful when allowed origins are loaded from a database or environment variables.
 
 ```typescript
 app.enableCors({
@@ -62,6 +72,8 @@ app.enableCors({
   },
 });
 ```
+
+The `!origin` check allows server-to-server requests (which have no Origin header) to proceed. Remove it if you want to reject those too.
 
 ### CORS Options
 
@@ -90,7 +102,23 @@ app.enableCors({
 
 ## Summary
 
-CORS configuration controls which origins can access your API. Use `app.enableCors()` with explicit origins for production. Never use wildcards with credentials, and test thoroughly with actual browser requests.
+- CORS controls which domains can make cross-origin requests to your API
+- Use `app.enableCors()` with an explicit list of allowed origins for production
+- Never use `origin: '*'` with `credentials: true`—browsers reject this combination
+- Use environment variables for allowed origins and test with actual browser requests, not just curl
+
+## Code Examples
+
+**Enabling CORS with default configuration using the built-in enableCors method**
+
+```typescript
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  app.enableCors();
+  await app.listen(3000);
+}
+```
+
 
 ## Resources
 

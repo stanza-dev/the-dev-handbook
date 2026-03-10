@@ -15,8 +15,8 @@ Identifying users (Authentication) and controlling access (Authorization).
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Challenge JWT Header
-- ✏️ Fill in the Blank: Challenge Reflector Usage
-- 🧩 Multiple Choice: Guard Execution Order
+- 🧩 Multiple Choice: JWT Header
+- ✏️ Fill in the Blank: Reflector Usage
+- 🧩 Challenge: Guard Execution Order
 
 → [Practice in your IDE](https://stanza.dev/courses/nestjs-security)

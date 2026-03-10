@@ -16,16 +16,26 @@ Not all data should be sent to clients. Passwords, internal IDs, and sensitive f
 - **@Expose()**: Explicitly include property
 - **@Transform()**: Custom transformation logic
 
+## Real World Context
+
+API responses often contain data that shouldn't be exposed: password hashes, internal IDs, audit timestamps. Serialization controls exactly what leaves your API. In a user profile endpoint, you want to return name and email but never the hashed password or internal flags.
+
 ## Deep Dive
 
 ### Setup
+
+Enable `ClassSerializerInterceptor` globally so all controller responses are transformed.
 
 ```typescript
 // main.ts
 app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 ```
 
+This wires `class-transformer` into the response pipeline for every endpoint.
+
 ### Entity with Serialization
+
+Use `@Exclude()` to hide sensitive fields and `@Expose()` to add computed properties to the response.
 
 ```typescript
 import { Exclude, Expose, Transform } from 'class-transformer';
@@ -54,7 +64,11 @@ export class UserEntity {
 }
 ```
 
+The `constructor` with `Object.assign` is essential to convert plain database objects into class instances that `class-transformer` can process.
+
 ### Using in Controller
+
+Wrap raw data in an entity class instance so the serialization decorators take effect.
 
 ```typescript
 @Get(':id')
@@ -64,7 +78,11 @@ findOne(@Param('id') id: string): UserEntity {
 }
 ```
 
+Returning `new UserEntity(user)` is critical because plain objects bypass `@Exclude()` and `@Expose()`.
+
 ### Serialization Groups
+
+Groups let you expose different fields depending on the requester's role.
 
 ```typescript
 export class UserEntity {
@@ -83,7 +101,11 @@ export class UserEntity {
 findAllForAdmin() { ... }
 ```
 
+Only properties whose groups overlap with the active `@SerializeOptions` groups are included in the output.
+
 ### Response Mapping
+
+For stricter API contracts, manually map fields in a dedicated response DTO instead of relying on decorators.
 
 ```typescript
 // Create separate response DTOs
@@ -99,6 +121,8 @@ export class UserResponseDto {
   }
 }
 ```
+
+This approach is more explicit and avoids accidentally leaking new database columns added later.
 
 ## Common Pitfalls
 
@@ -116,6 +140,16 @@ export class UserResponseDto {
 ## Summary
 
 Serialization transforms response data using class-transformer decorators. @Exclude() hides sensitive fields, @Expose() adds computed properties, and @Transform() applies custom logic. Use separate response DTOs for clean API contracts.
+
+## Code Examples
+
+**Using ClassSerializerInterceptor with @Exclude and @Expose decorators to control response shape**
+
+```typescript
+// main.ts
+app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+```
+
 
 ## Resources
 

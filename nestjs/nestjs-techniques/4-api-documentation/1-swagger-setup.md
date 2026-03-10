@@ -28,9 +28,13 @@ Swagger documentation enables:
 
 ### Installation & Setup
 
+Install the Swagger package and configure the document builder in your bootstrap function.
+
 ```bash
 npm install @nestjs/swagger
 ```
+
+Use `DocumentBuilder` to set metadata, then call `SwaggerModule.setup()` to mount the Swagger UI.
 
 ```typescript
 import { NestFactory } from '@nestjs/core';
@@ -57,7 +61,11 @@ async function bootstrap() {
 bootstrap();
 ```
 
+After starting the server, the interactive Swagger UI is available at `http://localhost:3000/api`.
+
 ### Controller Documentation
+
+Decorate controllers with `@ApiTags()` for grouping and methods with `@ApiOperation()` and `@ApiResponse()` for endpoint details.
 
 ```typescript
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
@@ -91,7 +99,11 @@ export class UsersController {
 }
 ```
 
+Passing `type: [UserDto]` (array syntax) tells Swagger the response is an array of that schema.
+
 ### DTO Documentation
+
+Use `@ApiProperty()` on each field to specify descriptions, examples, and constraints that appear in the generated schema.
 
 ```typescript
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -126,7 +138,11 @@ export class CreateUserDto {
 }
 ```
 
+Use `@ApiPropertyOptional()` instead of `@ApiProperty({ required: false })` for cleaner syntax on optional fields.
+
 ### CLI Plugin for Auto-Generation
+
+Enable the `@nestjs/swagger` CLI plugin to infer `@ApiProperty()` metadata automatically from TypeScript types and JSDoc comments.
 
 ```json
 // nest-cli.json
@@ -159,6 +175,8 @@ export class CreateUserDto {
 }
 ```
 
+JSDoc comments become the `description` field in the generated schema, reducing decorator boilerplate significantly.
+
 ## Common Pitfalls
 
 1. **Missing return types**: Without types, Swagger can't generate schemas.
@@ -176,6 +194,36 @@ export class CreateUserDto {
 ## Summary
 
 @nestjs/swagger integrates OpenAPI documentation into NestJS. Use decorators like @ApiOperation, @ApiResponse, and @ApiProperty to document endpoints. The CLI plugin can auto-generate much of the documentation from types.
+
+## Code Examples
+
+**Configuring Swagger UI with DocumentBuilder for API documentation**
+
+```typescript
+import { NestFactory } from '@nestjs/core';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  const config = new DocumentBuilder()
+    .setTitle('My API')
+    .setDescription('The API documentation')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .addTag('users')
+    .addTag('products')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
+
+  await app.listen(3000);
+}
+bootstrap();
+```
+
 
 ## Resources
 

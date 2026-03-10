@@ -193,6 +193,34 @@ export default function () {
 
 Profiling identifies bottlenecks through CPU profiles, heap snapshots, and event loop monitoring. Use Node.js inspector, load testing tools, and custom timing middleware. Profile with realistic load and compare against baselines.
 
+## Code Examples
+
+**Event loop delay monitoring — p99 values above 100ms indicate the event loop is being blocked**
+
+```typescript
+import { monitorEventLoopDelay } from 'perf_hooks';
+
+@Injectable()
+export class EventLoopMonitorService implements OnModuleInit {
+  private histogram: ReturnType<typeof monitorEventLoopDelay>;
+
+  onModuleInit() {
+    this.histogram = monitorEventLoopDelay({ resolution: 20 });
+    this.histogram.enable();
+  }
+
+  getEventLoopStats() {
+    return {
+      min: this.histogram.min / 1e6,
+      max: this.histogram.max / 1e6,
+      mean: this.histogram.mean / 1e6,
+      p99: this.histogram.percentile(99) / 1e6,
+    };
+  }
+}
+```
+
+
 ## Resources
 
 - [Performance](https://docs.nestjs.com/techniques/performance) — Performance optimization

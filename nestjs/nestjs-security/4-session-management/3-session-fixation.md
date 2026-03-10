@@ -27,6 +27,8 @@ Session fixation scenarios:
 
 ### Session Regeneration on Login
 
+The core defense against session fixation is regenerating the session ID after successful authentication. This ensures any pre-set session ID becomes invalid.
+
 ```typescript
 @Injectable()
 export class AuthService {
@@ -58,7 +60,11 @@ export class AuthService {
 }
 ```
 
+Storing `loginTime`, `userAgent`, and `ip` in the session enables later verification that the session hasn't been hijacked.
+
 ### Session Binding Verification
+
+A session guard can verify that the request's IP and user-agent match the values stored at login time, detecting potential session hijacking.
 
 ```typescript
 @Injectable()
@@ -90,9 +96,11 @@ export class SessionGuard implements CanActivate {
 }
 ```
 
+IP binding should log rather than block, since mobile users frequently change IPs. The absolute timeout of 24 hours forces re-authentication regardless of activity.
+
 ### JWT-Based Session Equivalent
 
-For stateless JWT auth, regenerate tokens on privilege changes:
+For stateless JWT auth, use token versioning to achieve the same effect as session regeneration. Incrementing the version invalidates all existing tokens.
 
 ```typescript
 @Injectable()
@@ -121,7 +129,11 @@ export class AuthService {
 }
 ```
 
+This adds a database lookup on every request, but it is the only way to immediately invalidate stateless JWTs on password changes.
+
 ### Absolute Session Timeout
+
+Implement both absolute and idle timeouts. The absolute timeout limits the total session lifetime, while the idle timeout catches abandoned sessions.
 
 ```typescript
 @Injectable()
@@ -157,6 +169,8 @@ export class SessionTimeoutInterceptor implements NestInterceptor {
 }
 ```
 
+The `session.lastActivity = now` update on each request keeps the idle timer rolling for active users while enforcing the hard 24-hour limit.
+
 ## Common Pitfalls
 
 1. **Not regenerating on login**: The core vulnerability. Always regenerate session ID.
@@ -173,7 +187,46 @@ export class SessionTimeoutInterceptor implements NestInterceptor {
 
 ## Summary
 
-Prevent session fixation by regenerating session IDs on login and privilege changes. Implement absolute timeouts alongside idle timeouts. For JWT, use token versioning to invalidate old tokens. Log and monitor session anomalies.
+- Regenerate session IDs on every login and privilege escalation to prevent session fixation
+- Implement both idle timeouts (e.g., 30 min) and absolute timeouts (e.g., 24 hours)
+- For stateless JWT auth, use token versioning to invalidate old tokens on password changes
+- Bind sessions to user-agent or IP for additional security and log anomalies
+
+## Code Examples
+
+**Regenerating session IDs after authentication to prevent session fixation attacks**
+
+```typescript
+@Injectable()
+export class AuthService {
+  async login(request: Request, email: string, password: string) {
+    const user = await this.validateCredentials(email, password);
+    
+    // Regenerate session on successful login
+    await this.regenerateSession(request);
+    
+    // Store user in new session
+    request.session.userId = user.id;
+    request.session.loginTime = Date.now();
+    request.session.userAgent = request.headers['user-agent'];
+    request.session.ip = request.ip;
+    
+    return user;
+  }
+
+  private regenerateSession(request: Request): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const oldSession = { ...request.session };
+      request.session.regenerate((err) => {
+        if (err) reject(err);
+        // Optionally copy non-sensitive data
+        resolve();
+      });
+    });
+  }
+}
+```
+
 
 ## Resources
 

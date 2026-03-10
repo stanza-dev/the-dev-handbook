@@ -138,6 +138,28 @@ TypeOrmModule.forRoot({
 
 Query optimization eliminates N+1 problems through eager loading, improves lookup speed with indexes, and reduces data transfer by selecting specific fields. Use query builder for complex queries and log queries during development.
 
+## Code Examples
+
+**Fixing the N+1 query problem — use eager loading with relations instead of fetching children in a loop**
+
+```typescript
+// BAD: N+1 queries
+const orders = await this.ordersRepo.find();
+for (const order of orders) {
+  order.items = await this.orderItemsRepo.find({
+    where: { orderId: order.id },
+  });
+}
+// 1 query for orders + N queries for items
+
+// GOOD: Single query with JOIN
+const orders = await this.ordersRepo.find({
+  relations: ['items'],
+});
+// 1 query with JOIN
+```
+
+
 ## Resources
 
 - [Database](https://docs.nestjs.com/techniques/database) — Database optimization techniques

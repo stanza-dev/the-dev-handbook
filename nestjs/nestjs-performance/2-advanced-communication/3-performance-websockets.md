@@ -16,6 +16,10 @@ When you need bidirectional real-time communication, WebSockets are the answer. 
 - **@SubscribeMessage()**: Handler for specific message types
 - **Socket.IO**: Popular WebSocket library with fallbacks
 
+## Real World Context
+
+Collaborative editing tools like Google Docs, multiplayer games, and live trading platforms all require bidirectional real-time communication. WebSockets maintain a persistent connection so both client and server can push data instantly without polling.
+
 ## Deep Dive
 
 ### Setup
@@ -121,6 +125,28 @@ export class SecureGateway {
 ## Summary
 
 WebSocketGateway handles bidirectional real-time communication. Use @SubscribeMessage() for handling events and server.emit() for broadcasting. Implement connection/disconnect handlers for cleanup and authentication.
+
+## Code Examples
+
+**A WebSocket gateway with connection handling and room-based broadcasting via Socket.IO**
+
+```typescript
+@WebSocketGateway({ cors: { origin: '*' } })
+export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  @WebSocketServer()
+  server: Server;
+
+  handleConnection(client: Socket) {
+    console.log('Client connected:', client.id);
+  }
+
+  @SubscribeMessage('message')
+  handleMessage(@MessageBody() data: { room: string; message: string }) {
+    this.server.to(data.room).emit('message', data);
+  }
+}
+```
+
 
 ## Resources
 

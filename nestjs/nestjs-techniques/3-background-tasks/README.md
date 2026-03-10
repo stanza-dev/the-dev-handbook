@@ -13,10 +13,11 @@ Handling asynchronous operations with Queues and Scheduling.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
+- 🧩 Challenge: Scheduling Decorators
 - ✏️ Fill in the Blank: Defining a Consumer
-- 🧩 Multiple Choice: Challenge Cron Decorator
-- ✏️ Fill in the Blank: Event Listener
+- 🧩 Challenge: Cron Execution Count
+- 🧩 Challenge: Event Emitter Features
 
 → [Practice in your IDE](https://stanza.dev/courses/nestjs-techniques)

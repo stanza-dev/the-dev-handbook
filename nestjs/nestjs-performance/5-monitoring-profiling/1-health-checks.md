@@ -94,27 +94,28 @@ export class HealthController {
 }
 ```
 
-### Custom Health Indicator
+### Custom Health Indicator (NestJS 11+)
+
+NestJS 11 deprecates the `HealthIndicator` base class and `HealthCheckError`. Use the new `HealthIndicatorService` instead:
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { HealthIndicator, HealthIndicatorResult, HealthCheckError } from '@nestjs/terminus';
+import { HealthIndicatorService, HealthIndicatorResult } from '@nestjs/terminus';
 
 @Injectable()
-export class RedisHealthIndicator extends HealthIndicator {
-  constructor(private redis: Redis) {
-    super();
-  }
+export class RedisHealthIndicator {
+  constructor(
+    private healthIndicatorService: HealthIndicatorService,
+    private redis: Redis,
+  ) {}
 
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
+    const indicator = this.healthIndicatorService.check(key);
     try {
       await this.redis.ping();
-      return this.getStatus(key, true);
+      return indicator.up();
     } catch (error) {
-      throw new HealthCheckError(
-        'Redis check failed',
-        this.getStatus(key, false, { message: error.message }),
-      );
+      return indicator.down({ message: error.message });
     }
   }
 }
@@ -172,6 +173,33 @@ async readiness() {
 ## Summary
 
 Health checks report application status to orchestrators. Use liveness for basic aliveness, readiness for serving capability. Create custom indicators for specific dependencies and implement graceful degradation.
+
+## Code Examples
+
+**NestJS 11 custom health indicator using HealthIndicatorService — replaces the deprecated HealthIndicator base class**
+
+```typescript
+import { HealthIndicatorService } from '@nestjs/terminus';
+
+@Injectable()
+export class RedisHealthIndicator {
+  constructor(
+    private healthIndicatorService: HealthIndicatorService,
+    private redis: Redis,
+  ) {}
+
+  async isHealthy(key: string) {
+    const indicator = this.healthIndicatorService.check(key);
+    try {
+      await this.redis.ping();
+      return indicator.up();
+    } catch (error) {
+      return indicator.down({ message: error.message });
+    }
+  }
+}
+```
+
 
 ## Resources
 

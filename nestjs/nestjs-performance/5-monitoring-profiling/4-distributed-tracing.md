@@ -28,20 +28,22 @@ Distributed tracing answers:
 
 ### OpenTelemetry Setup
 
+The `@opentelemetry/exporter-jaeger` package is deprecated. Use the OTLP exporter instead — Jaeger natively supports OTLP ingestion:
+
 ```bash
-npm install @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node @opentelemetry/exporter-jaeger
+npm install @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node @opentelemetry/exporter-trace-otlp-proto
 ```
 
 ```typescript
 // tracing.ts (load before app)
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import { JaegerExporter } from '@opentelemetry/exporter-jaeger';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 
 const sdk = new NodeSDK({
   serviceName: 'nestjs-app',
-  traceExporter: new JaegerExporter({
-    endpoint: 'http://jaeger:14268/api/traces',
+  traceExporter: new OTLPTraceExporter({
+    url: 'http://jaeger:4318/v1/traces',
   }),
   instrumentations: [getNodeAutoInstrumentations()],
 });
@@ -189,7 +191,28 @@ export class LoggerService {
 
 ## Summary
 
-Distributed tracing tracks requests across services. Use OpenTelemetry for instrumentation, Jaeger/Zipkin for visualization. Propagate context in HTTP headers and correlate logs with trace IDs for complete observability.
+Distributed tracing tracks requests across services. Use OpenTelemetry with OTLP exporters for vendor-neutral instrumentation, and Jaeger or Zipkin for visualization. Propagate context in HTTP headers and correlate logs with trace IDs for complete observability.
+
+## Code Examples
+
+**OpenTelemetry SDK setup with OTLP exporter — auto-instrumentation captures HTTP, database, and framework spans**
+
+```typescript
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
+
+const sdk = new NodeSDK({
+  serviceName: 'nestjs-app',
+  traceExporter: new OTLPTraceExporter({
+    url: 'http://jaeger:4318/v1/traces',
+  }),
+  instrumentations: [getNodeAutoInstrumentations()],
+});
+
+sdk.start();
+```
+
 
 ## Resources
 
