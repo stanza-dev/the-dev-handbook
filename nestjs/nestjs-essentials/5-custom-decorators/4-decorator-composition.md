@@ -200,6 +200,27 @@ describe('RolesGuard', () => {
 
 Decorator composition creates expressive, domain-specific APIs. Use `applyDecorators()` to combine multiple decorators. Create guards and interceptors that read metadata. Document composite decorators and test the guards/interceptors that implement their behavior.
 
+## Code Examples
+
+**A domain-specific audit decorator — combines metadata and an interceptor to automatically log actions for compliance**
+
+```typescript
+export function Audit(action: string) {
+  return applyDecorators(
+    SetMetadata('audit:action', action),
+    UseInterceptors(AuditInterceptor),
+  );
+}
+
+// Usage:
+@Audit('USER_DELETE')
+@Delete(':id')
+deleteUser(@Param('id') id: string) {
+  return this.usersService.remove(id);
+}
+```
+
+
 ## Resources
 
 - [Decorator Composition](https://docs.nestjs.com/custom-decorators#decorator-composition) — Composing decorators with applyDecorators

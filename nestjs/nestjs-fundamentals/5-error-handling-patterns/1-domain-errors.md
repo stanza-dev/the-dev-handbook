@@ -180,6 +180,27 @@ async findUser(id: string): Promise<Result<User, UserNotFoundError>> {
 
 Domain error hierarchies provide type-safe, meaningful error handling. Create base classes for error categories, specific classes for each failure case, and global filters for HTTP mapping. Include error codes and context for debugging.
 
+## Code Examples
+
+**Domain error hierarchy — abstract base class with error code and status, concrete classes for each failure case, mapped to HTTP by a global filter**
+
+```typescript
+export abstract class DomainError extends Error {
+  abstract readonly code: string;
+  abstract readonly statusCode: number;
+}
+
+export class UserNotFoundError extends DomainError {
+  readonly code = 'USER_NOT_FOUND';
+  readonly statusCode = 404;
+  constructor(id: string) { super(`User ${id} not found`); }
+}
+
+// In service: throw new UserNotFoundError(userId);
+// Filter maps DomainError to HTTP response automatically
+```
+
+
 ## Resources
 
 - [Exception Filters](https://docs.nestjs.com/exception-filters) — Error handling strategies

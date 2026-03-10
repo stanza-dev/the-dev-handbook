@@ -15,6 +15,10 @@ Consistent error responses improve API usability. A well-designed error format h
 - **Error Codes**: Machine-readable identifiers
 - **Validation Errors**: Field-level error details
 
+## Real World Context
+
+API consumers — frontend apps, mobile apps, third-party integrations — need predictable error formats to handle failures gracefully. Standardized error schemas with machine-readable error codes reduce integration time and improve developer experience. Well-designed error responses are as important as your success responses.
+
 ## Deep Dive
 
 ### Standard Error Response
@@ -91,6 +95,31 @@ export const ErrorCodes = {
 ## Summary
 
 Consistent error responses improve API usability. Define a standard schema, include error codes, and provide detailed validation errors.
+
+## Code Examples
+
+**A consistent error response schema — includes machine-readable errorCode, timestamp, and request path for debugging**
+
+```typescript
+// Standardized error response interface
+interface ApiError {
+  statusCode: number;
+  message: string;
+  errorCode: string;
+  timestamp: string;
+  path: string;
+}
+
+// Example response:
+// {
+//   "statusCode": 404,
+//   "message": "User #42 not found",
+//   "errorCode": "USER_NOT_FOUND",
+//   "timestamp": "2025-01-15T10:30:00Z",
+//   "path": "/users/42"
+// }
+```
+
 
 ## Resources
 

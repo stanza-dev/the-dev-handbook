@@ -111,6 +111,25 @@ health() { return 'OK'; }
 
 Decorators are functions that modify classes, methods, properties, or parameters. In NestJS, use `SetMetadata()` for attaching metadata and `Reflector` to read it. Decorator factories allow parameterized decorators. Remember that execution order is bottom-to-top.
 
+## Code Examples
+
+**Creating a metadata decorator with SetMetadata — the @Public() decorator marks endpoints that skip authentication checks**
+
+```typescript
+import { SetMetadata } from '@nestjs/common';
+
+export const IS_PUBLIC_KEY = 'isPublic';
+export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
+
+// Usage on a route handler:
+@Public()
+@Get('health')
+health() {
+  return { status: 'ok' };
+}
+```
+
+
 ## Resources
 
 - [Custom Decorators](https://docs.nestjs.com/custom-decorators) — Official guide to creating custom decorators

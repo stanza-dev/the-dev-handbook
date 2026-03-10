@@ -101,6 +101,25 @@ const provider = {
 
 Async providers use factory functions returning Promises. NestJS waits for all async providers to resolve before accepting requests. Handle errors gracefully and add timeouts to prevent indefinite startup delays.
 
+## Code Examples
+
+**Async factory provider — NestJS waits for the Promise to resolve before starting the app, ensuring the database is connected**
+
+```typescript
+const databaseProvider = {
+  provide: 'DATABASE_CONNECTION',
+  useFactory: async (configService: ConfigService) => {
+    const connection = await createConnection({
+      host: configService.get('DB_HOST'),
+      port: configService.get('DB_PORT'),
+    });
+    return connection;
+  },
+  inject: [ConfigService],
+};
+```
+
+
 ## Resources
 
 - [Async Providers](https://docs.nestjs.com/fundamentals/async-providers) — Official async providers guide

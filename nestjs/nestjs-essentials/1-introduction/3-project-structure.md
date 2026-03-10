@@ -95,6 +95,24 @@ libs/
 
 NestJS project structure follows a module-per-feature pattern where each domain (users, products) has its own folder containing the module, controller, service, and related files. This organization scales well and makes navigation intuitive for new team members.
 
+## Code Examples
+
+**Root module composition — each feature domain has its own module, imported into the central AppModule**
+
+```typescript
+// app.module.ts — Root module importing feature modules
+import { Module } from '@nestjs/common';
+import { UsersModule } from './users/users.module';
+import { ProductsModule } from './products/products.module';
+import { ConfigModule } from './config/config.module';
+
+@Module({
+  imports: [ConfigModule.forRoot(), UsersModule, ProductsModule],
+})
+export class AppModule {}
+```
+
+
 ## Resources
 
 - [Modules Documentation](https://docs.nestjs.com/modules) — Official guide to organizing code with modules

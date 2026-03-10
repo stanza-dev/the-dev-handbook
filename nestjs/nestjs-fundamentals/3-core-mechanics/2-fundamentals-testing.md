@@ -140,6 +140,24 @@ const module = await Test.createTestingModule({
 
 NestJS testing utilities (Test.createTestingModule, overrideProvider) make unit testing straightforward. Mock dependencies for isolation, use actual modules for integration tests, and Supertest for E2E testing.
 
+## Code Examples
+
+**Unit testing with Test.createTestingModule — mock the repository with useValue and verify the service behaves correctly**
+
+```typescript
+const module = await Test.createTestingModule({
+  providers: [
+    UsersService,
+    { provide: UsersRepository, useValue: mockRepository },
+  ],
+}).compile();
+
+const service = module.get<UsersService>(UsersService);
+const result = await service.findOne('1');
+expect(result).toEqual({ id: '1', name: 'Test' });
+```
+
+
 ## Resources
 
 - [Testing](https://docs.nestjs.com/fundamentals/testing) — Official testing guide

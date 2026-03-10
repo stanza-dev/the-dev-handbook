@@ -165,6 +165,27 @@ async findBySpecification(spec: Specification<User>): Promise<User[]> {
 
 The Repository pattern abstracts data access behind an interface. Implement with TypeORM repositories, add domain-specific methods, and use specifications for complex queries. This enables testing, flexibility, and separation of concerns.
 
+## Code Examples
+
+**Repository pattern — define an interface for data access, implement with TypeORM, and inject the interface for easy mocking in tests**
+
+```typescript
+// Abstract interface for testability
+export interface IUserRepository {
+  findById(id: string): Promise<User | null>;
+  save(user: User): Promise<User>;
+}
+
+@Injectable()
+export class TypeOrmUserRepository implements IUserRepository {
+  constructor(@InjectRepository(User) private repo: Repository<User>) {}
+
+  findById(id: string) { return this.repo.findOne({ where: { id } }); }
+  save(user: User) { return this.repo.save(user); }
+}
+```
+
+
 ## Resources
 
 - [Database](https://docs.nestjs.com/techniques/database) — Database patterns and TypeORM

@@ -16,6 +16,10 @@ Guards, interceptors, and filters need information about the current request—b
 - **switchToHttp()**: Get HTTP-specific context
 - **getHandler()/getClass()**: Get route handler metadata
 
+## Real World Context
+
+Cross-cutting concerns like authentication, rate limiting, and logging need to inspect requests regardless of the transport layer. ExecutionContext provides a unified API to access request data across HTTP, WebSocket, and microservice contexts — so a single `AuthGuard` can protect REST endpoints, GraphQL resolvers, and WebSocket gateways.
+
 ## Deep Dive
 
 ### ArgumentsHost Basics
@@ -112,6 +116,25 @@ const isPublic = this.reflector.getAllAndOverride<boolean>('isPublic', [
 ## Summary
 
 ExecutionContext provides unified access to request context across transports. Use switchToHttp(), switchToRpc(), or switchToWs() for transport-specific data. Access handler metadata with getHandler(), getClass(), and Reflector.
+
+## Code Examples
+
+**ExecutionContext in a guard — getHandler() reads route metadata, switchToHttp().getRequest() accesses the HTTP request**
+
+```typescript
+@Injectable()
+export class RolesGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
+  canActivate(context: ExecutionContext): boolean {
+    const roles = this.reflector.get<string[]>('roles', context.getHandler());
+    if (!roles) return true;
+    const request = context.switchToHttp().getRequest();
+    return roles.some(role => request.user?.roles?.includes(role));
+  }
+}
+```
+
 
 ## Resources
 

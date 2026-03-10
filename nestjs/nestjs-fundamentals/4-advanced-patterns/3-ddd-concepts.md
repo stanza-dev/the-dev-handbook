@@ -196,6 +196,31 @@ export class PricingService {
 
 DDD organizes code around business concepts. Entities have identity, value objects are immutable. Aggregates ensure consistency, domain services handle cross-entity logic. Use DDD for complex business domains.
 
+## Code Examples
+
+**A DDD Value Object — immutable, defined by its attributes, with domain logic (validation, arithmetic) built into the class**
+
+```typescript
+// Value Object — immutable, no identity
+export class Money {
+  private constructor(
+    public readonly amount: number,
+    public readonly currency: string,
+  ) {}
+
+  static create(amount: number, currency: string): Money {
+    if (amount < 0) throw new Error('Amount cannot be negative');
+    return new Money(amount, currency);
+  }
+
+  add(other: Money): Money {
+    if (this.currency !== other.currency) throw new Error('Currency mismatch');
+    return Money.create(this.amount + other.amount, this.currency);
+  }
+}
+```
+
+
 ## Resources
 
 - [CQRS and DDD](https://docs.nestjs.com/recipes/cqrs) — Domain patterns in NestJS

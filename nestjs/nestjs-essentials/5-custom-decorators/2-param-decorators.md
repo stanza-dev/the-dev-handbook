@@ -136,6 +136,27 @@ findOne(
 
 Create parameter decorators with `createParamDecorator()`. Access the request via `ExecutionContext`. Use the data parameter for flexible extraction like `@CurrentUser('email')`. Keep decorators fast and handle edge cases.
 
+## Code Examples
+
+**A custom parameter decorator with optional property extraction — @CurrentUser() returns the full user, @CurrentUser('email') returns just the email**
+
+```typescript
+import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+
+export const CurrentUser = createParamDecorator(
+  (data: string | undefined, ctx: ExecutionContext) => {
+    const request = ctx.switchToHttp().getRequest();
+    const user = request.user;
+    return data ? user?.[data] : user;
+  },
+);
+
+// Usage:
+// @Get('me') getProfile(@CurrentUser() user: User)
+// @Get('email') getEmail(@CurrentUser('email') email: string)
+```
+
+
 ## Resources
 
 - [Custom Route Decorators](https://docs.nestjs.com/custom-decorators#custom-route-decorators) — Creating custom parameter decorators

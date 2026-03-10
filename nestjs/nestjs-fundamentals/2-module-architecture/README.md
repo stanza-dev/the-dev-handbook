@@ -13,10 +13,11 @@ Complex module patterns, dynamic modules, and compilation contexts.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Dynamic Module Method
-- ✏️ Fill in the Blank: Challenge Resolve Circular
+- ✏️ Fill in the Blank: Resolving Circular Dependencies
+- 🧩 Challenge: Module Registration Steps
 - 🧩 Challenge: Global Module Behavior
 
 → [Practice in your IDE](https://stanza.dev/courses/nestjs-fundamentals)

@@ -92,6 +92,22 @@ bootstrap();
 
 The Nest CLI accelerates development by scaffolding projects and generating components with consistent structure. The `NestFactory.create()` method bootstraps your application by building the dependency graph from `AppModule`. Master the CLI commands to maintain velocity as your project grows.
 
+## Code Examples
+
+**The main.ts entry point — NestFactory.create() builds the dependency graph from AppModule and starts the HTTP server**
+
+```typescript
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  await app.listen(process.env.PORT ?? 3000);
+}
+bootstrap();
+```
+
+
 ## Resources
 
 - [Nest CLI Overview](https://docs.nestjs.com/cli/overview) — Complete guide to Nest CLI commands and options

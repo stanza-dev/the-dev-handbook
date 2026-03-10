@@ -120,6 +120,24 @@ export class ConfigModule {}
 
 Modules organize NestJS applications into cohesive blocks. The `@Module()` decorator defines imports (dependencies), controllers, providers, and exports. This encapsulation enables scalable architecture where teams can work independently on feature modules.
 
+## Code Examples
+
+**A feature module — providers are private by default, add to exports to share with other modules that import this one**
+
+```typescript
+import { Module } from '@nestjs/common';
+import { CatsController } from './cats.controller';
+import { CatsService } from './cats.service';
+
+@Module({
+  controllers: [CatsController],
+  providers: [CatsService],
+  exports: [CatsService], // Available to other modules
+})
+export class CatsModule {}
+```
+
+
 ## Resources
 
 - [Modules Documentation](https://docs.nestjs.com/modules) — Official guide to creating and organizing modules

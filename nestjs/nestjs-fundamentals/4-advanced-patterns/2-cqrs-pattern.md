@@ -175,6 +175,31 @@ export class UserCreatedHandler implements IEventHandler<UserCreatedEvent> {
 
 CQRS separates reads and writes into distinct models. Use @nestjs/cqrs for commands and queries. Commands mutate state, queries return data. Combine with domain events for reactive side effects.
 
+## Code Examples
+
+**CQRS with @nestjs/cqrs — define command objects, create handlers, and dispatch via CommandBus from controllers**
+
+```typescript
+// Command: mutates state
+export class CreateUserCommand {
+  constructor(public readonly email: string, public readonly name: string) {}
+}
+
+@CommandHandler(CreateUserCommand)
+export class CreateUserHandler implements ICommandHandler<CreateUserCommand> {
+  async execute(command: CreateUserCommand) {
+    return this.usersRepo.create(command);
+  }
+}
+
+// Controller dispatches via bus
+@Post()
+create(@Body() dto: CreateUserDto) {
+  return this.commandBus.execute(new CreateUserCommand(dto.email, dto.name));
+}
+```
+
+
 ## Resources
 
 - [CQRS](https://docs.nestjs.com/recipes/cqrs) — Official CQRS guide

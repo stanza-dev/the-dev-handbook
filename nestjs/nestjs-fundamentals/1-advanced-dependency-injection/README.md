@@ -13,10 +13,11 @@ Mastering providers, injection scopes, and circular dependencies.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: Mocking with useValue
-- 🧩 Multiple Choice: Challenge Async Factory
+- 🧩 Multiple Choice: Async Factory Providers
 - 🧩 Multiple Choice: Scope Bubbling
+- 🔗 Matching: Provider Types and Use Cases
 
 → [Practice in your IDE](https://stanza.dev/courses/nestjs-fundamentals)

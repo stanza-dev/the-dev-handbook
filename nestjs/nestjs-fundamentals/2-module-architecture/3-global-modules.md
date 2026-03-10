@@ -15,6 +15,10 @@ Some modules are needed everywhere—configuration, logging, caching. Instead of
 - **Root Import**: Global modules still need one import (typically in AppModule)
 - **Provider Scope**: Global affects module scope, not provider instances
 
+## Real World Context
+
+In large applications, certain services — logging, configuration, caching — are needed everywhere. Global modules eliminate repetitive imports and keep your module configuration clean and maintainable. Without them, every module in your application would need to explicitly import `ConfigModule` or `LoggerModule`.
+
 ## Deep Dive
 
 ### Creating a Global Module
@@ -79,6 +83,24 @@ export class UsersService {
 ## Summary
 
 @Global() makes modules available everywhere without explicit imports. Use it for cross-cutting concerns like configuration and logging. Don't overuse—explicit imports improve code clarity.
+
+## Code Examples
+
+**@Global() makes a module's exported providers available everywhere — but it still needs one import and must explicitly export its providers**
+
+```typescript
+@Global()
+@Module({
+  providers: [ConfigService, LoggerService],
+  exports: [ConfigService, LoggerService],
+})
+export class CoreModule {}
+
+// Import once in AppModule — available everywhere
+@Module({ imports: [CoreModule] })
+export class AppModule {}
+```
+
 
 ## Resources
 

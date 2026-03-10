@@ -104,6 +104,26 @@ export class RequestService {
 
 Provider scopes control instance lifecycle. DEFAULT (singleton) shares one instance, REQUEST creates per-request instances, and TRANSIENT creates fresh instances on every injection. Use the appropriate scope based on your statefulness requirements.
 
+## Code Examples
+
+**A request-scoped provider — a new instance is created for each HTTP request, with access to the request object via @Inject(REQUEST)**
+
+```typescript
+import { Injectable, Scope, Inject } from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
+
+@Injectable({ scope: Scope.REQUEST })
+export class RequestContextService {
+  constructor(@Inject(REQUEST) private request: Request) {}
+
+  getUserId(): string {
+    return this.request.user?.id;
+  }
+}
+```
+
+
 ## Resources
 
 - [Injection Scopes](https://docs.nestjs.com/fundamentals/injection-scopes) — Official injection scopes guide

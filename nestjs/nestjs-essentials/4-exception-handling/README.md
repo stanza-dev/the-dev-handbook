@@ -13,10 +13,12 @@ Master error handling with built-in and custom exception filters for robust API 
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **5 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Not Found Exception
+- 🧩 Challenge: Exception Status Code
 - ✏️ Fill in the Blank: Exception Filter Decorator
-- 🧩 Multiple Choice: Global Exception Filter
+- 🔗 Matching: Exception Status Codes
+- 🧩 Challenge: Global Exception Filter
 
 → [Practice in your IDE](https://stanza.dev/courses/nestjs-essentials)

@@ -135,6 +135,30 @@ DatabaseModule.forRootAsync({
 
 Dynamic modules accept configuration via static methods like forRoot() and forFeature(). They return DynamicModule objects with providers and exports. Use forRootAsync for configuration that depends on other services.
 
+## Code Examples
+
+**Dynamic module with forRoot() — accepts configuration options and returns a globally available module with the configured providers**
+
+```typescript
+@Module({})
+export class ConfigModule {
+  static forRoot(options: ConfigOptions): DynamicModule {
+    return {
+      module: ConfigModule,
+      global: true,
+      providers: [
+        { provide: 'CONFIG_OPTIONS', useValue: options },
+        ConfigService,
+      ],
+      exports: [ConfigService],
+    };
+  }
+}
+
+// Usage: ConfigModule.forRoot({ envFile: '.env' })
+```
+
+
 ## Resources
 
 - [Dynamic Modules](https://docs.nestjs.com/fundamentals/dynamic-modules) — Official dynamic modules guide

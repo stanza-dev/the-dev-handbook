@@ -51,7 +51,7 @@ createUser() { ... }
 ```typescript
 import { Reflector } from '@nestjs/core';
 
-// Using Reflector.createDecorator (NestJS 10+)
+// Using Reflector.createDecorator (recommended approach)
 export const Roles = Reflector.createDecorator<string[]>();
 
 // In guard
@@ -147,6 +147,27 @@ export class MetadataGuard implements CanActivate {
 ## Summary
 
 Method and class decorators annotate handlers and controllers. Use `applyDecorators()` to combine multiple decorators into one semantic decorator. Read metadata with `Reflector` in guards and interceptors. Use `getAllAndOverride()` to check both method and class levels.
+
+## Code Examples
+
+**Combining decorators with applyDecorators() — @Auth('admin') applies metadata, guards, and Swagger docs in a single decorator**
+
+```typescript
+import { applyDecorators, UseGuards, SetMetadata } from '@nestjs/common';
+
+export function Auth(...roles: string[]) {
+  return applyDecorators(
+    SetMetadata('roles', roles),
+    UseGuards(AuthGuard, RolesGuard),
+  );
+}
+
+// Replaces 3 decorators with 1:
+@Auth('admin')
+@Post('users')
+createUser(@Body() dto: CreateUserDto) { ... }
+```
+
 
 ## Resources
 

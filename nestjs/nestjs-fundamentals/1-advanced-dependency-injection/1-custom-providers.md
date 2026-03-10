@@ -15,6 +15,7 @@ Standard providers use class names for injection tokens. But what about configur
 - **useValue**: Provide a fixed value (objects, primitives, mocks)
 - **useClass**: Dynamically select which class to instantiate
 - **useFactory**: Create providers with custom logic and dependencies
+- **useExisting**: Create an alias for an existing provider (returns same instance)
 
 ## Real World Context
 
@@ -84,6 +85,31 @@ const asyncProvider = {
 };
 ```
 
+### Aliasing with useExisting
+
+```typescript
+// useExisting returns the SAME instance as the original provider
+const aliasProvider = {
+  provide: 'LEGACY_LOGGER',
+  useExisting: LoggerService,
+};
+
+@Module({
+  providers: [LoggerService, aliasProvider],
+})
+export class AppModule {}
+
+// Both inject the same singleton instance:
+constructor(
+  private logger: LoggerService,
+  @Inject('LEGACY_LOGGER') private legacyLogger: LoggerService,
+) {
+  console.log(logger === legacyLogger); // true
+}
+```
+
+Unlike `useClass`, which creates a **new instance**, `useExisting` returns the **same instance** as the original provider. This is useful for backward compatibility or providing alternative injection tokens.
+
 ## Common Pitfalls
 
 1. **Forgetting inject array**: Factory providers need dependencies listed in `inject`.
@@ -100,6 +126,28 @@ const asyncProvider = {
 ## Summary
 
 Custom providers control how dependencies are created. Use `useValue` for constants, `useClass` for conditional implementations, and `useFactory` for complex creation logic. Inject custom providers using `@Inject(TOKEN)`.
+
+## Code Examples
+
+**Custom providers — useValue injects a fixed object, useFactory creates providers with async logic and injected dependencies**
+
+```typescript
+// Value provider for configuration
+const configProvider = {
+  provide: 'APP_CONFIG',
+  useValue: { apiUrl: 'https://api.example.com', timeout: 5000 },
+};
+
+// Factory provider with injected dependencies
+const dbProvider = {
+  provide: 'DATABASE',
+  useFactory: async (config: ConfigService) => {
+    return createConnection(config.get('database'));
+  },
+  inject: [ConfigService],
+};
+```
+
 
 ## Resources
 

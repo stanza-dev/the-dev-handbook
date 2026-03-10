@@ -15,6 +15,10 @@ Built-in exceptions cover common cases, but your domain may need specific error 
 - **Domain Errors**: Business logic specific exceptions
 - **Error Codes**: Machine-readable error identifiers
 
+## Real World Context
+
+Enterprise applications require domain-specific errors for payment failures, permission denials, and resource conflicts. Custom exceptions make your API self-documenting: a frontend developer seeing `INSUFFICIENT_FUNDS` knows exactly what happened, while a generic 400 error leaves them guessing. This also enables programmatic error handling in client apps.
+
 ## Deep Dive
 
 ### Basic Custom Exception
@@ -79,6 +83,26 @@ export class OrderNotFoundException extends DomainException {
 ## Summary
 
 Custom exceptions extend HttpException for domain-specific errors. Create hierarchies for related errors and include error codes for programmatic handling.
+
+## Code Examples
+
+**A domain-specific custom exception — extends HttpException with a machine-readable error code and contextual message**
+
+```typescript
+import { HttpException, HttpStatus } from '@nestjs/common';
+
+export class InsufficientFundsException extends HttpException {
+  constructor(required: number, available: number) {
+    super(
+      { message: `Insufficient funds: need ${required}, have ${available}`, errorCode: 'INSUFFICIENT_FUNDS' },
+      HttpStatus.PAYMENT_REQUIRED,
+    );
+  }
+}
+
+// Usage: throw new InsufficientFundsException(100, 50);
+```
+
 
 ## Resources
 

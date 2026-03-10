@@ -15,6 +15,7 @@ NestJS applications have a defined lifecycle—from initialization to shutdown. 
 - **OnApplicationBootstrap**: Called after all modules initialized, before listening
 - **OnModuleDestroy**: Called when app receives shutdown signal
 - **BeforeApplicationShutdown**: Called before connections close
+- **OnApplicationShutdown**: Called after all connections are closed, receives shutdown signal
 
 ## Real World Context
 
@@ -44,7 +45,7 @@ Use lifecycle hooks for:
 import { Injectable, OnModuleInit, OnApplicationBootstrap, OnModuleDestroy } from '@nestjs/common';
 
 @Injectable()
-export class DatabaseService implements OnModuleInit, OnApplicationBootstrap, OnModuleDestroy {
+export class DatabaseService implements OnModuleInit, OnApplicationBootstrap, OnModuleDestroy, OnApplicationShutdown {
   async onModuleInit() {
     console.log('Module dependencies resolved');
     await this.connect();
@@ -58,6 +59,10 @@ export class DatabaseService implements OnModuleInit, OnApplicationBootstrap, On
   async onModuleDestroy() {
     console.log('Shutting down...');
     await this.disconnect();
+  }
+
+  async onApplicationShutdown(signal?: string) {
+    console.log(`App shutdown complete (signal: ${signal})`);
   }
 }
 ```
@@ -105,6 +110,27 @@ export class AppService implements BeforeApplicationShutdown {
 ## Summary
 
 Lifecycle hooks run code at specific points in the app lifecycle. Implement OnModuleInit for initialization, OnModuleDestroy for cleanup. Enable shutdown hooks with enableShutdownHooks() for graceful termination.
+
+## Code Examples
+
+**Lifecycle hooks — onModuleInit for setup, onModuleDestroy when shutdown starts, onApplicationShutdown after connections close**
+
+```typescript
+@Injectable()
+export class DatabaseService
+  implements OnModuleInit, OnModuleDestroy, OnApplicationShutdown {
+  async onModuleInit() {
+    await this.connect();
+  }
+  async onModuleDestroy() {
+    await this.disconnect();
+  }
+  async onApplicationShutdown(signal?: string) {
+    console.log(`Shutdown: ${signal}`);
+  }
+}
+```
+
 
 ## Resources
 

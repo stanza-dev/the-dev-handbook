@@ -31,6 +31,9 @@ Consider a `GET /users/:id` endpoint. The `:id` parameter comes as a string from
 | `ParseBoolPipe` | Converts string to boolean |
 | `ParseUUIDPipe` | Validates UUID format |
 | `ParseArrayPipe` | Parses and validates arrays |
+| `ParseFloatPipe` | Converts string to floating-point number |
+| `ParseEnumPipe` | Validates and transforms enum values |
+| `ParseFilePipe` | Validates file uploads |
 | `DefaultValuePipe` | Provides default when value is undefined |
 
 ### Using ParseIntPipe
@@ -114,6 +117,26 @@ findOne(
 ## Summary
 
 Pipes validate and transform input data before it reaches your handlers. Built-in pipes handle common cases like `ParseIntPipe` and `ValidationPipe`. Custom pipes handle domain-specific transformations. Enable them globally for consistent validation across your API.
+
+## Code Examples
+
+**A custom pipe implementing PipeTransform — validates and transforms a string into a Date object, throwing BadRequestException on invalid input**
+
+```typescript
+@Injectable()
+export class ParseDatePipe implements PipeTransform<string, Date> {
+  transform(value: string): Date {
+    const date = new Date(value);
+    if (isNaN(date.getTime())) {
+      throw new BadRequestException('Invalid date format');
+    }
+    return date;
+  }
+}
+
+// Usage: @Query('date', ParseDatePipe) date: Date
+```
+
 
 ## Resources
 

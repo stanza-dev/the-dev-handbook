@@ -105,6 +105,28 @@ create() { ... }
 
 Controllers handle HTTP requests using decorators like `@Controller()`, `@Get()`, `@Post()`, and parameter extractors like `@Body()` and `@Param()`. They should remain thin, delegating business logic to injectable services.
 
+## Code Examples
+
+**A controller with POST and GET handlers — @Body() extracts the request body, @Param() with ParseIntPipe converts the route parameter to a number**
+
+```typescript
+@Controller('users')
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+  @Post()
+  create(@Body() dto: CreateUserDto) {
+    return this.usersService.create(dto);
+  }
+
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.findOne(id);
+  }
+}
+```
+
+
 ## Resources
 
 - [Controllers Documentation](https://docs.nestjs.com/controllers) — Official guide to creating and configuring controllers

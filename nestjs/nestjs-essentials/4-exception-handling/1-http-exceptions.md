@@ -15,6 +15,10 @@ APIs must communicate errors clearly. NestJS provides built-in HTTP exception cl
 - **Built-in Exceptions**: BadRequestException, NotFoundException, etc.
 - **Status Codes**: HTTP status codes (4xx client errors, 5xx server errors)
 
+## Real World Context
+
+In production APIs, clear error responses help frontend teams handle errors gracefully and reduce debugging time. Consistent HTTP status codes enable monitoring tools like Datadog or Sentry to track error rates by category — distinguishing between client mistakes (4xx) and server failures (5xx) — and alert on anomalies before users report them.
+
 ## Deep Dive
 
 ### Basic HttpException
@@ -74,6 +78,26 @@ throw new BadRequestException({
 ## Summary
 
 NestJS provides built-in HTTP exceptions for common error scenarios. Use specific classes like NotFoundException for clear, consistent error responses.
+
+## Code Examples
+
+**Using built-in exceptions in a service — NotFoundException automatically returns a 404 response with a descriptive message**
+
+```typescript
+import { NotFoundException, BadRequestException } from '@nestjs/common';
+
+@Injectable()
+export class UsersService {
+  findOne(id: number): User {
+    const user = this.users.find(u => u.id === id);
+    if (!user) {
+      throw new NotFoundException(`User #${id} not found`);
+    }
+    return user;
+  }
+}
+```
+
 
 ## Resources
 

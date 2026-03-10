@@ -13,10 +13,12 @@ Under the hood of the NestJS runtime.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **5 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Challenge Lifecycle Init
+- 🧩 Multiple Choice: Lifecycle Initialization Hook
+- 🧩 Challenge: Lifecycle Hook Count
 - ✏️ Fill in the Blank: Creating a Test Module
 - ✏️ Fill in the Blank: Execution Context Type
+- 🧩 Challenge: ExecutionContext Methods
 
 → [Practice in your IDE](https://stanza.dev/courses/nestjs-fundamentals)

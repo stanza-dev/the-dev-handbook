@@ -122,6 +122,33 @@ export class AppService {
 
 @Optional() prevents crashes for missing dependencies. Use string or Symbol tokens for non-class providers. Symbol tokens are preferred for uniqueness. Implement fallback behavior when optional dependencies are missing.
 
+## Code Examples
+
+**Optional dependency with Symbol token — @Optional() prevents a crash if no cache provider is registered, and Symbol ensures token uniqueness**
+
+```typescript
+import { Injectable, Optional, Inject } from '@nestjs/common';
+
+export const CACHE_TOKEN = Symbol('CACHE_SERVICE');
+
+@Injectable()
+export class AppService {
+  constructor(
+    @Optional() @Inject(CACHE_TOKEN)
+    private cacheService?: CacheService,
+  ) {}
+
+  async getData(key: string) {
+    if (this.cacheService) {
+      const cached = await this.cacheService.get(key);
+      if (cached) return cached;
+    }
+    return this.fetchFromDatabase(key);
+  }
+}
+```
+
+
 ## Resources
 
 - [Custom Providers](https://docs.nestjs.com/fundamentals/custom-providers#optional-providers) — Optional providers documentation

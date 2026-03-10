@@ -131,6 +131,23 @@ When multiple interceptors are applied:
 
 Interceptors wrap route handler execution, enabling before/after logic, response transformation, caching, and timeouts. They work with RxJS Observables for powerful stream manipulation. Apply them at method, controller, or global level.
 
+## Code Examples
+
+**A logging interceptor — code before next.handle() runs pre-handler, RxJS operators like tap() run post-handler**
+
+```typescript
+@Injectable()
+export class LoggingInterceptor implements NestInterceptor {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const now = Date.now();
+    return next.handle().pipe(
+      tap(() => console.log(`Response time: ${Date.now() - now}ms`)),
+    );
+  }
+}
+```
+
+
 ## Resources
 
 - [Interceptors Documentation](https://docs.nestjs.com/interceptors) — Official guide to implementing interceptors

@@ -59,7 +59,7 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(LoggerMiddleware)
-      .forRoutes('*');
+      .forRoutes('{*splat}');
   }
 }
 ```
@@ -100,6 +100,28 @@ export function logger(req: Request, res: Response, next: NextFunction) {
 ## Summary
 
 Middleware executes before route handlers, perfect for logging, auth checks, and request transformation. Implement `NestMiddleware` for class-based middleware, or use simple functions. Configure in the module's `configure()` method using `MiddlewareConsumer`.
+
+## Code Examples
+
+**Class-based middleware implementing NestMiddleware — applied via MiddlewareConsumer in the module's configure() method**
+
+```typescript
+@Injectable()
+export class LoggerMiddleware implements NestMiddleware {
+  use(req: Request, res: Response, next: NextFunction) {
+    console.log(`${req.method} ${req.url}`);
+    next(); // Pass control to the next handler
+  }
+}
+
+// In module:
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('{*splat}');
+  }
+}
+```
+
 
 ## Resources
 

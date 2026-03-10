@@ -2,7 +2,7 @@
 
 > Master the core building blocks of NestJS applications. Learn to structure robust server-side applications using modules, controllers, and providers with industry-standard practices.
 
-**NestJS 11** · Beginner → Intermediate
+**NestJS 11.1** · Beginner → Intermediate
 
 ## Sections
 
@@ -10,11 +10,11 @@
 |---|---------|---------|
 | 🏁 | [First Steps](./1-introduction/) | 4 lessons |
 | 🧱 | [Core Building Blocks](./2-core-building-blocks/) | 4 lessons |
-| 🔄 | [Request Lifecycle & Middleware](./3-request-lifecycle/) | 4 lessons |
+| 🔄 | [Request Lifecycle & Middleware](./3-request-lifecycle/) | 5 lessons |
 | ⚠️ | [Exception Handling](./4-exception-handling/) | 4 lessons |
 | 🎨 | [Custom Decorators](./5-custom-decorators/) | 4 lessons |
 
-**20 lessons** · **18 interactive challenges**
+**21 lessons** · **20 interactive challenges**
 
 ## Want the Interactive Experience?
 

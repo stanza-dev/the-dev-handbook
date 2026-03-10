@@ -16,6 +16,10 @@ Sometimes you need to dynamically resolve providers at runtime rather than throu
 - **resolve()**: Create new instance (for transient/request scoped)
 - **Lazy Loading**: Load modules on demand
 
+## Real World Context
+
+Dynamic provider resolution is crucial for plugin systems, strategy patterns, and multi-tenant architectures where the concrete implementation depends on runtime context rather than compile-time configuration. For example, choosing between a Stripe or PayPal payment processor based on user preferences requires runtime resolution.
+
 ## Deep Dive
 
 ### Basic ModuleRef Usage
@@ -96,6 +100,25 @@ export class FeatureService {
 ## Summary
 
 ModuleRef provides runtime access to the DI container. Use get() for singletons, resolve() for scoped providers, and create() for dynamic instantiation. Prefer constructor injection; use ModuleRef only when needed.
+
+## Code Examples
+
+**ModuleRef for dynamic provider resolution — use in onModuleInit (not constructor) with strict: false to look across all modules**
+
+```typescript
+@Injectable()
+export class PluginLoader implements OnModuleInit {
+  private analyticsService: AnalyticsService;
+
+  constructor(private moduleRef: ModuleRef) {}
+
+  onModuleInit() {
+    // Resolve provider dynamically at runtime
+    this.analyticsService = this.moduleRef.get(AnalyticsService, { strict: false });
+  }
+}
+```
+
 
 ## Resources
 

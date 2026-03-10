@@ -15,6 +15,10 @@ Exception filters catch exceptions and transform them into HTTP responses. They 
 - **ExceptionFilter**: Interface for filter implementation
 - **ArgumentsHost**: Access to request/response context
 
+## Real World Context
+
+Exception filters are essential in production because they standardize error responses across your entire API. Without them, different parts of your application might return errors in different formats, confusing API consumers. A global exception filter also provides a single place for error logging and monitoring integration.
+
 ## Deep Dive
 
 ### Basic Exception Filter
@@ -96,6 +100,26 @@ export class AppModule {}
 ## Summary
 
 Exception filters provide centralized error handling. Use @Catch() to specify types and apply globally for consistent responses.
+
+## Code Examples
+
+**Registering a global exception filter via APP_FILTER token — unlike app.useGlobalFilters(), this approach supports dependency injection**
+
+```typescript
+// Global filter with DI support
+import { APP_FILTER } from '@nestjs/core';
+
+@Module({
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
+  ],
+})
+export class AppModule {}
+```
+
 
 ## Resources
 

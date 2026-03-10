@@ -103,6 +103,30 @@ A potential circular dependency has been detected.
 
 forwardRef() breaks circular dependencies by lazily resolving references. Apply it to both sides of the cycle. Better yet, refactor your architecture to avoid circular dependencies—they often indicate a design problem.
 
+## Code Examples
+
+**Breaking a circular dependency with forwardRef() — must be applied on BOTH sides so NestJS can lazily resolve the references**
+
+```typescript
+// Both sides must use forwardRef()
+@Injectable()
+export class UsersService {
+  constructor(
+    @Inject(forwardRef(() => OrganizationsService))
+    private orgsService: OrganizationsService,
+  ) {}
+}
+
+@Injectable()
+export class OrganizationsService {
+  constructor(
+    @Inject(forwardRef(() => UsersService))
+    private usersService: UsersService,
+  ) {}
+}
+```
+
+
 ## Resources
 
 - [Circular Dependency](https://docs.nestjs.com/fundamentals/circular-dependency) — Official circular dependency guide

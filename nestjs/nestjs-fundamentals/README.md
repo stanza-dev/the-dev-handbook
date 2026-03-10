@@ -2,7 +2,7 @@
 
 > Deep dive into the architectural concepts of NestJS. Understand how Dependency Injection, Modules, and Lifecycle events work under the hood.
 
-**NestJS 11** · Intermediate → Advanced
+**NestJS 11.1** · Intermediate → Advanced
 
 ## Sections
 
@@ -14,7 +14,7 @@
 | 🎯 | [Advanced Patterns](./4-advanced-patterns/) | 4 lessons |
 | 🚨 | [Error Handling Patterns](./5-error-handling-patterns/) | 4 lessons |
 
-**20 lessons** · **15 interactive challenges**
+**20 lessons** · **22 interactive challenges**
 
 ## Want the Interactive Experience?
 

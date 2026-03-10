@@ -13,10 +13,12 @@ Design patterns and architectural strategies for scalable NestJS applications.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **5 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Repository Pattern Benefit
-- 🧩 Multiple Choice: CQRS Commands
-- 🧩 Multiple Choice: Value Object Characteristic
+- 🔗 Matching: CQRS Commands
+- ✏️ Fill in the Blank: Value Object Properties
+- 🧩 Challenge: Value Object Characteristic
+- 🧩 Challenge: Clean Architecture Layers
 
 → [Practice in your IDE](https://stanza.dev/courses/nestjs-fundamentals)

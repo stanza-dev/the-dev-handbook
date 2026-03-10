@@ -190,9 +190,30 @@ export class UsersModule {}
 
 Clean Architecture separates concerns into layers. Domain contains business rules, application contains use cases, infrastructure contains adapters. Dependencies point inward. Use for complex systems requiring flexibility and testability.
 
+## Code Examples
+
+**Clean Architecture ports and adapters — the domain defines interfaces, infrastructure implements them, dependencies point inward**
+
+```typescript
+// Port (interface) — domain layer
+export interface UserRepositoryPort {
+  findById(id: string): Promise<User | null>;
+  save(user: User): Promise<void>;
+}
+
+// Adapter (implementation) — infrastructure layer
+@Injectable()
+export class PrismaUserRepository implements UserRepositoryPort {
+  constructor(private prisma: PrismaService) {}
+  async findById(id: string) { return this.prisma.user.findUnique({ where: { id } }); }
+  async save(user: User) { await this.prisma.user.upsert({ ... }); }
+}
+```
+
+
 ## Resources
 
-- [Modules](https://docs.nestjs.com/modules) — Organizing code with modules
+- [Dynamic Modules](https://docs.nestjs.com/fundamentals/dynamic-modules) — Building modular, composable architectures with dynamic modules
 
 ---
 

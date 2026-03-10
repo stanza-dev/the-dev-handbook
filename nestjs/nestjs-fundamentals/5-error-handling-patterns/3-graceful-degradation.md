@@ -223,6 +223,27 @@ export class HealthController {
 
 Graceful degradation keeps core functionality working when dependencies fail. Use fallbacks, timeouts, feature flags, and bulkheads. Monitor degraded state and test failure scenarios. Users prefer limited functionality over error pages.
 
+## Code Examples
+
+**Graceful degradation with timeout and fallback — if the recommendation service is slow or down, serve cached data instead of failing**
+
+```typescript
+async getProductWithRecommendations(id: string) {
+  const product = await this.productsRepo.findById(id);
+  let recommendations: Product[];
+  try {
+    recommendations = await withTimeout(
+      this.recommendationService.getForProduct(id),
+      2000, // 2s timeout
+    );
+  } catch {
+    recommendations = await this.cache.get(`recs:${id}`) ?? [];
+  }
+  return { product, recommendations };
+}
+```
+
+
 ## Resources
 
 - [Health Checks](https://docs.nestjs.com/recipes/terminus) — Health checks and monitoring

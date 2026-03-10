@@ -116,6 +116,15 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     );
   }
 
+  private sanitizeHeaders(headers: Record<string, string>): Record<string, string> {
+    const sensitiveHeaders = ['authorization', 'cookie', 'x-api-key'];
+    return Object.fromEntries(
+      Object.entries(headers || {}).map(([key, value]) =>
+        sensitiveHeaders.includes(key.toLowerCase()) ? [key, '[REDACTED]'] : [key, value]
+      ),
+    );
+  }
+
   private getClientMessage(exception: unknown, status: number): string {
     if (exception instanceof HttpException) {
       return exception.message;
@@ -209,6 +218,34 @@ export class SentryService {
 ## Summary
 
 Effective error logging uses structured JSON with consistent fields. Include correlation IDs, sanitize sensitive data, and integrate with error tracking services. Monitor error rates and set up alerts for anomalies.
+
+## Code Examples
+
+**Global exception filter with structured logging — includes correlation ID for request tracing and sanitizes 5xx errors for clients**
+
+```typescript
+@Catch()
+export class GlobalExceptionFilter implements ExceptionFilter {
+  catch(exception: unknown, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const request = ctx.getRequest();
+    const correlationId = request.headers['x-correlation-id'] ?? uuid();
+    const status = exception instanceof HttpException
+      ? exception.getStatus() : 500;
+
+    this.logger.error(JSON.stringify({
+      correlationId, status, path: request.url,
+      message: exception instanceof Error ? exception.message : 'Unknown',
+    }));
+
+    ctx.getResponse().status(status).json({
+      statusCode: status, correlationId,
+      message: status >= 500 ? 'Internal server error' : (exception as any).message,
+    });
+  }
+}
+```
+
 
 ## Resources
 

@@ -13,10 +13,11 @@ Robust error handling strategies including domain errors, retry patterns, and gr
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Exponential Backoff
-- 🧩 Multiple Choice: Circuit Breaker States
-- 🧩 Multiple Choice: Correlation ID Purpose
+- 🧩 Challenge: When to Retry
+- 🧩 Challenge: Circuit Breaker States
+- 🔗 Matching: Correlation ID Purpose
 
 → [Practice in your IDE](https://stanza.dev/courses/nestjs-fundamentals)

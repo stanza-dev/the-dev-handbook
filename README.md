@@ -155,7 +155,7 @@ Maintained by [Stanza](https://stanza.dev) — Learn coding faster right in your
 
 ### 🐈 NestJS
 
-- 🦁 [NestJS Essentials](./nestjs/nestjs-essentials/) — 20 lessons
+- 🦁 [NestJS Essentials](./nestjs/nestjs-essentials/) — 21 lessons
 - 🎓 [NestJS Fundamentals](./nestjs/nestjs-fundamentals/) — 20 lessons
 - 🚀 [NestJS High Performance](./nestjs/nestjs-performance/) — 20 lessons
 - 🛡️ [NestJS Security](./nestjs/nestjs-security/) — 20 lessons

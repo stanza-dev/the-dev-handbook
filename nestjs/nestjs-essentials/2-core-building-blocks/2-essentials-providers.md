@@ -96,6 +96,23 @@ export class CatsModule {}
 | Value | Configuration, mocks | `{ provide: 'API_KEY', useValue: 'abc123' }` |
 | Class | Conditional implementations | `{ provide: Logger, useClass: ProdLogger }` |
 | Factory | Dynamic creation | `{ provide: 'DB', useFactory: () => ... }` |
+| Existing | Alias for another provider | `{ provide: 'ALIAS', useExisting: RealService }` |
+
+### Aliasing with useExisting
+
+Sometimes you need the same provider under a different token:
+
+```typescript
+@Module({
+  providers: [
+    ConnectionService,
+    { provide: 'DATABASE_CONNECTION', useExisting: ConnectionService },
+  ],
+})
+export class AppModule {}
+```
+
+Unlike `useClass`, which creates a **new instance**, `useExisting` returns the **same singleton instance** as the original provider. This is useful for backward compatibility or providing alternative injection tokens.
 
 ### Injection Scopes
 
@@ -128,6 +145,30 @@ export class RequestScopedService {}
 ## Summary
 
 Providers are injectable classes marked with `@Injectable()`. The NestJS IoC container creates and injects them automatically via constructor parameters. This enables loose coupling, testability, and clean architecture.
+
+## Code Examples
+
+**An injectable service — @Injectable() marks the class for DI, allowing NestJS to inject it into controllers or other services**
+
+```typescript
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class UsersService {
+  private readonly users: User[] = [];
+
+  create(dto: CreateUserDto): User {
+    const user = { id: Date.now(), ...dto };
+    this.users.push(user);
+    return user;
+  }
+
+  findOne(id: number): User | undefined {
+    return this.users.find(u => u.id === id);
+  }
+}
+```
+
 
 ## Resources
 

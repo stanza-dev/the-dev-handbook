@@ -211,9 +211,33 @@ export class PaymentService {
 
 Retry patterns add resilience to external calls. Use exponential backoff with jitter, circuit breakers for failing services, and idempotency for safe retries. Only retry transient failures and set appropriate limits.
 
+## Code Examples
+
+**Retry with exponential backoff and jitter — delay doubles each attempt with random variation to prevent thundering herd**
+
+```typescript
+export async function retry<T>(
+  fn: () => Promise<T>,
+  maxAttempts: number,
+  baseDelay: number,
+): Promise<T> {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (attempt === maxAttempts) throw error;
+      const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000;
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+  throw new Error('Unreachable');
+}
+```
+
+
 ## Resources
 
-- [Techniques](https://docs.nestjs.com/techniques) — Advanced techniques
+- [HTTP Module](https://docs.nestjs.com/techniques/http-module) — Making HTTP requests with retry capabilities
 
 ---
 

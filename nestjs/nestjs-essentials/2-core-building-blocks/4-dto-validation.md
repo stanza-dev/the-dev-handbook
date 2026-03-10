@@ -131,6 +131,28 @@ When validation fails, NestJS returns:
 
 DTOs define expected data shapes, and class-validator decorators enforce rules. The ValidationPipe validates automatically when enabled globally. This ensures all incoming data is validated before reaching your business logic, improving security and reliability.
 
+## Code Examples
+
+**A DTO with class-validator decorators — when used with ValidationPipe, invalid requests are automatically rejected with 400 Bad Request**
+
+```typescript
+import { IsString, IsEmail, MinLength } from 'class-validator';
+
+export class CreateUserDto {
+  @IsString()
+  @MinLength(2)
+  name: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MinLength(8)
+  password: string;
+}
+```
+
+
 ## Resources
 
 - [Validation Documentation](https://docs.nestjs.com/techniques/validation) — Official guide to request validation with ValidationPipe

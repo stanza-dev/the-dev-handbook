@@ -60,6 +60,24 @@ The framework is **platform-agnostic**, meaning it works with Express (default) 
 
 NestJS is a TypeScript-first framework that brings Angular-inspired architecture to Node.js backends. It provides modules, dependency injection, decorators, and a rich ecosystem of official packages. Understanding these fundamentals is essential before diving into controllers and services.
 
+## Code Examples
+
+**A typical NestJS feature module — controllers handle HTTP, providers handle business logic, exports share services with other modules**
+
+```typescript
+import { Module } from '@nestjs/common';
+import { UsersController } from './users.controller';
+import { UsersService } from './users.service';
+
+@Module({
+  controllers: [UsersController],
+  providers: [UsersService],
+  exports: [UsersService],
+})
+export class UsersModule {}
+```
+
+
 ## Resources
 
 - [NestJS Official Documentation](https://docs.nestjs.com/) — The official NestJS documentation homepage
