@@ -5,6 +5,23 @@ source_lesson: "redis-fundamentals-basic-commands"
 
 # Essential Redis Commands
 
+## Introduction
+
+Redis commands are the building blocks of every interaction with the server. This lesson covers the essential commands for storing, retrieving, and managing keys — the foundation you will use throughout every Redis project.
+
+## Key Concepts
+
+- **SET/GET**: Store and retrieve string values by key.
+- **INCR/DECR**: Atomically increment or decrement numeric values — no race conditions.
+- **EXPIRE/TTL**: Set automatic key deletion after a timeout and check remaining time.
+- **KEYS/EXISTS/DEL**: Discover, check, and remove keys from the database.
+
+## Real World Context
+
+These commands power the most common Redis patterns. SET/GET with EX handles session tokens, INCR drives page view counters and rate limiters, and EXPIRE ensures temporary data cleans itself up automatically.
+
+## Deep Dive
+
 Let's learn the fundamental commands that form the foundation of working with Redis.
 
 ## String Commands: SET and GET
@@ -123,6 +140,42 @@ MGET user:1:name user:1:email
 ```
 
 📖 [Redis Commands Reference](https://redis.io/docs/latest/commands/)
+
+## Common Pitfalls
+
+1. **Using KEYS in production** — `KEYS *` scans the entire keyspace and blocks Redis. Use SCAN for production key discovery.
+2. **Forgetting that INCR creates keys** — INCR on a non-existent key creates it with value 0 then increments, which can lead to unexpected counters if your key naming has typos.
+
+## Best Practices
+
+1. **Prefer SET with EX/NX options** — Combine value setting with expiration in a single atomic command instead of separate SET + EXPIRE calls.
+2. **Use MGET/MSET for batch operations** — Reduce network round-trips by getting or setting multiple keys in one command.
+
+## Summary
+
+- SET and GET are the most fundamental Redis commands.
+- INCR provides atomic counters safe for concurrent access.
+- EXPIRE adds automatic TTL-based cleanup to any key.
+- TTL returns remaining seconds (-1 = no expiry, -2 = key missing).
+- Use SCAN instead of KEYS in production environments.
+
+## Code Examples
+
+**Core Redis commands — SET/GET for strings, EX for expiration, INCR for atomic counters**
+
+```bash
+SET user:name "Alice"
+GET user:name
+# "Alice"
+
+SET session:token "abc" EX 3600
+TTL session:token
+# (integer) 3600
+
+INCR page_views
+# (integer) 1
+```
+
 
 ## Resources
 

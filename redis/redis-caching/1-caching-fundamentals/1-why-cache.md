@@ -5,9 +5,21 @@ source_lesson: "redis-caching-why-cache"
 
 # Why Caching Matters
 
+## Introduction
 Caching is one of the most effective ways to improve application performance. By storing frequently accessed data in Redis, you can reduce database load and dramatically speed up response times.
 
-## The Performance Problem
+## Key Concepts
+- **Cache Hit**: When requested data is found in the cache, avoiding a database query.
+- **Cache Miss**: When data is not in the cache, requiring a database lookup.
+- **Hit Rate**: The percentage of requests served from cache — aim for 95%+ for high-traffic applications.
+- **Staleness**: When cached data no longer matches the source of truth in the database.
+
+## Real World Context
+Every high-traffic website relies on caching to stay responsive. Without it, each page view triggers expensive database queries. Redis handles millions of operations per second from RAM, making it the most popular caching solution.
+
+## Deep Dive
+
+### The Performance Problem
 
 Without caching, every request hits your database:
 
@@ -108,7 +120,37 @@ Hit Rate = Cache Hits / (Cache Hits + Cache Misses) × 100%
 
 > "There are only two hard things in Computer Science: cache invalidation and naming things." - Phil Karlton
 
-📖 [Redis Caching Overview](https://redis.io/docs/latest/develop/use/client-side-caching/)
+## Common Pitfalls
+1. **Caching everything** — Not all data benefits from caching. Rapidly changing data or highly personalized content yields low hit rates and wastes memory.
+2. **Ignoring cache hit rate** — Deploying a cache without monitoring hits vs misses means you cannot tell if it is actually helping.
+
+## Best Practices
+1. **Start with the highest-impact data** — Cache the slowest or most frequently accessed queries first for maximum benefit.
+2. **Always set a TTL** — Every cache entry should expire to prevent stale data and unbounded memory growth.
+
+## Summary
+- Caching reduces database load and speeds up responses by 10-1000x
+- Good cache candidates are expensive queries, frequently accessed data, and slowly changing content
+- Cache hit rate is the key metric — aim for 95%+
+- Every caching strategy involves trade-offs between freshness and performance
+
+## Code Examples
+
+**Basic cache pattern — store a database result in Redis with a TTL so future reads skip the database**
+
+```bash
+# Cache a database query result with a 5-minute TTL
+SET cache:user:1001 '{"name":"Alice","email":"a@ex.com"}' EX 300
+
+# Subsequent reads are served from cache (~0.1ms vs ~50ms from DB)
+GET cache:user:1001
+# Output: {"name":"Alice","email":"a@ex.com"}
+```
+
+
+## Resources
+
+- [Redis as a Cache](https://redis.io/docs/latest/develop/) — Official Redis development documentation and use cases
 
 ---
 

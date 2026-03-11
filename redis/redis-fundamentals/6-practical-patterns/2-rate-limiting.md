@@ -5,6 +5,23 @@ source_lesson: "redis-fundamentals-rate-limiting"
 
 # Rate Limiting Pattern
 
+## Introduction
+
+Rate limiting protects your APIs from abuse and overload. Redis is the perfect backend for rate limiters thanks to atomic counters, automatic expiration, and sub-millisecond operation — handling millions of rate-check decisions per second.
+
+## Key Concepts
+
+- **Fixed window**: Count requests in fixed time buckets (e.g., per minute) using INCR + EXPIRE NX.
+- **Sliding window log**: Track exact request timestamps in a sorted set for precise rate limiting.
+- **Token bucket**: Allow bursting while maintaining an average rate, best implemented with Lua scripts.
+- **EXPIRE NX**: Sets TTL only if the key has none — essential for rate limit windows so the counter resets after the period.
+
+## Real World Context
+
+Every public API (GitHub, Stripe, Twitter) uses rate limiting. Without it, a single client can overwhelm your servers. Redis-backed rate limiters return rate limit headers (X-RateLimit-Remaining, X-RateLimit-Reset) to help clients throttle themselves.
+
+## Deep Dive
+
 Rate limiting protects your APIs from abuse. Redis makes it fast and simple to implement.
 
 ## Fixed Window Counter
@@ -126,6 +143,44 @@ TTL rate:api:user:1001:minute        # 45 seconds
 ```
 
 📖 [Rate Limiting Pattern](https://redis.io/docs/latest/develop/use/patterns/)
+
+## Common Pitfalls
+
+1. **Forgetting EXPIRE NX** — Using plain EXPIRE resets the window on every request, making the limit ineffective. NX ensures only the first request starts the timer.
+2. **Race between INCR and EXPIRE** — If your app crashes between INCR and EXPIRE, the counter key lives forever. Use Lua scripts for atomicity in production.
+
+## Best Practices
+
+1. **Return rate limit headers** — Always include X-RateLimit-Limit, X-RateLimit-Remaining, and X-RateLimit-Reset so clients can self-throttle.
+2. **Use tiered limits** — Different limits per user tier (free/pro/enterprise) and per endpoint (/search is more expensive than /users).
+
+## Summary
+
+- Fixed window (INCR + EXPIRE NX) is the simplest rate limiter.
+- Sliding window log (sorted set) provides more accurate rate limiting.
+- EXPIRE NX is critical — it prevents the TTL from resetting on each request.
+- Return rate limit headers to help API consumers manage their usage.
+- Use different limits per endpoint and user tier.
+
+## Code Examples
+
+**Fixed window rate limiting — INCR counts requests atomically, EXPIRE NX ensures the window resets after 60 seconds**
+
+```bash
+# Fixed window rate limit: 100 requests/minute
+INCR rate:api:user:1001:minute
+# Returns: current count
+
+EXPIRE rate:api:user:1001:minute 60 NX
+# NX = only set TTL if not already set
+
+# Check: if count > 100, reject with 429
+```
+
+
+## Resources
+
+- [Rate Limiting with Redis](https://redis.io/docs/latest/develop/use/patterns/) — Redis patterns for rate limiting and throttling
 
 ---
 

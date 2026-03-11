@@ -5,9 +5,20 @@ source_lesson: "redis-caching-request-coalescing"
 
 # Request Coalescing and Deduplication
 
-When a cache miss occurs, multiple simultaneous requests can overwhelm your database. Request coalescing ensures only one request fetches the data.
+## Introduction
+When a cache miss occurs, multiple simultaneous requests can overwhelm your database. Request coalescing ensures only one request fetches the data while others wait for the result.
 
-## The Stampede Problem
+## Key Concepts
+- **Cache Stampede (Thundering Herd)**: When a popular cache key expires and many concurrent requests all query the database simultaneously.
+- **Distributed Lock**: A Redis-based lock (SET NX EX) that ensures only one process performs a cache refresh.
+- **Singleflight**: An application-level pattern that deduplicates concurrent function calls for the same key.
+
+## Real World Context
+Imagine a product page cached for 5 minutes that receives 500 requests per second. When the cache expires, all 500 requests discover the miss simultaneously and hit the database — potentially causing a cascade failure. Coalescing reduces this to exactly 1 database query.
+
+## Deep Dive
+
+### The Stampede Problem
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -153,7 +164,56 @@ data = sf.do("user:1001", lambda: fetch_from_db(1001))
 | Early Refresh | Predictable access patterns |
 | Singleflight | Single-server, high concurrency |
 
+## Common Pitfalls
+1. **Lock TTL too short** — If the database query takes longer than the lock TTL, multiple processes end up fetching simultaneously. Set lock TTL higher than your worst-case query time.
+2. **No fallback on lock timeout** — If the lock holder crashes, waiting processes must eventually fetch the data themselves rather than waiting forever.
+
+## Best Practices
+1. **Combine coalescing with early refresh** — Probabilistic early refresh prevents the stampede from happening in the first place. Coalescing is the safety net.
+2. **Use singleflight for single-server, distributed locks for multi-server** — Singleflight has zero Redis overhead but only works within one process.
+
+## Summary
+- Cache stampede happens when a popular key expires and many requests hit the database simultaneously
+- Distributed locks (SET NX EX) ensure only one process refreshes the cache
+- Probabilistic early refresh prevents stampedes by refreshing before TTL expires
+- Singleflight provides application-level deduplication without Redis overhead
+
 📖 [Distributed Locks](https://redis.io/docs/latest/develop/use/patterns/distributed-locks/)
+
+## Code Examples
+
+**Request coalescing with distributed lock — only one request queries the database on cache miss**
+
+```python
+def get_with_coalescing(r, key, fetch_func, ttl=300):
+    # Try cache first
+    data = r.get(key)
+    if data:
+        return data
+    
+    lock_key = f"{key}:lock"
+    if r.set(lock_key, "1", nx=True, ex=10):
+        try:
+            data = fetch_func()  # Only 1 request fetches
+            r.set(key, data, ex=ttl)
+            return data
+        finally:
+            r.delete(lock_key)
+    else:
+        # Another request is fetching — wait and retry
+        import time
+        for _ in range(50):
+            time.sleep(0.1)
+            data = r.get(key)
+            if data:
+                return data
+        return fetch_func()  # Timeout fallback
+```
+
+
+## Resources
+
+- [Distributed Locks](https://redis.io/docs/latest/develop/use/patterns/distributed-locks/) — Redis distributed locking patterns for request coalescing
 
 ---
 

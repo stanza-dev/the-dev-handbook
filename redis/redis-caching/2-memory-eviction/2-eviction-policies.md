@@ -5,9 +5,21 @@ source_lesson: "redis-caching-eviction-policies"
 
 # Eviction Policies
 
-When Redis runs out of memory, it needs to decide which keys to remove. The eviction policy controls this decision.
+## Introduction
+When Redis runs out of memory, it needs to decide which keys to remove. The eviction policy controls this critical decision and directly impacts your cache's effectiveness.
 
-## Available Policies
+## Key Concepts
+- **LRU (Least Recently Used)**: Evicts keys not accessed for the longest time.
+- **LFU (Least Frequently Used)**: Evicts keys accessed the fewest times.
+- **Volatile**: Policies that only evict keys with a TTL set.
+- **Allkeys**: Policies that can evict any key regardless of TTL.
+
+## Real World Context
+Choosing the wrong eviction policy can cripple your cache. For example, using volatile-lru when most keys lack a TTL means Redis cannot evict anything and returns OOM errors. The right policy depends on your data access patterns.
+
+## Deep Dive
+
+### Available Policies
 
 ### noeviction
 
@@ -137,7 +149,40 @@ CONFIG SET maxmemory-policy allkeys-lru
 | Short-lived data is less valuable | volatile-ttl |
 | Popularity matters (hot content) | allkeys-lfu |
 
+## Common Pitfalls
+1. **Using volatile-lru when keys lack TTLs** — If most keys do not have a TTL set, volatile policies cannot evict them, and Redis will return OOM errors on writes.
+2. **Not testing your eviction policy under load** — The difference between LRU and LFU only becomes apparent under real traffic patterns. Test with production-like workloads.
+
+## Best Practices
+1. **Use allkeys-lru as your default** — It works well for most caching scenarios and requires no special key management.
+2. **Switch to allkeys-lfu for skewed access patterns** — When a small percentage of keys receive most of the traffic, LFU keeps those hot keys cached.
+
+## Summary
+- Redis offers 8 eviction policies covering LRU, LFU, random, TTL-based, and no-eviction
+- allkeys-lru is the best default for pure cache workloads
+- allkeys-lfu is better when access frequency varies widely
+- Use volatile policies only when mixing cached and persistent data in the same instance
+
 📖 [Key Eviction](https://redis.io/docs/latest/develop/reference/eviction/)
+
+## Code Examples
+
+**Setting and verifying the eviction policy — allkeys-lfu keeps frequently accessed keys cached**
+
+```bash
+# Set eviction policy
+CONFIG SET maxmemory-policy allkeys-lfu
+
+# Check current policy
+CONFIG GET maxmemory-policy
+# 1) "maxmemory-policy"
+# 2) "allkeys-lfu"
+
+# Monitor evictions in real-time
+INFO stats | grep evicted
+# evicted_keys:0
+```
+
 
 ## Resources
 

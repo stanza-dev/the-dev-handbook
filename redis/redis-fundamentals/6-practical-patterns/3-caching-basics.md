@@ -5,6 +5,23 @@ source_lesson: "redis-fundamentals-caching-basics"
 
 # Caching Patterns
 
+## Introduction
+
+Caching is Redis's most common use case. By storing frequently accessed data in Redis, you reduce database load, lower latency, and handle traffic spikes gracefully. This lesson covers the core caching patterns and strategies every developer should know.
+
+## Key Concepts
+
+- **Cache-aside (lazy loading)**: Application checks cache first, queries database on miss, stores result in cache.
+- **Write-through**: Application writes to both cache and database, keeping them in sync.
+- **Cache invalidation**: Removing or refreshing stale cached data — done via TTL, events, or versioning.
+- **Cache stampede**: When many requests simultaneously miss an expired cache key and flood the database.
+
+## Real World Context
+
+Without caching, a popular API endpoint hitting the database on every request collapses under load. With Redis caching, the same endpoint serves thousands of concurrent users from memory. Netflix, Reddit, and Stack Overflow all use Redis as their primary caching layer.
+
+## Deep Dive
+
 Caching is Redis's most common use case. Let's explore patterns for effective caching.
 
 ## Cache-Aside (Lazy Loading)
@@ -155,6 +172,42 @@ SET cache:data '{"value":"...","expires":1704067200}' EX 400
 5. **Plan for cache failures** - App should work without cache (just slower)
 
 📖 [Caching Patterns](https://redis.io/docs/latest/develop/use/patterns/)
+
+## Common Pitfalls
+
+1. **Caching without TTL** — Cached data without expiration goes stale indefinitely. Always set a reasonable TTL based on how often the underlying data changes.
+2. **Ignoring cache stampede** — When a popular cache key expires, hundreds of simultaneous requests hit the database. Use locking or early expiration to prevent this.
+
+## Best Practices
+
+1. **Start with cache-aside** — It is the simplest, most resilient pattern. The app works without the cache (just slower).
+2. **Set meaningful cache keys** — Include all parameters that affect the result: `cache:api:/products?category=electronics&page=1`.
+
+## Summary
+
+- Cache-aside is the most common pattern: check cache, query DB on miss, store result.
+- Always set TTL to prevent stale data.
+- Use cache key patterns that include query parameters.
+- Prevent cache stampede with locking or staggered TTLs.
+- Monitor cache hit rate to measure effectiveness.
+
+## Code Examples
+
+**Cache-aside (lazy loading) — check cache first, fetch from database on miss, store result with TTL**
+
+```bash
+# Cache-aside pattern
+GET cache:user:1001
+# nil (cache miss)
+
+# App queries database, then caches the result
+SET cache:user:1001 '{"name":"Alice"}' EX 300
+
+# Next request hits cache
+GET cache:user:1001
+# '{"name":"Alice"}' (cache hit)
+```
+
 
 ## Resources
 

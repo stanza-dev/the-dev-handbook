@@ -5,9 +5,20 @@ source_lesson: "redis-caching-invalidation"
 
 # Cache Invalidation Strategies
 
-Cache invalidation is challenging but essential. Here are proven strategies.
+## Introduction
+Cache invalidation is one of the hardest problems in software engineering. Serving stale data frustrates users, but invalidating too aggressively defeats the purpose of caching. Here are proven strategies that balance freshness with performance.
 
-## Strategy 1: Time-Based Invalidation (TTL)
+## Key Concepts
+- **Active Invalidation**: Explicitly deleting cache entries when source data changes.
+- **Version-Based Invalidation**: Including a version number in cache keys so old entries are naturally orphaned.
+- **Event-Driven Invalidation**: Using Pub/Sub or message queues to notify cache consumers of data changes.
+
+## Real World Context
+When a user updates their profile, every page showing their name must reflect the change immediately. Without a clear invalidation strategy, some pages show the old name for minutes or hours — a common source of user complaints.
+
+## Deep Dive
+
+### Strategy 1: Time-Based Invalidation (TTL)
 
 ```redis
 # Let caches expire naturally
@@ -132,7 +143,44 @@ SET cache:data '{"value":"...","soft_ttl":1704067200}' EX 400
 | Version-Based | Medium | Strong | Clean invalidation needed |
 | Event-Driven | High | Strong | Distributed systems |
 
+## Common Pitfalls
+1. **Only using TTL-based invalidation** — For data that changes unpredictably, TTL alone means users see stale data until expiration. Combine with active invalidation for consistency.
+2. **Forgetting related cache keys** — Updating a product affects not just `cache:product:123` but also `cache:products:featured`, search results, and category listings. Map all dependencies.
+
+## Best Practices
+1. **Start with TTL + active DEL** — This simple combination covers most use cases: TTL provides a safety net while DEL handles known mutations.
+2. **Use version-based invalidation for complex dependency graphs** — When a change affects many cache keys, incrementing a version is cleaner than tracking and deleting each one.
+
+## Summary
+- TTL-based invalidation is simplest but allows temporary staleness
+- Active DEL provides strong consistency when you know which keys to invalidate
+- Version-based invalidation avoids explicit deletes by orphaning old keys
+- Event-driven invalidation scales best for distributed systems
+
 📖 [Caching Best Practices](https://redis.io/docs/latest/develop/use/patterns/)
+
+## Code Examples
+
+**Three invalidation strategies — active DEL, version-based key rotation, and Pub/Sub event-driven**
+
+```bash
+# Active invalidation: delete cache when data changes
+DEL cache:user:1001
+DEL cache:user:1001:profile
+
+# Version-based invalidation: increment version
+INCR product:123:version
+# Old key cache:product:123:v5 is orphaned
+# New requests use cache:product:123:v6
+
+# Event-driven invalidation via Pub/Sub
+PUBLISH cache:invalidation '{"type":"product","id":123}'
+```
+
+
+## Resources
+
+- [Caching Best Practices](https://redis.io/docs/latest/develop/use/patterns/) — Official Redis caching patterns and best practices
 
 ---
 

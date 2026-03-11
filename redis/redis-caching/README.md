@@ -8,14 +8,14 @@
 
 | | Section | Lessons |
 |---|---------|---------|
-| 🏗️ | [Caching Architecture Fundamentals](./1-caching-fundamentals/) | 2 lessons |
-| 🧠 | [Memory Management and Eviction](./2-memory-eviction/) | 2 lessons |
-| ⏰ | [TTL Strategies and Cache Invalidation](./3-ttl-invalidation/) | 2 lessons |
-| 💻 | [Client-Side Caching](./4-client-side-caching/) | 2 lessons |
-| 🚄 | [Cache Performance Optimization](./5-cache-performance/) | 2 lessons |
-| 🎓 | [Advanced Caching Patterns](./6-advanced-caching/) | 2 lessons |
+| 🏗️ | [Caching Architecture Fundamentals](./1-caching-fundamentals/) | 3 lessons |
+| 🧠 | [Memory Management and Eviction](./2-memory-eviction/) | 3 lessons |
+| ⏰ | [TTL Strategies and Cache Invalidation](./3-ttl-invalidation/) | 3 lessons |
+| 💻 | [Client-Side Caching](./4-client-side-caching/) | 3 lessons |
+| 🚄 | [Cache Performance Optimization](./5-cache-performance/) | 3 lessons |
+| 🎓 | [Advanced Caching Patterns](./6-advanced-caching/) | 3 lessons |
 
-**12 lessons** · **16 interactive challenges**
+**18 lessons** · **22 interactive challenges**
 
 ## Want the Interactive Experience?
 

@@ -5,6 +5,23 @@ source_lesson: "redis-fundamentals-sets"
 
 # Sets: Unique Collections
 
+## Introduction
+
+Redis Sets are unordered collections of unique strings. They excel at membership testing, deduplication, and mathematical set operations like intersection and union — all in O(1) per element.
+
+## Key Concepts
+
+- **Uniqueness**: Adding the same value twice has no effect — Sets automatically deduplicate.
+- **O(1) membership test**: SISMEMBER checks if an element exists in constant time.
+- **Set operations**: SINTER (intersection), SUNION (union), and SDIFF (difference) combine multiple sets.
+- **Random selection**: SRANDMEMBER and SPOP return random elements for sampling or lottery patterns.
+
+## Real World Context
+
+Sets track unique visitors per page, implement tag systems, model social graph relationships (followers, friends), and check online user status. SINTER finds mutual friends or shared tags between entities.
+
+## Deep Dive
+
 Redis Sets are unordered collections of unique strings. They're perfect for tracking unique items, tags, and performing mathematical set operations.
 
 ## Why Use Sets?
@@ -164,6 +181,43 @@ SCARD online_users
 ```
 
 📖 [Set Commands Documentation](https://redis.io/docs/latest/commands/?group=set)
+
+## Common Pitfalls
+
+1. **Using Sets for ordered data** — Sets have no guaranteed order. Use sorted sets or lists if ordering matters.
+2. **Expecting SMEMBERS to be fast on huge sets** — SMEMBERS returns ALL members (O(n)). For large sets, use SSCAN to iterate incrementally.
+
+## Best Practices
+
+1. **Use SISMEMBER for fast lookups** — O(1) membership checks are ideal for blacklists, whitelists, and feature flags.
+2. **Leverage set operations** — SINTER and SUNION are powerful primitives. Use them to find mutual friends, common tags, or aggregate daily visitor sets into weekly totals.
+
+## Summary
+
+- Sets store unique, unordered string members.
+- SISMEMBER provides O(1) membership testing.
+- SADD returns 0 for duplicates, making it idempotent.
+- SINTER, SUNION, and SDIFF perform mathematical set operations.
+- SRANDMEMBER selects random elements without removing them.
+
+## Code Examples
+
+**Sets enforce uniqueness and support powerful operations — SINTER finds common members across sets**
+
+```bash
+# Track unique visitors
+SADD visitors:today "user:1001" "user:1002" "user:1001"
+SCARD visitors:today
+# (integer) 2  (duplicate ignored)
+
+# Find mutual followers
+SADD user:1:follows "alice" "bob" "charlie"
+SADD user:2:follows "bob" "charlie" "diana"
+SINTER user:1:follows user:2:follows
+# 1) "bob"
+# 2) "charlie"
+```
+
 
 ## Resources
 

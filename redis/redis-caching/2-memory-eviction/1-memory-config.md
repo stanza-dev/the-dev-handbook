@@ -5,9 +5,20 @@ source_lesson: "redis-caching-memory-config"
 
 # Memory Configuration
 
-When using Redis as a cache, you must manage memory carefully. Redis stores everything in RAM, and running out of memory can crash your server.
+## Introduction
+When using Redis as a cache, you must manage memory carefully. Redis stores everything in RAM, and running out of memory can crash your server or trigger unexpected evictions.
 
-## Setting Memory Limits
+## Key Concepts
+- **maxmemory**: The configuration directive that sets the maximum amount of memory Redis will use.
+- **Eviction**: The automatic removal of keys when maxmemory is reached.
+- **MEMORY USAGE**: A command that reports how many bytes a specific key consumes.
+
+## Real World Context
+In production, a Redis cache without a maxmemory limit will grow until the OS kills it (OOM killer). Setting a proper limit and monitoring usage prevents outages and ensures predictable behavior under load.
+
+## Deep Dive
+
+### Setting Memory Limits
 
 ### In redis.conf
 
@@ -134,7 +145,40 @@ SET cache:api:result "{...}" EX 300
 # Prevents cache from growing indefinitely
 ```
 
+## Common Pitfalls
+1. **Not setting maxmemory** — Without a limit, Redis grows until the OS kills it. Always configure maxmemory for cache instances.
+2. **Key names that are too long** — Verbose key names like `application:myapp:database:users:user_id:1001` waste memory. Keep keys concise but readable.
+
+## Best Practices
+1. **Monitor used_memory vs maxmemory** — Set alerts when usage exceeds 80% of the limit so you can take action before eviction pressure builds.
+2. **Use hashes for related fields** — A single hash with multiple fields uses less memory than multiple string keys due to shared key overhead.
+
+## Summary
+- Always set maxmemory for Redis cache instances
+- Use INFO memory and MEMORY USAGE to monitor consumption
+- Hashes are more memory-efficient than multiple string keys for related data
+- MEMORY DOCTOR provides automated diagnostic recommendations
+
 📖 [Redis Memory Optimization](https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/)
+
+## Code Examples
+
+**Configuring and monitoring Redis memory — set limits and inspect per-key usage**
+
+```bash
+# Set maximum memory to 1GB
+CONFIG SET maxmemory 1gb
+
+# Check current memory usage
+INFO memory
+# used_memory_human:512.00M
+# maxmemory_human:1.00G
+
+# Check memory used by a specific key
+MEMORY USAGE cache:user:1001
+# Output: (integer) 156
+```
+
 
 ## Resources
 

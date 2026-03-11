@@ -16,8 +16,8 @@ Explore Sorted Sets for rankings, JSON storage, geospatial data, and bitmaps.
 This section includes **4 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: Getting Top Players
-- 🧩 Multiple Choice: Measuring Distance
+- 🔗 Matching: Geospatial Command Purposes
 - ✏️ Fill in the Blank: JSON Path Query
-- ✏️ Fill in the Blank: Counting Active Users
+- 🧩 Challenge: Bitmap Operations
 
 → [Practice in your IDE](https://stanza.dev/courses/redis-fundamentals)

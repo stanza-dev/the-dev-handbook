@@ -5,6 +5,23 @@ source_lesson: "redis-fundamentals-sorted-sets"
 
 # Sorted Sets: Rankings and Scores
 
+## Introduction
+
+Sorted Sets combine the uniqueness of Sets with a floating-point score for each member, keeping elements automatically sorted by score. They are the definitive data structure for leaderboards, rankings, priority queues, and time-series indices.
+
+## Key Concepts
+
+- **Score-based ordering**: Each member has a numeric score; Redis maintains sort order automatically.
+- **Rank queries**: ZRANK and ZREVRANK return a member's position in the sorted order.
+- **Range queries**: ZRANGE supports rank-based, score-based, and lexicographic ranges.
+- **ZINCRBY**: Atomically increment a member's score — perfect for accumulating points.
+
+## Real World Context
+
+Every game leaderboard, trending content feed, and priority task queue in production likely runs on sorted sets. Time-series indices store events with timestamps as scores for efficient range queries. Rate limiters use sorted sets for sliding window algorithms.
+
+## Deep Dive
+
 Sorted Sets combine the uniqueness of Sets with a score for each member, keeping elements automatically sorted by score. Perfect for leaderboards, priority queues, and time-series data.
 
 ## How Sorted Sets Work
@@ -157,6 +174,44 @@ ZRANGE events 1704067200 1704200000 BYSCORE
 ```
 
 📖 [Sorted Set Commands](https://redis.io/docs/latest/commands/?group=sorted-set)
+
+## Common Pitfalls
+
+1. **Confusing ZRANK with ZREVRANK** — ZRANK returns rank by ascending score (lowest = 0). For "top scores" use ZREVRANK where highest = 0.
+2. **Using ZRANGEBYSCORE instead of ZRANGE BYSCORE** — The old ZRANGEBYSCORE command still works but ZRANGE with BYSCORE is the modern, unified syntax.
+
+## Best Practices
+
+1. **Use ZADD GT for high-score tables** — GT only updates a score if the new value is greater, preventing accidental score decreases.
+2. **Combine ZRANGE REV with LIMIT for pagination** — Fetch top-N results efficiently without loading the entire set.
+
+## Summary
+
+- Sorted Sets maintain members in score order automatically.
+- ZADD adds members with scores; ZINCRBY updates scores atomically.
+- ZRANGE with REV and WITHSCORES is the primary query command.
+- ZREVRANK returns a member's position from the top (highest = 0).
+- Use GT flag with ZADD to only allow score increases.
+
+## Code Examples
+
+**Sorted Set leaderboard — ZADD adds members with scores, ZRANGE REV returns highest first, ZINCRBY updates scores**
+
+```bash
+# Create a leaderboard
+ZADD leaderboard 1500 "alice" 2200 "bob" 3100 "charlie"
+
+# Get top 3 (highest scores first)
+ZRANGE leaderboard 0 2 REV WITHSCORES
+# 1) "charlie"  2) "3100"
+# 3) "bob"      4) "2200"
+# 5) "alice"    6) "1500"
+
+# Increment a player's score
+ZINCRBY leaderboard 500 "alice"
+# "2000"
+```
+
 
 ## Resources
 

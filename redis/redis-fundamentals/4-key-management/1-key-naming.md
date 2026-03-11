@@ -5,6 +5,23 @@ source_lesson: "redis-fundamentals-key-naming"
 
 # Key Naming Conventions
 
+## Introduction
+
+Good key naming is the foundation of a maintainable Redis database. Consistent, hierarchical key names make data easy to discover, organize, and manage at scale.
+
+## Key Concepts
+
+- **Colon separator**: The Redis convention uses colons to create hierarchical namespaces (e.g., user:1001:profile).
+- **Object-type:id:field pattern**: The standard structure for key names gives instant context about what a key stores.
+- **SCAN vs KEYS**: SCAN iterates keys incrementally without blocking; KEYS blocks Redis and is dangerous in production.
+- **Key metadata**: TYPE returns the data structure, EXISTS checks presence, MEMORY USAGE shows bytes consumed.
+
+## Real World Context
+
+In production systems with millions of keys, good naming lets you SCAN for all session keys, identify all cache keys for invalidation, and debug data issues quickly. Bad naming leads to key collisions, confusion about what data a key holds, and difficulty cleaning up stale data.
+
+## Deep Dive
+
 Good key naming is crucial for maintaining organized, scalable Redis databases. Poor naming leads to confusion and makes it hard to manage data.
 
 ## Best Practices
@@ -138,6 +155,43 @@ MEMORY USAGE user:1001
 ```
 
 📖 [Redis Keys Documentation](https://redis.io/docs/latest/commands/?group=generic)
+
+## Common Pitfalls
+
+1. **Inconsistent separators** — Mixing underscores, dots, and colons makes pattern matching with SCAN impossible. Pick colons and stick with them.
+2. **Using KEYS in production** — KEYS * blocks Redis while scanning the entire keyspace. On a database with millions of keys, this can freeze your application for seconds.
+
+## Best Practices
+
+1. **Follow object-type:id:field convention** — user:1001:sessions, cache:api:products:page:1, rate:api:user:1001:minute.
+2. **Keep keys readable but concise** — Long enough to understand at a glance, short enough to not waste memory at scale.
+
+## Summary
+
+- Use colons as namespace separators: object-type:id:field.
+- Never use KEYS in production — use SCAN with MATCH patterns instead.
+- TYPE, EXISTS, and MEMORY USAGE help inspect individual keys.
+- Use meaningful prefixes (cache:, lock:, rate:, queue:) to categorize keys.
+- Keep key length balanced between readability and memory efficiency.
+
+## Code Examples
+
+**Redis key naming conventions — use colons as namespace separators and SCAN instead of KEYS in production**
+
+```bash
+# Good: Colon-separated, hierarchical keys
+SET user:1001:profile '{"name":"Alice"}'
+SET cache:api:users:page:1 '[...]'
+SET rate:api:user:1001:minute 42
+
+# Production-safe key scanning
+SCAN 0 MATCH user:* COUNT 100
+```
+
+
+## Resources
+
+- [Redis Keyspace](https://redis.io/docs/latest/develop/use/keyspace/) — Official guide to Redis key management and naming
 
 ---
 

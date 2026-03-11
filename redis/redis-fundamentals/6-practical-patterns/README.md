@@ -15,7 +15,7 @@ Implement real-world patterns: sessions, rate limiting, counters, and caching.
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Session Expiration
-- ✏️ Fill in the Blank: Atomic Rate Limiting
-- 🧩 Multiple Choice: Cache-Aside Pattern
+- 🧩 Challenge: Rate Limiter Setup
+- 🧩 Challenge: Cache-Aside Pattern Steps
 
 → [Practice in your IDE](https://stanza.dev/courses/redis-fundamentals)

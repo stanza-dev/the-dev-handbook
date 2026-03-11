@@ -11,11 +11,11 @@
 | 🚀 | [Getting Started with Redis](./1-getting-started/) | 3 lessons |
 | 📊 | [Core Data Structures](./2-core-data-structures/) | 4 lessons |
 | 🎯 | [Advanced Data Structures](./3-advanced-data-structures/) | 4 lessons |
-| 🔑 | [Key Management and Expiration](./4-key-management/) | 2 lessons |
-| 💾 | [Persistence and Durability](./5-persistence/) | 2 lessons |
+| 🔑 | [Key Management and Expiration](./4-key-management/) | 3 lessons |
+| 💾 | [Persistence and Durability](./5-persistence/) | 3 lessons |
 | 🛠️ | [Practical Use Cases](./6-practical-patterns/) | 3 lessons |
 
-**18 lessons** · **20 interactive challenges**
+**20 lessons** · **23 interactive challenges**
 
 ## Want the Interactive Experience?
 

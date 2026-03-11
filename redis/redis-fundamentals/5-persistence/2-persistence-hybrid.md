@@ -5,6 +5,23 @@ source_lesson: "redis-fundamentals-persistence-hybrid"
 
 # Hybrid Persistence and Backups
 
+## Introduction
+
+For production systems that need both fast recovery and strong durability, combining RDB and AOF provides the best of both worlds. This lesson covers how to configure hybrid persistence, manage AOF rewriting, and implement backup strategies.
+
+## Key Concepts
+
+- **Hybrid persistence**: Running RDB and AOF simultaneously — RDB for fast backup/restore, AOF for minimal data loss.
+- **AOF rewriting**: BGREWRITEAOF compacts the AOF by replacing the command log with the current dataset state.
+- **Startup priority**: When both are enabled, Redis loads from AOF on restart because it is more complete.
+- **Copy-on-write**: Redis uses OS copy-on-write during BGSAVE, making it safe to copy RDB files while Redis is running.
+
+## Real World Context
+
+Production Redis deployments at companies like GitHub and Instagram use hybrid persistence. The RDB file provides a compact, easy-to-transfer backup for disaster recovery, while AOF ensures that the gap between the last RDB and a crash loses at most one second of data.
+
+## Deep Dive
+
 For production systems, combining RDB and AOF provides the best of both worlds.
 
 ## RDB + AOF (Recommended)
@@ -142,6 +159,44 @@ redis-check-aof --fix /var/lib/redis/appendonly.aof
 | Financial data | AOF with fsync always |
 
 📖 [Persistence FAQ](https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/)
+
+## Common Pitfalls
+
+1. **Not monitoring AOF file size** — Without auto-rewrite, AOF files grow continuously and slow down restarts. Ensure auto-aof-rewrite-percentage and auto-aof-rewrite-min-size are configured.
+2. **Assuming backups are valid** — An RDB file could be corrupted. Periodically test recovery by restoring backups to a test instance.
+
+## Best Practices
+
+1. **Automate RDB backups with BGSAVE + cp** — Schedule regular BGSAVE and copy the dump.rdb to external storage for disaster recovery.
+2. **Keep auto-rewrite thresholds reasonable** — 100% growth trigger and 64MB minimum size prevents excessive rewrites on small datasets.
+
+## Summary
+
+- Enable both RDB and AOF for production persistence.
+- Redis loads from AOF on startup when both are enabled.
+- BGREWRITEAOF compacts AOF files to prevent unbounded growth.
+- RDB files are safe to copy while Redis is running (copy-on-write).
+- Test backup recovery regularly — untested backups are not backups.
+
+## Code Examples
+
+**Configuring RDB + AOF hybrid persistence — the recommended production setup for maximum durability**
+
+```bash
+# Enable hybrid persistence in redis.conf
+save 900 1
+save 300 10
+appendonly yes
+appendfsync everysec
+
+# Check persistence status
+redis-cli INFO persistence | grep -E 'rdb_last_bgsave|aof_enabled'
+```
+
+
+## Resources
+
+- [Redis Persistence FAQ](https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/) — Frequently asked questions about Redis persistence
 
 ---
 

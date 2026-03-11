@@ -5,9 +5,20 @@ source_lesson: "redis-caching-client-side-impl"
 
 # Implementing Client-Side Caching
 
-Let's see how to enable client-side caching in different programming languages.
+## Introduction
+Most modern Redis client libraries provide built-in support for client-side caching. Enabling it typically requires a RESP3 connection and a one-line configuration change.
 
-## Python (redis-py)
+## Key Concepts
+- **RESP3 Connection**: The protocol version that supports push messages for invalidation.
+- **Cache Configuration**: Client libraries expose options for local TTL, max entries, and eviction policy.
+- **Transparent Caching**: Once enabled, GET/HGET commands are automatically served from local cache on repeat reads.
+
+## Real World Context
+Adding client-side caching to an existing application often requires only a configuration change — no code logic changes needed. This makes it one of the highest-ROI optimizations available for read-heavy services.
+
+## Deep Dive
+
+### Python (redis-py)
 
 Requires redis-py v5.1.0+ and Redis 7.4+:
 
@@ -161,7 +172,44 @@ Only certain read commands are cached:
 
 Write commands and special commands are not cached.
 
+## Common Pitfalls
+1. **Forgetting RESP3** — Client-side caching silently does nothing without RESP3. Always verify with CLIENT TRACKINGINFO.
+2. **Assuming all commands are cached** — Only read commands (GET, HGET, MGET, etc.) use the local cache. Write commands always go to the server.
+
+## Best Practices
+1. **Verify caching is active with MONITOR** — If the same GET appears twice in MONITOR output, client-side caching is not working.
+2. **Set appropriate local TTL** — Even with server invalidation, a local TTL provides defense against missed invalidation messages.
+
+## Summary
+- Enable client-side caching with protocol=3 and a cache config in your client library
+- Python, Node.js, and Java all have built-in support in recent versions
+- Verify with redis-cli MONITOR: cached reads should not appear on repeated access
+- Only read commands (GET, HGET, MGET) are cached locally
+
 📖 [Client-Side Caching Reference](https://redis.io/docs/latest/develop/reference/client-side-caching/)
+
+## Code Examples
+
+**Node.js client-side caching with node-redis — RESP3 connection with LRU local cache**
+
+```javascript
+import { createClient } from 'redis';
+
+const client = createClient({
+  socket: { host: 'localhost', port: 6379 },
+  RESP: 3,  // RESP3 required for tracking
+  clientSideCache: {
+    ttl: 0,              // 0 = no local expiration
+    maxEntries: 10000,   // limit local cache size
+    evictPolicy: 'LRU'   // local eviction: LRU or FIFO
+  }
+});
+
+await client.connect();
+const val1 = await client.get('key'); // from Redis
+const val2 = await client.get('key'); // from local cache!
+```
+
 
 ## Resources
 

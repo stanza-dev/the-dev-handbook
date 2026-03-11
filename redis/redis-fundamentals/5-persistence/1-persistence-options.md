@@ -5,6 +5,23 @@ source_lesson: "redis-fundamentals-persistence-options"
 
 # Understanding Redis Persistence
 
+## Introduction
+
+Redis stores data in memory for speed, but without persistence configuration, all data is lost on restart. Understanding RDB snapshots and AOF logging lets you choose the right durability guarantee for each use case.
+
+## Key Concepts
+
+- **RDB (Redis Database)**: Creates point-in-time snapshots saved as a compact binary file. Fast recovery but may lose data between snapshots.
+- **AOF (Append Only File)**: Logs every write operation. Slower recovery (replays commands) but minimal data loss.
+- **BGSAVE**: Creates an RDB snapshot in a background fork without blocking Redis.
+- **appendfsync**: Controls how often AOF data is flushed to disk — always, everysec, or no.
+
+## Real World Context
+
+A session cache might use no persistence at all (data is disposable). A shopping cart needs at least RDB (lose a few minutes is acceptable). A financial ledger needs AOF with fsync always (zero data loss). Choosing the right option balances performance against durability requirements.
+
+## Deep Dive
+
 Redis stores data in memory for speed, but offers persistence options to survive restarts. Understanding these options is crucial for choosing the right durability guarantees.
 
 ## Why Persistence Matters
@@ -143,6 +160,43 @@ appendfsync no        # Let OS decide (fastest, risky)
 - Slightly slower for writes (depending on fsync policy)
 
 📖 [Redis Persistence](https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/)
+
+## Common Pitfalls
+
+1. **Assuming Redis persists by default** — Some installations disable persistence. Always verify with INFO persistence that your chosen method is active.
+2. **Using SAVE in production** — SAVE blocks Redis for the entire duration of the snapshot. Always use BGSAVE for non-blocking snapshots.
+
+## Best Practices
+
+1. **Use RDB + AOF together** — RDB provides fast restarts and compact backups; AOF fills the durability gap between snapshots.
+2. **Set appendfsync to everysec** — This is the recommended default, losing at most one second of data while maintaining good performance.
+
+## Summary
+
+- RDB creates periodic snapshots; AOF logs every write.
+- BGSAVE creates non-blocking RDB snapshots in a fork.
+- AOF with everysec loses at most 1 second of data on crash.
+- RDB + AOF together provides the best of both worlds.
+- Redis loads from AOF on startup when both are enabled (AOF is more complete).
+
+## Code Examples
+
+**The two persistence mechanisms — BGSAVE creates RDB snapshots, AOF logs every write for maximum durability**
+
+```bash
+# RDB: Create a background snapshot
+BGSAVE
+
+# AOF: Enable in redis.conf
+# appendonly yes
+# appendfsync everysec
+
+# Check persistence status
+INFO persistence
+# rdb_last_bgsave_status:ok
+# aof_enabled:1
+```
+
 
 ## Resources
 

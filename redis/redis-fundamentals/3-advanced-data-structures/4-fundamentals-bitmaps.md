@@ -5,6 +5,23 @@ source_lesson: "redis-fundamentals-bitmaps"
 
 # Bitmaps: Efficient Binary Data
 
+## Introduction
+
+Bitmaps are Redis strings treated as arrays of bits, enabling extremely memory-efficient tracking of binary states across millions of items. Where a Set of user IDs might use megabytes, a bitmap achieves the same tracking in kilobytes.
+
+## Key Concepts
+
+- **SETBIT/GETBIT**: Set or read a single bit at a given offset (position).
+- **BITCOUNT**: Count the number of bits set to 1 — perfect for counting active users.
+- **BITOP**: Perform AND, OR, XOR, NOT across multiple bitmaps to combine datasets.
+- **Memory efficiency**: 1 million users tracked in a bitmap uses only 125 KB vs 8 MB in a Set.
+
+## Real World Context
+
+Bitmaps power daily/weekly/monthly active user (DAU/WAU/MAU) analytics, feature flag systems, user retention analysis (BITOP AND across days), and bloom-filter-like duplicate detection. Any binary per-user state is a bitmap candidate.
+
+## Deep Dive
+
 Bitmaps are not a separate data type - they're strings treated as arrays of bits. They're incredibly memory-efficient for tracking binary states across millions of items.
 
 ## Why Bitmaps?
@@ -168,6 +185,40 @@ Users    Set (IDs)    Bitmap      Savings
 - Use Roaring Bitmaps for sparse data
 
 📖 [Bitmaps Documentation](https://redis.io/docs/latest/develop/data-types/bitmaps/)
+
+## Common Pitfalls
+
+1. **Sparse bitmaps waste memory** — If your user IDs are 1 and 1,000,000,000, the bitmap allocates space for all bits in between. Use Sets or Roaring Bitmaps for sparse data.
+2. **Confusing byte range with bit range in BITCOUNT** — BITCOUNT's optional range parameters operate on bytes, not bits. BITCOUNT key 0 0 counts bits in the first byte only.
+
+## Best Practices
+
+1. **Use sequential IDs as offsets** — Bitmaps are most efficient when IDs are dense and sequential. Map user IDs to compact offsets if needed.
+2. **Combine daily bitmaps with BITOP** — OR for "active any day this week" (WAU), AND for "active every day this week" (retention).
+
+## Summary
+
+- Bitmaps are strings treated as bit arrays — 64x more memory efficient than Sets for binary tracking.
+- SETBIT marks a user; BITCOUNT counts how many are marked.
+- BITOP AND/OR/XOR/NOT combines multiple bitmaps for retention and engagement analysis.
+- Maximum offset is 2^32-1 (about 4 billion).
+
+## Code Examples
+
+**Bitmaps for analytics — SETBIT marks users, BITCOUNT counts them, BITOP AND finds users active on multiple days**
+
+```bash
+# Track daily active users (1 bit per user)
+SETBIT active:2024-01-15 1001 1
+SETBIT active:2024-01-15 1002 1
+BITCOUNT active:2024-01-15
+# (integer) 2
+
+# Users active on BOTH days (AND)
+BITOP AND active:both active:day1 active:day2
+BITCOUNT active:both
+```
+
 
 ## Resources
 

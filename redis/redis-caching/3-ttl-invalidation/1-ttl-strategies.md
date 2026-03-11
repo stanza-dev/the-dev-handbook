@@ -5,9 +5,20 @@ source_lesson: "redis-caching-ttl-strategies"
 
 # TTL Strategies
 
-Choosing the right TTL (Time-To-Live) is crucial. Too short wastes cache benefits; too long serves stale data.
+## Introduction
+Choosing the right TTL (Time-To-Live) is crucial. Too short wastes cache benefits; too long serves stale data. A well-tuned TTL strategy balances freshness with performance.
 
-## Factors Affecting TTL Choice
+## Key Concepts
+- **TTL (Time-To-Live)**: The duration a cached entry remains valid before Redis automatically deletes it.
+- **Jitter**: Random variation added to TTLs to prevent simultaneous expiration of many keys.
+- **Soft Expiry**: A secondary threshold before the actual TTL where background refresh is triggered.
+
+## Real World Context
+An e-commerce site caching product prices needs short TTLs (minutes) to reflect frequent changes, while its category list can use long TTLs (hours) since categories rarely change. Getting these wrong means either stale prices or unnecessary database load.
+
+## Deep Dive
+
+### Factors Affecting TTL Choice
 
 1. **Data volatility**: How often does the source data change?
 2. **Staleness tolerance**: How much delay is acceptable?
@@ -122,7 +133,43 @@ SET cache:data '{"value":"...","expires_at":1704067200}' EX 310
 # If close to expiration, trigger background refresh
 ```
 
+## Common Pitfalls
+1. **Using the same TTL for all data** — Static configuration data and real-time stock prices need wildly different TTLs. Categorize data by volatility.
+2. **Forgetting TTL jitter** — Without jitter, batch-cached data expires simultaneously, causing a thundering herd of database queries.
+
+## Best Practices
+1. **Add 10% jitter to all TTLs** — This simple technique prevents cache stampedes with minimal code.
+2. **Use sliding TTLs for sessions** — Reset the TTL on each access so active sessions stay alive while idle ones expire.
+
+## Summary
+- Match TTL to data volatility: seconds for dynamic, hours for static
+- Add jitter to prevent thundering herd on simultaneous expiration
+- Use early/soft expiry to refresh cache before TTL hits zero
+- Sliding TTLs work well for session data that resets on activity
+
 📖 [EXPIRE Command](https://redis.io/docs/latest/commands/expire/)
+
+## Code Examples
+
+**Jittered TTL helper — adds ±10% randomness to prevent thousands of keys expiring simultaneously**
+
+```python
+import random
+
+def jittered_ttl(base_ttl, jitter_percent=10):
+    """Add random jitter to prevent thundering herd"""
+    jitter = base_ttl * jitter_percent / 100
+    return int(base_ttl + random.uniform(-jitter, jitter))
+
+# Usage: TTLs spread between 270-330 seconds
+ttl = jittered_ttl(300)  # e.g., 287, 312, 298...
+r.set("cache:product:1", data, ex=ttl)
+```
+
+
+## Resources
+
+- [EXPIRE Command](https://redis.io/docs/latest/commands/expire/) — Official documentation for key expiration
 
 ---
 

@@ -5,6 +5,23 @@ source_lesson: "redis-fundamentals-geospatial"
 
 # Geospatial: Location Data
 
+## Introduction
+
+Redis Geospatial indices store latitude/longitude coordinates and enable fast location-based queries. Built on top of sorted sets, they let you find nearby locations, calculate distances, and build store locators with just a few commands.
+
+## Key Concepts
+
+- **GEOADD**: Stores locations with longitude, latitude, and a member name.
+- **GEOSEARCH**: Finds members within a given radius or bounding box from a point or existing member.
+- **GEODIST**: Calculates the great-circle distance between two stored locations.
+- **Sorted set foundation**: Geospatial indices are internally sorted sets — all sorted set commands work on them too.
+
+## Real World Context
+
+Store locators ("find the nearest coffee shop"), delivery zone validation, ride-sharing driver matching, and proximity-based social features all rely on geospatial queries. Redis handles millions of location lookups per second with sub-millisecond latency.
+
+## Deep Dive
+
 Redis Geospatial indices let you store latitude/longitude coordinates and perform location-based queries. Built on top of Sorted Sets, they're perfect for finding nearby locations.
 
 ## Adding Locations
@@ -138,6 +155,39 @@ DEL temp:customer
 ```
 
 📖 [Geospatial Commands](https://redis.io/docs/latest/commands/?group=geo)
+
+## Common Pitfalls
+
+1. **Swapping longitude and latitude** — GEOADD takes longitude first, then latitude. This is the opposite of Google Maps (lat, lng). Getting it backwards places locations in the wrong hemisphere.
+2. **Expecting exact distances** — GEODIST uses a spherical earth model. For very short distances or near the poles, the approximation error increases slightly.
+
+## Best Practices
+
+1. **Use GEOSEARCH instead of deprecated GEORADIUS** — GEOSEARCH is the modern, more flexible command supporting both radius and box queries.
+2. **Add COUNT to limit results** — Always use COUNT when searching to avoid returning thousands of results in dense areas.
+
+## Summary
+
+- GEOADD stores locations as longitude, latitude, name (longitude first!).
+- GEOSEARCH finds nearby members by radius or bounding box.
+- GEODIST calculates distance between two stored members.
+- Results can be sorted by distance (ASC) and include coordinates (WITHCOORD).
+- Geospatial indices are sorted sets internally, so ZREM removes locations.
+
+## Code Examples
+
+**Geospatial indexing — GEOADD stores coordinates, GEOSEARCH finds nearby locations sorted by distance**
+
+```bash
+# Add store locations (longitude, latitude, name)
+GEOADD stores -122.4194 37.7749 "store:sf" -118.2437 34.0522 "store:la"
+
+# Find stores within 600km of San Francisco
+GEOSEARCH stores FROMMEMBER "store:sf" BYRADIUS 600 km WITHDIST ASC
+# 1) "store:sf"  "0.0000"
+# 2) "store:la"  "559.1195"
+```
+
 
 ## Resources
 

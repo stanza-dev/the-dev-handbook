@@ -13,11 +13,12 @@ Master Redis's fundamental data types: Strings, Hashes, Lists, and Sets.
 
 ## Practice Challenges
 
-This section includes **4 interactive challenges** available on Stanza:
+This section includes **5 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: Getting All Hash Fields
 - 🧩 Multiple Choice: Building a Queue
 - 🧩 Challenge: Set Uniqueness
 - 🧩 Multiple Choice: Set Intersection
+- 🔗 Matching: Data Type Use Cases
 
 → [Practice in your IDE](https://stanza.dev/courses/redis-fundamentals)

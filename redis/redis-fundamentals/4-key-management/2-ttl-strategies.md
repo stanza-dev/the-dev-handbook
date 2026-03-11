@@ -5,6 +5,23 @@ source_lesson: "redis-fundamentals-ttl-strategies"
 
 # TTL and Expiration Strategies
 
+## Introduction
+
+Time-To-Live (TTL) makes keys self-cleaning — after a specified duration, Redis automatically deletes them. Mastering TTL strategies is essential for caching, session management, rate limiting, and any pattern involving temporary data.
+
+## Key Concepts
+
+- **EXPIRE/PEXPIRE**: Set timeout in seconds or milliseconds on an existing key.
+- **TTL/PTTL**: Check remaining time; returns -1 (no TTL) or -2 (key gone).
+- **PERSIST**: Remove expiration, making a key permanent again.
+- **Conditional flags**: NX (only if no TTL), XX (only if TTL exists), GT (only if new TTL is greater), LT (only if new TTL is less).
+
+## Real World Context
+
+TTL drives every caching layer (5 minutes for API responses), every session store (30-minute sliding window), and every rate limiter (60-second counters). Without TTL, temporary data accumulates until Redis runs out of memory.
+
+## Deep Dive
+
 Time-To-Live (TTL) is a powerful feature that automatically removes keys after a specified time. Essential for caching, sessions, and temporary data.
 
 ## Setting Expiration
@@ -140,6 +157,44 @@ HPERSIST user:1001 FIELDS 1 temp_token
 ```
 
 📖 [EXPIRE Command](https://redis.io/docs/latest/commands/expire/)
+
+## Common Pitfalls
+
+1. **Separate SET and EXPIRE calls** — If your app crashes between SET and EXPIRE, the key lives forever. Use SET with EX in a single command.
+2. **Forgetting EXPIRE NX for rate limiters** — Without NX, each request resets the TTL window. Use `EXPIRE key 60 NX` so only the first request sets the timer.
+
+## Best Practices
+
+1. **Use sliding TTL for sessions** — Call EXPIRE on every request to reset the timeout, creating an activity-based session window.
+2. **Use SET with EX or PX** — Atomic set-with-expiration prevents orphaned keys from a crash between SET and EXPIRE.
+
+## Summary
+
+- EXPIRE sets automatic key deletion after N seconds.
+- TTL returns remaining time (-1 = permanent, -2 = deleted).
+- Use SET with EX for atomic set-and-expire.
+- Use EXPIRE NX for rate limiters (only set TTL on first request).
+- Redis 8 adds hash field expiration with HEXPIRE and HGETEX.
+
+## Code Examples
+
+**TTL lifecycle — set expiration with EX or EXPIRE, check with TTL, remove with PERSIST**
+
+```bash
+# Set expiration when creating a key
+SET cache:data "value" EX 300
+
+# Add expiration to an existing key
+EXPIRE session:abc123 1800
+
+# Check remaining TTL
+TTL session:abc123
+# (integer) 1798
+
+# Remove expiration (make permanent)
+PERSIST session:abc123
+```
+
 
 ## Resources
 

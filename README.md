@@ -163,9 +163,9 @@ Maintained by [Stanza](https://stanza.dev) — Learn coding faster right in your
 
 ### 🔴 Redis
 
-- ⚡ [High-Performance Caching Strategies](./redis/redis-caching/) — 12 lessons
+- ⚡ [High-Performance Caching Strategies](./redis/redis-caching/) — 18 lessons
 - 🏗️ [Clustering and High Availability Architecture](./redis/redis-clustering/) — 12 lessons
-- 🔴 [In-Memory Data Store Fundamentals](./redis/redis-fundamentals/) — 18 lessons
+- 🔴 [In-Memory Data Store Fundamentals](./redis/redis-fundamentals/) — 20 lessons
 - 📡 [Real-Time Messaging and Event Streaming](./redis/redis-messaging/) — 12 lessons
 - 📊 [Probabilistic Data Structures and Analytics](./redis/redis-probabilistic/) — 8 lessons
 - 📜 [Scripting, Transactions, and Programmability](./redis/redis-scripting/) — 10 lessons

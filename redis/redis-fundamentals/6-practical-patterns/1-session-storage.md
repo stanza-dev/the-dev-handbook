@@ -5,6 +5,23 @@ source_lesson: "redis-fundamentals-session-storage"
 
 # Session Storage Pattern
 
+## Introduction
+
+Redis is the industry standard for storing web application sessions. Its sub-millisecond access, built-in expiration, and ability to be shared across multiple app servers make it far superior to file-based or in-memory session stores.
+
+## Key Concepts
+
+- **Session as hash**: Store session fields (user_id, role, created_at) as a Redis hash with HSET.
+- **Sliding expiration**: Call EXPIRE on every request to reset the TTL, keeping active sessions alive.
+- **Multi-session tracking**: Use a Set per user to track all their active sessions for "logout everywhere" functionality.
+- **JSON sessions**: Redis JSON allows storing complex nested session data with atomic sub-field updates.
+
+## Real World Context
+
+Every multi-server web application needs shared sessions. Without Redis, sticky sessions or database-backed sessions create scaling bottlenecks. Redis sessions enable horizontal scaling — add more app servers without session affinity.
+
+## Deep Dive
+
 Redis is perfect for storing user sessions. It's fast, supports automatic expiration, and can be shared across multiple application servers.
 
 ## Why Redis for Sessions?
@@ -120,6 +137,45 @@ DEL user:1001:sessions
 5. **Use HTTPS** to protect session cookies in transit
 
 📖 [Redis as Session Store](https://redis.io/docs/latest/develop/use/patterns/)
+
+## Common Pitfalls
+
+1. **Not setting session expiration** — Sessions without TTL accumulate forever, wasting memory. Always set EXPIRE.
+2. **Using predictable session IDs** — Never use sequential or guessable IDs. Generate cryptographically random UUIDs or tokens.
+
+## Best Practices
+
+1. **Use sliding expiration** — Reset TTL on each request so active users stay logged in while idle sessions expire naturally.
+2. **Track sessions per user** — Maintain a Set of active session IDs per user to enable "logout all devices" and detect session theft.
+
+## Summary
+
+- Store sessions as Redis hashes with HSET for field-level access.
+- Use EXPIRE with sliding window to auto-expire inactive sessions.
+- Track all user sessions in a Set for "logout everywhere" support.
+- Redis JSON is an alternative for complex nested session data.
+- Always use cryptographically random session IDs.
+
+## Code Examples
+
+**Basic Redis session lifecycle — create with HSET, set TTL with EXPIRE, refresh on activity, and delete on logout**
+
+```bash
+# Create session with hash + expiration
+HSET sess:a1b2c3d4 user_id 1001 email "alice@example.com" role "admin"
+EXPIRE sess:a1b2c3d4 1800
+
+# Sliding expiration: refresh on each request
+EXPIRE sess:a1b2c3d4 1800
+
+# Logout: destroy session
+DEL sess:a1b2c3d4
+```
+
+
+## Resources
+
+- [Redis Patterns](https://redis.io/docs/latest/develop/use/patterns/) — Common Redis usage patterns including session storage
 
 ---
 
