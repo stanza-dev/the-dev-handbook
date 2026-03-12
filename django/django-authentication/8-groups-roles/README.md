@@ -6,7 +6,7 @@ Organize users into groups and implement role-based access control
 
 ## Lessons
 
-1. [Working with Groups](./1-groups-basics.md)
+1. [Django Groups & Permissions: Role-Based Access Control](./1-groups-basics.md)
 2. [Role-Based Access Control Patterns](./2-rbac-patterns.md)
 3. [Middleware for Access Control](./3-access-control.md)
 

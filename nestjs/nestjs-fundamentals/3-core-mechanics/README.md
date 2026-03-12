@@ -8,7 +8,7 @@ Under the hood of the NestJS runtime.
 
 1. [Lifecycle Events](./1-lifecycle-events.md)
 2. [Testing](./2-fundamentals-testing.md)
-3. [Execution Context](./3-execution-context.md)
+3. [NestJS Execution Context: Guards, Interceptors & Pipes](./3-execution-context.md)
 4. [Platform Agnosticism](./4-platform-agnosticism.md)
 
 ## Practice Challenges

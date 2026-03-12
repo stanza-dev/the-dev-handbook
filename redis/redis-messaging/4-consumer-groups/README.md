@@ -2,19 +2,22 @@
 
 > Part of [Real-Time Messaging and Event Streaming](https://stanza.dev/courses/redis-messaging)
 
-Implement scalable message processing with consumer groups for parallel consumption.
+Scale stream processing with consumer groups for parallel, fault-tolerant message handling.
 
 ## Lessons
 
-1. [Understanding Consumer Groups](./1-consumer-groups.md)
-2. [Handling Consumer Failures](./2-failure-handling.md)
+1. [Introduction to Consumer Groups](./1-groups-intro.md)
+2. [Acknowledging Messages](./2-groups-ack.md)
+3. [Managing Consumer Groups](./3-group-management.md)
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **5 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Consumer Group Delivery
-- 🧩 Multiple Choice: Message Acknowledgment
-- 🧩 Multiple Choice: XCLAIM Purpose
+- ✏️ Fill in the Blank: XREADGROUP New Messages ID
+- 🧩 Multiple Choice: Purpose of XACK
+- ✏️ Fill in the Blank: Acknowledging Stream Messages
+- 🧩 Challenge: Setting Up a Consumer Group
+- 🔗 Matching: XGROUP Management Commands
 
 → [Practice in your IDE](https://stanza.dev/courses/redis-messaging)

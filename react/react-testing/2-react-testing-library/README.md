@@ -6,7 +6,7 @@ Mastering queries, rendering, and the RTL philosophy.
 
 ## Lessons
 
-1. [Queries: Finding Elements](./1-rtl-queries.md)
+1. [React Testing Library Queries: getBy, queryBy, findBy](./1-rtl-queries.md)
 2. [Rendering Components](./2-rtl-render.md)
 3. [User Events](./3-user-events.md)
 

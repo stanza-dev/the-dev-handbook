@@ -1,19 +1,21 @@
-# 🔬 Advanced Lua Scripting Patterns
+# 🔬 Advanced Lua Techniques
 
 > Part of [Scripting, Transactions, and Programmability](https://stanza.dev/courses/redis-scripting)
 
-Master complex Lua patterns for atomic operations, error handling, and debugging.
+Master atomicity, debugging, and script optimization for production use.
 
 ## Lessons
 
 1. [Atomic Read-Modify-Write](./1-atomic-rmw.md)
 2. [Script Flags and Debugging](./2-lua-debug.md)
+3. [Debugging Scripts with LDB and SCRIPT KILL](./3-script-debugging.md)
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Atomic Operations
-- 🧩 Multiple Choice: redis.pcall Usage
+- 🧩 Multiple Choice: Lua vs WATCH for High Contention
+- 🔗 Matching: SCRIPT Subcommands
+- 🧩 Multiple Choice: redis.call vs redis.pcall
 
 → [Practice in your IDE](https://stanza.dev/courses/redis-scripting)

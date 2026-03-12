@@ -8,14 +8,14 @@
 
 | | Section | Lessons |
 |---|---------|---------|
-| 🔒 | [Transactions with MULTI/EXEC](./1-transactions/) | 2 lessons |
-| 👁️ | [Optimistic Locking with WATCH](./2-optimistic-locking/) | 2 lessons |
-| 🚀 | [Pipelining for Performance](./3-pipelining/) | 1 lesson |
-| 🌙 | [Lua Scripting Fundamentals](./4-lua-basics/) | 2 lessons |
-| 🔬 | [Advanced Lua Scripting Patterns](./5-advanced-lua/) | 2 lessons |
-| ⚡ | [Redis Functions (8.0+)](./6-redis-functions/) | 1 lesson |
+| 🔒 | [Transactions with MULTI/EXEC](./1-transactions/) | 3 lessons |
+| 👁️ | [Optimistic Locking Patterns](./2-optimistic-locking/) | 3 lessons |
+| ⚡ | [Pipelining for Performance](./3-pipelining/) | 3 lessons |
+| 🌙 | [Lua Scripting Basics](./4-lua-basics/) | 3 lessons |
+| 🔬 | [Advanced Lua Techniques](./5-advanced-lua/) | 3 lessons |
+| ⚙️ | [Redis Functions](./6-redis-functions/) | 3 lessons |
 
-**10 lessons** · **12 interactive challenges**
+**18 lessons** · **22 interactive challenges**
 
 ## Want the Interactive Experience?
 

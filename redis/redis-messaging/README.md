@@ -8,14 +8,14 @@
 
 | | Section | Lessons |
 |---|---------|---------|
-| 📢 | [Publish/Subscribe Fundamentals](./1-pubsub-fundamentals/) | 2 lessons |
-| ⚡ | [Building Real-Time Features](./2-realtime-features/) | 2 lessons |
-| 🌊 | [Introduction to Streams](./3-streams-intro/) | 2 lessons |
-| 👥 | [Consumer Groups](./4-consumer-groups/) | 2 lessons |
-| 🛡️ | [Stream Reliability and Error Handling](./5-stream-reliability/) | 2 lessons |
-| 🏛️ | [Event Sourcing Patterns](./6-event-patterns/) | 2 lessons |
+| 📢 | [Publish/Subscribe Fundamentals](./1-pubsub-fundamentals/) | 3 lessons |
+| ⚡ | [Real-Time Application Features](./2-realtime-features/) | 3 lessons |
+| 🌊 | [Introduction to Redis Streams](./3-streams-intro/) | 3 lessons |
+| 👥 | [Consumer Groups](./4-consumer-groups/) | 3 lessons |
+| 🛡️ | [Stream Reliability and Error Handling](./5-stream-reliability/) | 3 lessons |
+| 🔄 | [Event-Driven Patterns](./6-event-patterns/) | 3 lessons |
 
-**12 lessons** · **16 interactive challenges**
+**18 lessons** · **28 interactive challenges**
 
 ## Want the Interactive Experience?
 

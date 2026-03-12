@@ -7,7 +7,7 @@
 ## Lessons
 
 1. [Updating JSON with jsonb_set and jsonb_insert](./1-set-insert.md)
-2. [Concatenation and Deletion Operators](./2-concatenation-deletion.md)
+2. [PostgreSQL JSON: Concatenation (||) and Deletion (-) Operators](./2-concatenation-deletion.md)
 3. [Cleaning JSON Data](./3-strip-nulls.md)
 
 ## Practice Challenges

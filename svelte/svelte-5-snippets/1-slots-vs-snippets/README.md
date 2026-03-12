@@ -6,7 +6,7 @@ Understanding why Svelte 5 introduces Snippets and how they differ from Slots.
 
 ## Lessons
 
-1. [Why Svelte 5 Replaced Slots](./1-why-snippets.md)
+1. [Svelte 5 Snippets vs Slots: Why Slots Were Replaced](./1-why-snippets.md)
 2. [Creating and Rendering Snippets](./2-snippet-basics.md)
 3. [The 'children' Prop: Replacing Default Slots](./3-children-prop.md)
 

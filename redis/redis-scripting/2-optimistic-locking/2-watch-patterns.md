@@ -3,132 +3,130 @@ source_course: "redis-scripting"
 source_lesson: "redis-scripting-watch-patterns"
 ---
 
-# WATCH Patterns and Comparison
+# WATCH Patterns and Comparisons
 
-Learn common patterns using WATCH and when to choose alternatives.
+## Introduction
 
-## Inventory Reservation Pattern
+WATCH is versatile but not always the right tool. This lesson covers the most useful WATCH patterns — counter increments, conditional updates, and inventory reservation — and explains when to use WATCH versus Lua scripting.
+
+## Key Concepts
+
+- **Counter increment with floor/ceiling** — read, bound-check, increment; use WATCH to prevent race conditions
+- **Conditional update** — only write if the current value meets a condition
+- **Inventory reservation** — reserve an item only if stock > 0, decrement atomically
+- **WATCH vs Lua** — WATCH retries on conflict; Lua executes atomically and never retries
+
+## Real World Context
+
+An e-commerce site needs to reserve the last item in stock. Multiple users click "Buy" simultaneously. WATCH ensures only one succeeds; the others get a "sold out" response.
+
+## Deep Dive
+
+Inventory reservation pattern:
 
 ```python
-def reserve_inventory(product_id, quantity, user_id):
-    """
-    Reserve inventory for a user.
-    Only succeeds if enough stock available.
-    """
-    stock_key = f'product:{product_id}:stock'
-    reservation_key = f'user:{user_id}:cart:{product_id}'
-    
-    for _ in range(5):
-        try:
-            r.watch(stock_key)
-            
-            stock = int(r.get(stock_key) or 0)
-            existing = int(r.get(reservation_key) or 0)
-            
-            if stock < quantity:
-                r.unwatch()
-                return {'error': 'Insufficient stock'}
-            
-            pipe = r.pipeline()
-            pipe.multi()
-            pipe.decrby(stock_key, quantity)
-            pipe.set(reservation_key, existing + quantity, ex=900)  # 15min
-            pipe.execute()
-            
-            return {'reserved': quantity, 'expires_in': 900}
-            
-        except redis.WatchError:
-            continue
-    
-    return {'error': 'Could not complete reservation'}
+def reserve_inventory(r, product_id, quantity):
+    key = f"inventory:{product_id}"
+    for attempt in range(5):
+        with r.pipeline() as pipe:
+            try:
+                pipe.watch(key)
+                current = int(pipe.get(key) or 0)
+                if current < quantity:
+                    pipe.unwatch()
+                    return False  # Insufficient stock
+                pipe.multi()
+                pipe.decrby(key, quantity)
+                pipe.execute()
+                return True
+            except redis.WatchError:
+                continue
+    return False  # Exhausted retries
 ```
 
-## Compare-and-Swap (CAS)
+The equivalent Lua script (simpler under high contention):
+
+```lua
+-- reserve_inventory.lua
+-- KEYS[1] = inventory key, ARGV[1] = quantity
+local current = tonumber(redis.call('GET', KEYS[1])) or 0
+local qty = tonumber(ARGV[1])
+if current < qty then
+    return 0
+end
+redis.call('DECRBY', KEYS[1], qty)
+return 1
+```
+
+The Lua version runs atomically in a single EVAL call — no retry loop needed.
+
+When to choose WATCH:
+- The conditional logic depends on data that cannot be computed server-side
+- You need to read from the database or external service before deciding
+- Low-to-moderate contention where retries are rare
+
+When to choose Lua:
+- High contention where retries would be frequent
+- All logic can be expressed in Lua with Redis calls
+- You want simpler client code
+
+## Common Pitfalls
+
+1. **Using WATCH for non-contested keys.** If only one client writes a key, WATCH adds overhead with no benefit. Use a simple SET or INCR instead.
+2. **Forgetting to handle the "sold out" case** in the retry loop. After exhausting retries, return a meaningful error, not a silent failure.
+3. **Mixing WATCH and Lua.** Do not use WATCH inside a Lua script — Lua scripts are already atomic and WATCH has no effect inside them.
+
+## Best Practices
+
+1. Prefer Lua for inventory/counter patterns — it is simpler and scales better under contention.
+2. Use WATCH when the decision depends on external data that Redis cannot compute.
+3. Always set a maximum retry count and surface a conflict error to the caller when exhausted.
+
+## Summary
+
+- WATCH patterns: conditional update, counter with bounds, inventory reservation
+- Lua scripts handle the same patterns atomically without client-side retry loops
+- Choose WATCH when external data is needed for the decision
+- Choose Lua when all logic can run server-side and contention is high
+- Always cap retry loops to prevent infinite spinning
+
+## Code Examples
+
+**Inventory reservation using WATCH retry loop**
 
 ```python
-def compare_and_swap(key, expected, new_value):
-    """Set key to new_value only if current value equals expected"""
-    for _ in range(5):
-        try:
-            r.watch(key)
-            current = r.get(key)
-            
-            if current != expected:
-                r.unwatch()
-                return False
-            
-            pipe = r.pipeline()
-            pipe.multi()
-            pipe.set(key, new_value)
-            pipe.execute()
-            return True
-            
-        except redis.WatchError:
-            continue
-    
+def reserve_inventory(r, product_id, quantity):
+    key = f"inventory:{product_id}"
+    for attempt in range(5):
+        with r.pipeline() as pipe:
+            try:
+                pipe.watch(key)
+                current = int(pipe.get(key) or 0)
+                if current < quantity:
+                    pipe.unwatch()
+                    return False
+                pipe.multi()
+                pipe.decrby(key, quantity)
+                pipe.execute()
+                return True
+            except redis.WatchError:
+                continue
     return False
 ```
 
-## WATCH vs Lua Scripts
+**Same pattern as a Lua script (no retry needed)**
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                WATCH               Lua Script               │
-├─────────────────────────────────────────────────────────────┤
-│ Retries on contention     │  No retries needed (atomic)    │
-│ Multiple round trips      │  Single round trip             │
-│ Logic in client           │  Logic on server               │
-│ Easier debugging          │  Harder debugging              │
-│ No new language           │  Requires Lua                  │
-│ Works everywhere          │  Script loading required       │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Same Logic: WATCH vs Lua
-
-```python
-# WATCH version
-def increment_if_less_than_watch(key, max_value):
-    for _ in range(5):
-        try:
-            r.watch(key)
-            val = int(r.get(key) or 0)
-            if val >= max_value:
-                r.unwatch()
-                return None
-            pipe = r.pipeline()
-            pipe.multi()
-            pipe.incr(key)
-            return pipe.execute()[0]
-        except redis.WatchError:
-            continue
-    return None
-
-# Lua version - no retries needed
-LUA_SCRIPT = """
-local val = tonumber(redis.call('GET', KEYS[1])) or 0
-if val >= tonumber(ARGV[1]) then
-    return nil
+```lua
+-- KEYS[1] = inventory key, ARGV[1] = quantity
+local current = tonumber(redis.call('GET', KEYS[1])) or 0
+local qty = tonumber(ARGV[1])
+if current < qty then
+    return 0
 end
-return redis.call('INCR', KEYS[1])
-"""
-
-def increment_if_less_than_lua(key, max_value):
-    return r.eval(LUA_SCRIPT, 1, key, max_value)
+redis.call('DECRBY', KEYS[1], qty)
+return 1
 ```
 
-## When to Use Each
-
-| Scenario | Best Choice |
-|----------|-------------|
-| Low contention (< 10 writes/sec) | WATCH |
-| High contention | Lua script |
-| Complex multi-key logic | Lua script |
-| Simple check-and-set | WATCH |
-| Need to read during transaction | Lua script |
-| Don't want Lua dependency | WATCH |
-
-📖 [Transactions](https://redis.io/docs/latest/develop/interact/transactions/)
 
 ## Resources
 

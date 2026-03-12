@@ -5,156 +5,107 @@ source_lesson: "redis-scripting-lua-intro"
 
 # Introduction to Lua Scripts
 
-Lua scripting allows you to run complex logic atomically on the Redis server, with access to multiple keys and custom computations.
+## Introduction
 
-## Why Lua Scripts?
+Lua scripting allows you to run complex logic atomically on the Redis server. Unlike MULTI/EXEC which just queues commands, a Lua script can read data, branch on conditions, loop, and write — all in one uninterruptible operation. This is the most powerful form of atomicity Redis offers.
 
-1. **True Atomicity**: Entire script runs without interruption
-2. **Reduced Network**: One round-trip for complex operations
-3. **Server-Side Logic**: Compute on data without transferring it
-4. **Conditional Operations**: Read, decide, write atomically
+## Key Concepts
 
-## EVAL Command
+- **EVAL** — execute a Lua script inline: `EVAL script numkeys [key...] [arg...]`
+- **KEYS array** — Lua 1-indexed array of Redis keys passed to the script; access via `KEYS[1]`, `KEYS[2]`
+- **ARGV array** — 1-indexed array of additional arguments; access via `ARGV[1]`, `ARGV[2]`
+- **redis.call()** — calls a Redis command from Lua; raises a Lua error if the command fails
+- **Atomic execution** — no other Redis commands run while the script executes
 
-```redis
-EVAL "return 'Hello, Lua!'" 0
-# Returns: "Hello, Lua!"
+## Real World Context
 
-# Syntax:
-# EVAL script numkeys [key ...] [arg ...]
+You need to implement a "claim once" feature: the first user to claim a reward gets it; everyone else is rejected. This requires atomically checking and setting a flag. A single Lua script does this perfectly — no WATCH retry loop needed.
+
+## Deep Dive
+
+The EVAL syntax:
+
+```bash
+EVAL "return redis.call('SET', KEYS[1], ARGV[1])" 1 mykey myvalue
+#     ^script                                       ^ numkeys ^ key ^ arg
 ```
 
-## Accessing Keys and Arguments
+`numkeys` tells Redis how many of the following tokens are keys (KEYS) vs. arguments (ARGV). This matters for Redis Cluster, which must route the command to the correct node.
 
-```redis
-# KEYS array: keys passed to script
-# ARGV array: additional arguments
-
-EVAL "return {KEYS[1], KEYS[2], ARGV[1], ARGV[2]}" 2 key1 key2 arg1 arg2
-# Returns: ["key1", "key2", "arg1", "arg2"]
-```
-
-## Calling Redis Commands
-
-Use `redis.call()` to execute Redis commands:
+A more realistic example — claim once:
 
 ```lua
--- Set a key and return its value
+-- KEYS[1] = reward key, ARGV[1] = user_id
+local already_claimed = redis.call('GET', KEYS[1])
+if already_claimed then
+    return 0  -- already claimed
+end
 redis.call('SET', KEYS[1], ARGV[1])
-return redis.call('GET', KEYS[1])
+return 1  -- claimed successfully
 ```
 
-```redis
-EVAL "redis.call('SET', KEYS[1], ARGV[1]); return redis.call('GET', KEYS[1])" 1 mykey myvalue
-# Returns: "myvalue"
+Execute from the CLI:
+
+```bash
+EVAL "local c = redis.call('GET', KEYS[1]); if c then return 0 end; redis.call('SET', KEYS[1], ARGV[1]); return 1" 1 reward:summer-promo user:42
 ```
 
-## redis.call vs redis.pcall
+For multi-line scripts, use a file:
+
+```bash
+redis-cli --eval claim_once.lua reward:summer-promo , user:42
+# Note: comma separates KEYS from ARGV in redis-cli --eval syntax
+```
+
+## Common Pitfalls
+
+1. **Forgetting numkeys.** If you pass `EVAL script 0 myarg`, `myarg` is an ARGV (not a KEYS entry). Getting numkeys wrong causes cluster routing errors.
+2. **Using global variables.** Lua scripts in Redis must be stateless between calls. Global variable state does not persist across EVAL calls.
+3. **Accessing KEYS[0] instead of KEYS[1].** Lua uses 1-based indexing. `KEYS[0]` is nil, not the first key.
+
+## Best Practices
+
+1. Always declare all accessed Redis keys in the KEYS array, even when not strictly required (for cluster compatibility).
+2. Keep scripts short and focused — long scripts block Redis for all other clients.
+3. Cache scripts with SCRIPT LOAD and use EVALSHA in production to avoid sending the full script text on every call.
+
+## Summary
+
+- EVAL executes Lua scripts atomically on the Redis server
+- KEYS[1..n] are the Redis keys; ARGV[1..m] are the arguments (both 1-indexed)
+- numkeys separates KEYS from ARGV in the EVAL command
+- redis.call() raises on error; redis.pcall() returns an error table
+- Scripts block all other commands while running — keep them fast
+
+## Code Examples
+
+**Basic EVAL usage and claim-once example**
+
+```bash
+# Basic EVAL syntax
+EVAL "return redis.call('SET', KEYS[1], ARGV[1])" 1 mykey myvalue
+
+# Claim-once script
+EVAL "local c = redis.call('GET', KEYS[1]); if c then return 0 end; redis.call('SET', KEYS[1], ARGV[1]); return 1" 1 reward:summer-promo user:42
+```
+
+**Multi-line claim-once Lua script**
 
 ```lua
--- redis.call: Raises error on failure (stops script)
+-- claim_once.lua
+-- KEYS[1] = reward key, ARGV[1] = user_id
+local already_claimed = redis.call('GET', KEYS[1])
+if already_claimed then
+    return 0
+end
 redis.call('SET', KEYS[1], ARGV[1])
-
--- redis.pcall: Returns error object (script continues)
-local result = redis.pcall('INCR', 'non_numeric_key')
-if result.err then
-    return "Error: " .. result.err
-end
+return 1
 ```
 
-## Lua Basics for Redis
-
-### Variables and Types
-
-```lua
-local count = 10           -- number
-local name = "Alice"       -- string
-local flag = true          -- boolean
-local items = {1, 2, 3}    -- table (array)
-local user = {             -- table (object)
-    name = "Alice",
-    age = 30
-}
-```
-
-### Conditionals
-
-```lua
-local balance = tonumber(redis.call('GET', KEYS[1]))
-
-if balance == nil then
-    return "Key not found"
-elseif balance < 0 then
-    return "Negative balance"
-else
-    return balance
-end
-```
-
-### Loops
-
-```lua
--- For loop
-for i = 1, #KEYS do
-    redis.call('DEL', KEYS[i])
-end
-
--- While loop
-local cursor = "0"
-repeat
-    local result = redis.call('SCAN', cursor, 'MATCH', 'temp:*')
-    cursor = result[1]
-    local keys = result[2]
-    for i, key in ipairs(keys) do
-        redis.call('DEL', key)
-    end
-until cursor == "0"
-```
-
-## Practical Example: Rate Limiter
-
-```lua
--- rate_limit.lua
--- KEYS[1] = rate limit key
--- ARGV[1] = limit
--- ARGV[2] = window (seconds)
-
-local current = redis.call('GET', KEYS[1])
-
-if current == false then
-    -- First request in window
-    redis.call('SET', KEYS[1], 1, 'EX', ARGV[2])
-    return 1
-elseif tonumber(current) < tonumber(ARGV[1]) then
-    -- Under limit
-    return redis.call('INCR', KEYS[1])
-else
-    -- Over limit
-    return -1
-end
-```
-
-```redis
-EVAL "<script>" 1 rate:user:1001 100 60
-# Returns count if allowed, -1 if rate limited
-```
-
-## Script Caching with EVALSHA
-
-```redis
-# Load script and get SHA1
-SCRIPT LOAD "return redis.call('GET', KEYS[1])"
-# Returns: "a42059b356c875f0717db19a51f6aaa9161e77a2"
-
-# Execute using SHA1 (faster, less bandwidth)
-EVALSHA a42059b356c875f0717db19a51f6aaa9161e77a2 1 mykey
-```
-
-📖 [Redis Scripting](https://redis.io/docs/latest/develop/interact/programmability/eval-intro/)
 
 ## Resources
 
-- [Redis Scripting](https://redis.io/docs/latest/develop/interact/programmability/eval-intro/) — Introduction to Redis Lua scripting
+- [Redis Scripting with Lua](https://redis.io/docs/latest/develop/interact/programmability/eval-intro/) — Introduction to Redis Lua scripting
 
 ---
 

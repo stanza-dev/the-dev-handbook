@@ -5,143 +5,123 @@ source_lesson: "redis-scripting-watch-deep"
 
 # Check-and-Set with WATCH
 
-WATCH enables optimistic locking - transactions fail if watched keys change before EXEC.
+## Introduction
 
-## The Check-and-Set Problem
+WATCH enables the check-and-set (CAS) pattern in Redis — read a value, compute a new value, and write it back only if the original value has not changed. This is the foundation for correct concurrent updates without pessimistic locking.
 
-Without WATCH, you can't safely read and conditionally modify:
+## Key Concepts
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Thread A:                    Thread B:                     │
-│  balance = GET balance        │                             │
-│  (balance = 100)              │                             │
-│                               │ DECRBY balance 60           │
-│                               │ (balance = 40)              │
-│  if balance >= 50:            │                             │
-│    DECRBY balance 50          │                             │
-│  (balance = -10!)  ← RACE CONDITION!                        │
-└─────────────────────────────────────────────────────────────┘
-```
+- **Check-and-Set (CAS)** — read → compute → conditionally write; abort if someone else wrote in between
+- **Optimistic locking** — assumes most transactions will not conflict; retries on the rare conflict
+- **WATCH scope** — watches apply per-connection; different clients each manage their own watches
+- **Retry loop** — the application must loop until EXEC succeeds (returns non-nil)
 
-## WATCH Solves This
+## Real World Context
 
-```redis
-WATCH balance
-GET balance            # 100
+A leaderboard service needs to update a player's high score only if the new score beats the current one. Without CAS, two concurrent updates for the same player could both read the current score, both compute a new score, and both write — the lower update could overwrite the higher one.
 
-# Another client: DECRBY balance 60 (now 40)
+## Deep Dive
 
-MULTI
-DECRBY balance 50
-EXEC
-# Returns: (nil) - Transaction aborted!
-```
-
-## Complete Implementation Pattern
+The canonical WATCH retry loop in Python:
 
 ```python
 import redis
 
-r = redis.Redis(decode_responses=True)
+r = redis.Redis()
 
-def atomic_withdraw(account_key, amount, max_retries=5):
-    """
-    Withdraw amount if sufficient balance.
-    Uses optimistic locking with retry.
-    """
-    for attempt in range(max_retries):
-        try:
-            # Start watching
-            r.watch(account_key)
-            
-            # Read current balance
-            balance = int(r.get(account_key) or 0)
-            
-            # Check condition
-            if balance < amount:
-                r.unwatch()
-                return {'success': False, 'error': 'Insufficient funds'}
-            
-            # Execute conditional update
-            pipe = r.pipeline()
-            pipe.multi()
-            pipe.decrby(account_key, amount)
-            result = pipe.execute()
-            
-            return {
-                'success': True, 
-                'new_balance': result[0]
-            }
-            
-        except redis.WatchError:
-            # Key was modified by another client, retry
-            continue
-    
-    return {'success': False, 'error': 'Max retries exceeded'}
+def update_high_score(player_id, new_score):
+    key = f"score:{player_id}"
+    while True:
+        with r.pipeline() as pipe:
+            try:
+                pipe.watch(key)
+                current = pipe.get(key)
+                current_score = int(current) if current else 0
+                if new_score <= current_score:
+                    pipe.unwatch()
+                    return False  # No update needed
+                pipe.multi()
+                pipe.set(key, new_score)
+                pipe.execute()  # Returns None if watched key changed
+                return True
+            except redis.WatchError:
+                continue  # Retry
 ```
 
-## Multi-Key WATCH
+The redis-py client raises `WatchError` when EXEC returns nil, making the retry loop clean to implement.
+
+Note: `redis.WatchError` is a redis-py (Python client) convenience exception. At the Redis protocol level, a failed WATCH causes EXEC to return nil — client libraries may wrap this as an exception, a null check, or a special return value depending on the language.
+
+A raw Redis CLI session showing a conflict scenario:
+
+```bash
+# Client A
+WATCH score:player1
+GET score:player1
+# => 100
+
+# Client B (interleaves here)
+SET score:player1 200
+
+# Client A resumes
+MULTI
+SET score:player1 150
+EXEC
+# => (nil)  -- Client A's transaction aborted
+```
+
+## Common Pitfalls
+
+1. **Unbounded retry loops.** Under extreme contention, a loop with no limit could spin forever. Always add a maximum retry count and back off.
+2. **Not calling UNWATCH before returning early.** If you decide not to proceed with the transaction, call UNWATCH to release the watch on the current connection.
+3. **Watching volatile keys.** If a watched key expires between WATCH and EXEC, Redis treats the expiry as a modification and aborts the transaction.
+
+## Best Practices
+
+1. Cap retry loops at 3-5 attempts; after that, return a conflict error to the caller.
+2. Under sustained high contention (>50% retry rate), switch to Lua scripting — it handles the check-and-set atomically without retries.
+3. Watch only the minimal set of keys required for correctness; each watched key adds abort risk.
+
+## Summary
+
+- WATCH implements check-and-set: read before MULTI, write inside MULTI/EXEC
+- EXEC returning nil means a watched key changed; the application must retry
+- redis-py raises WatchError on nil EXEC, simplifying retry loop code
+- Always unwatch explicitly when aborting before MULTI
+- High-contention workloads should consider Lua scripting as an alternative
+
+## Code Examples
+
+**WATCH retry loop in Python (redis-py)**
 
 ```python
-def transfer(from_account, to_account, amount):
-    """Transfer between accounts atomically"""
-    for _ in range(5):
-        try:
-            # Watch both accounts
-            r.watch(from_account, to_account)
-            
-            from_balance = int(r.get(from_account) or 0)
-            
-            if from_balance < amount:
-                r.unwatch()
-                return False
-            
-            pipe = r.pipeline()
-            pipe.multi()
-            pipe.decrby(from_account, amount)
-            pipe.incrby(to_account, amount)
-            pipe.execute()
-            return True
-            
-        except redis.WatchError:
-            continue
-    
-    return False
+import redis
+
+r = redis.Redis()
+
+def update_high_score(player_id, new_score):
+    key = f"score:{player_id}"
+    while True:
+        with r.pipeline() as pipe:
+            try:
+                pipe.watch(key)
+                current = pipe.get(key)
+                current_score = int(current) if current else 0
+                if new_score <= current_score:
+                    pipe.unwatch()
+                    return False
+                pipe.multi()
+                pipe.set(key, new_score)
+                pipe.execute()
+                return True
+            except redis.WatchError:
+                continue
 ```
 
-## WATCH Best Practices
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  1. Keep the window small between WATCH and EXEC           │
-│  2. Don't do slow operations (DB queries) inside           │
-│  3. Always UNWATCH on early exit                           │
-│  4. Implement retry with backoff for high contention       │
-│  5. Consider Lua scripts for very high contention          │
-└─────────────────────────────────────────────────────────────┘
-```
-
-```python
-def watched_operation_with_backoff(key, max_retries=5):
-    for attempt in range(max_retries):
-        try:
-            r.watch(key)
-            # ... operation ...
-            pipe.execute()
-            return True
-        except redis.WatchError:
-            # Exponential backoff with jitter
-            delay = (2 ** attempt) * 0.001 + random.uniform(0, 0.001)
-            time.sleep(delay)
-    return False
-```
-
-📖 [WATCH Command](https://redis.io/docs/latest/commands/watch/)
 
 ## Resources
 
-- [WATCH Command](https://redis.io/docs/latest/commands/watch/) — WATCH command reference
+- [WATCH Command](https://redis.io/commands/watch/) — WATCH command reference
 
 ---
 

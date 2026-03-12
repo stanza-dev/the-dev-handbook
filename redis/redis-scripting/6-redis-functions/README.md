@@ -1,18 +1,23 @@
-# ⚡ Redis Functions (8.0+)
+# ⚙️ Redis Functions
 
 > Part of [Scripting, Transactions, and Programmability](https://stanza.dev/courses/redis-scripting)
 
-Use the modern Redis Functions API for persistent server-side programming.
+Build persistent, reusable server-side logic with Redis Functions.
 
 ## Lessons
 
 1. [Redis Functions Overview](./1-functions-intro.md)
+2. [Managing Function Libraries](./2-functions-libraries.md)
+3. [Functions vs EVAL: When to Use Each](./3-vs-eval.md)
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **5 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Function Persistence
-- ✏️ Fill in the Blank: Calling Functions
+- 🧩 Multiple Choice: Functions vs EVAL Persistence
+- 🔗 Matching: FUNCTION Command Purposes
+- ✏️ Fill in the Blank: Calling a Redis Function
+- 🧩 Challenge: Loading a Redis Function
+- 🔗 Matching: Functions vs EVAL Comparison
 
 → [Practice in your IDE](https://stanza.dev/courses/redis-scripting)

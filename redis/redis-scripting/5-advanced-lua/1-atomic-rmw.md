@@ -5,141 +5,115 @@ source_lesson: "redis-scripting-atomic-rmw"
 
 # Atomic Read-Modify-Write
 
-Lua scripts excel at operations that read data, make decisions, and write atomically.
+## Introduction
 
-## Conditional Update Pattern
+Lua scripts excel at read-modify-write (RMW) operations that must be atomic. The pattern is: read current state, compute new state, write new state — all without any other client being able to observe intermediate state or modify the keys between the read and the write.
+
+## Key Concepts
+
+- **Read-Modify-Write (RMW)** — read a value, compute a new value based on it, write back atomically
+- **Atomic Lua** — the entire script runs as a single Redis command; no other commands execute in parallel
+- **Why not WATCH** — WATCH retries when conflicts occur; Lua scripts never conflict because they run atomically
+- **Appropriate use cases** — counters with bounds, conditional increments, score updates, inventory management
+
+## Real World Context
+
+A leaderboard service must update a player's score only if the new score is higher than the current one. With separate GET + SET commands, two concurrent updates could both read the old score and both write, potentially losing the higher value. A Lua script performs this check-and-update atomically.
+
+## Deep Dive
+
+Conditional update — only update if new value is greater:
 
 ```lua
 -- update_if_greater.lua
--- Only update if new value is greater than current
--- KEYS[1] = key to update
--- ARGV[1] = new value
-
-local current = redis.call('GET', KEYS[1])
-local new_val = tonumber(ARGV[1])
-
-if current == false then
-    -- Key doesn't exist, set it
-    redis.call('SET', KEYS[1], new_val)
-    return new_val
+-- KEYS[1] = score key, ARGV[1] = new score
+local current = tonumber(redis.call('GET', KEYS[1])) or 0
+local new_score = tonumber(ARGV[1])
+if new_score > current then
+    redis.call('SET', KEYS[1], new_score)
+    return new_score
 end
-
-local current_val = tonumber(current)
-if new_val > current_val then
-    redis.call('SET', KEYS[1], new_val)
-    return new_val
-else
-    return current_val
-end
+return current
 ```
 
-## Complex Conditional Logic
+Bounded counter — increment only if below ceiling:
 
 ```lua
--- purchase.lua
--- Atomic purchase: check balance, check stock, update both
--- KEYS[1] = user balance key
--- KEYS[2] = product stock key
--- ARGV[1] = price
--- ARGV[2] = quantity
-
-local balance = tonumber(redis.call('GET', KEYS[1])) or 0
-local stock = tonumber(redis.call('GET', KEYS[2])) or 0
-local price = tonumber(ARGV[1])
-local quantity = tonumber(ARGV[2])
-
-local total_cost = price * quantity
-
--- Check both conditions
-if balance < total_cost then
-    return redis.error_reply('INSUFFICIENT_BALANCE')
+-- bounded_incr.lua
+-- KEYS[1] = counter key, ARGV[1] = ceiling
+local current = tonumber(redis.call('GET', KEYS[1])) or 0
+local ceiling = tonumber(ARGV[1])
+if current >= ceiling then
+    return -1  -- cannot increment
 end
-
-if stock < quantity then
-    return redis.error_reply('OUT_OF_STOCK')
-end
-
--- Both conditions met, execute atomically
-redis.call('DECRBY', KEYS[1], total_cost)
-redis.call('DECRBY', KEYS[2], quantity)
-
-return cjson.encode({
-    success = true,
-    new_balance = balance - total_cost,
-    new_stock = stock - quantity
-})
+return redis.call('INCR', KEYS[1])
 ```
 
-## Sliding Window Rate Limiter
+Execute with:
+
+```bash
+EVAL "$(cat bounded_incr.lua)" 1 counter:downloads 100
+```
+
+Why Lua beats WATCH for these patterns:
+- No retry loop needed
+- No possibility of starvation under high contention
+- Cleaner client code
+- Guaranteed to succeed on first attempt
+
+## Common Pitfalls
+
+1. **Long-running scripts blocking Redis.** If a script iterates large sets or sleeps, it blocks all other clients. Redis will kill scripts exceeding lua-time-limit (default 5 seconds).
+2. **Modifying keys not declared in KEYS array.** In Redis Cluster, this causes a CROSSSLOT error. Always declare all keys.
+3. **Not handling nil returns from GET.** If a key does not exist, GET returns nil in Lua. Always apply `or 0` (or a suitable default) when expecting a number.
+
+## Best Practices
+
+1. Replace WATCH retry loops with Lua scripts for all pure server-side conditional updates.
+2. Use `tonumber(...) or 0` to safely convert possibly-nil GET results to numbers.
+3. Load scripts with SCRIPT LOAD and use EVALSHA in production to save bandwidth.
+
+## Summary
+
+- Lua RMW scripts: GET → compute → SET in one atomic EVAL
+- No retry loop needed — scripts cannot be interrupted
+- Safer than WATCH for high-contention counters and conditional updates
+- Always handle nil GET results with `tonumber(...) or 0`
+- Declare all accessed keys in the KEYS array for cluster compatibility
+
+## Code Examples
+
+**Atomic conditional update: write only if new value is greater**
 
 ```lua
--- sliding_window.lua
--- Precise rate limiting using sorted sets
--- KEYS[1] = rate limit key
--- ARGV[1] = window size (seconds)
--- ARGV[2] = max requests
--- ARGV[3] = current timestamp
--- ARGV[4] = unique request ID
-
-local key = KEYS[1]
-local window = tonumber(ARGV[1])
-local limit = tonumber(ARGV[2])
-local now = tonumber(ARGV[3])
-local request_id = ARGV[4]
-
-local window_start = now - window
-
--- Remove old entries
-redis.call('ZREMRANGEBYSCORE', key, '-inf', window_start)
-
--- Count current requests
-local current = redis.call('ZCARD', key)
-
-if current >= limit then
-    return 0  -- Rate limited
+-- update_if_greater.lua
+-- KEYS[1] = score key, ARGV[1] = new score
+local current = tonumber(redis.call('GET', KEYS[1])) or 0
+local new_score = tonumber(ARGV[1])
+if new_score > current then
+    redis.call('SET', KEYS[1], new_score)
+    return new_score
 end
-
--- Add this request
-redis.call('ZADD', key, now, request_id)
-redis.call('EXPIRE', key, window)
-
-return limit - current  -- Remaining requests
+return current
 ```
 
-## JSON Processing with cjson
+**Bounded increment: increment only if below ceiling**
 
 ```lua
--- process_json.lua
--- Parse, modify, and store JSON
--- KEYS[1] = JSON document key
--- ARGV[1] = path to update
--- ARGV[2] = new value
-
-local json_str = redis.call('GET', KEYS[1])
-if not json_str then
-    return redis.error_reply('KEY_NOT_FOUND')
+-- bounded_incr.lua
+-- KEYS[1] = counter key, ARGV[1] = ceiling
+local current = tonumber(redis.call('GET', KEYS[1])) or 0
+local ceiling = tonumber(ARGV[1])
+if current >= ceiling then
+    return -1
 end
-
-local data = cjson.decode(json_str)
-
--- Navigate path and update
-local path = ARGV[1]
-local value = ARGV[2]
-
--- Simple single-level path update
-data[path] = value
-
-local new_json = cjson.encode(data)
-redis.call('SET', KEYS[1], new_json)
-
-return new_json
+return redis.call('INCR', KEYS[1])
 ```
 
-📖 [Lua Scripting](https://redis.io/docs/latest/develop/interact/programmability/eval-intro/)
 
 ## Resources
 
-- [Redis Scripting](https://redis.io/docs/latest/develop/interact/programmability/eval-intro/) — Redis Lua scripting documentation
+- [Redis Scripting with Lua](https://redis.io/docs/latest/develop/interact/programmability/eval-intro/) — Redis Lua scripting documentation
 
 ---
 

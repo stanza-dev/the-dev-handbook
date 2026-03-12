@@ -3,145 +3,87 @@ source_course: "redis-messaging"
 source_lesson: "redis-messaging-streams-trimming"
 ---
 
-# Stream Management and Trimming
+# Stream Trimming and Memory Management
 
-Streams grow indefinitely unless trimmed. Learn how to manage stream size effectively.
+## Introduction
 
-## XTRIM: Trimming Streams
+Streams grow indefinitely by default. For production systems, you need to trim them to prevent unbounded memory growth.
 
-### By Maximum Length
+## Key Concepts
 
-```redis
-# Keep only the latest 1000 entries
-XTRIM orders MAXLEN 1000
-# Returns: number of entries removed
+- **XTRIM MAXLEN**: keeps only the last N entries; `~` flag enables approximate trimming
+- **XTRIM MINID**: removes all entries with an ID less than the given timestamp-based ID (time-based retention)
+- **Inline trimming**: passing `MAXLEN` or `MINID` directly to XADD combines append and trim atomically
+- **Approximate trimming (`~`)**: allows Redis to keep slightly more entries to avoid expensive radix-tree rebalancing
 
-# Approximate trimming (faster, ~100 entry precision)
-XTRIM orders MAXLEN ~ 1000
+## Real World Context
+
+- **IoT sensor stream**: keep last 10,000 readings per device
+- **Activity feed**: keep 30 days of events using MINID with a rolling timestamp
+- **High-frequency trading**: keep last 1 minute of ticks, trim on every XADD
+
+## Deep Dive
+
+```bash
+# Keep only the last 1000 entries (exact)
+XTRIM mystream MAXLEN 1000
+
+# Approximate trim (faster, may keep slightly more)
+XTRIM mystream MAXLEN ~ 1000
+
+# Trim by minimum ID (remove entries older than a timestamp)
+XTRIM mystream MINID 1691000000000
+
+# Add entry AND keep stream at ~1000 entries (atomic)
+XADD mystream MAXLEN ~ 1000 '*' field value
 ```
 
-### By Minimum ID
+| Strategy | Command | When to Use |
+|---|---|---|
+| Keep N entries | `MAXLEN 1000` | Fixed-size sliding window |
+| Keep by age | `MINID timestamp` | Time-based retention (e.g., 7 days) |
 
-```redis
-# Remove entries older than a specific ID
-XTRIM orders MINID 1704067200000-0
+Each stream entry consumes memory proportional to the number of fields. Use `OBJECT ENCODING mystream` to inspect the internal encoding (listpack for small streams, stream for large ones).
 
-# Approximate (faster)
-XTRIM orders MINID ~ 1704067200000-0
+## Common Pitfalls
+
+- **Not trimming at all**: streams that grow without bound will eventually exhaust Redis memory
+- **Using exact MAXLEN on high-throughput streams**: every exact trim rebalances the radix tree; use `~` for performance
+- **Trimming without considering consumer group lag**: trimming entries that a consumer group hasn't processed yet causes those entries to be lost
+
+## Best Practices
+
+- Always use inline MAXLEN trimming (`XADD stream MAXLEN ~ N * ...`) rather than a separate XTRIM call
+- Use MINID for time-based retention to align with your data lifecycle policy
+- Monitor stream length with `XLEN` and set alerts if it grows beyond expected bounds
+
+## Summary
+
+Always trim production streams. Use `MAXLEN ~` for count-based retention and `MINID` for time-based retention. Combining trimming with XADD is the most efficient pattern — you maintain the stream size with no additional round trips.
+
+## Code Examples
+
+**Stream trimming patterns**
+
+```bash
+# Exact trim to 1000 entries
+XTRIM events MAXLEN 1000
+
+# Approximate trim (much faster on large streams)
+XTRIM events MAXLEN ~ 1000
+
+# Trim by age: remove entries before 7 days ago
+# (calculate UNIX milliseconds for 7 days ago)
+XTRIM events MINID ~ 1690629567000
+
+# Trim inline with XADD
+XADD events MAXLEN ~ 5000 '*' type click userId 42
 ```
 
-## Auto-Trimming with XADD
 
-```redis
-# Add and trim in one command
-XADD orders MAXLEN ~ 1000 * customer alice total 99.99
+## Resources
 
-# Using MINID
-XADD orders MINID ~ 1704000000000-0 * customer bob total 50.00
-```
-
-This is more efficient than separate XADD + XTRIM.
-
-## XDEL: Deleting Specific Entries
-
-```redis
-# Delete specific entries by ID
-XDEL orders 1704067200001-0
-# Returns: (integer) 1
-
-# Delete multiple
-XDEL orders 1704067200001-0 1704067200002-0
-```
-
-**Note**: XDEL marks entries as deleted but doesn't reclaim memory until the stream is compacted.
-
-## XINFO: Stream Information
-
-### Stream Details
-
-```redis
-XINFO STREAM orders
-# Returns:
-# 1) "length"
-# 2) (integer) 1000
-# 3) "first-entry"
-# 4) 1) "1704067200000-0"
-#    2) 1) "customer"
-#       2) "alice"
-# 5) "last-entry"
-# 6) ...
-```
-
-### Consumer Groups Info
-
-```redis
-# List all consumer groups
-XINFO GROUPS orders
-
-# Details about consumers in a group
-XINFO CONSUMERS orders mygroup
-```
-
-## Retention Strategies
-
-### Time-Based Retention
-
-```python
-import time
-
-def trim_by_age(stream_key, max_age_seconds):
-    """Remove entries older than max_age_seconds"""
-    min_timestamp = int((time.time() - max_age_seconds) * 1000)
-    min_id = f"{min_timestamp}-0"
-    r.xtrim(stream_key, minid=min_id, approximate=True)
-
-# Keep only last 24 hours
-trim_by_age('events', 86400)
-```
-
-### Size-Based Retention
-
-```python
-def trim_by_size(stream_key, max_entries):
-    """Keep only the latest max_entries"""
-    r.xtrim(stream_key, maxlen=max_entries, approximate=True)
-
-# Keep last 10000 entries
-trim_by_size('events', 10000)
-```
-
-### Scheduled Trimming
-
-```python
-import schedule
-
-def daily_trim():
-    streams = ['events', 'orders', 'logs']
-    for stream in streams:
-        trim_by_age(stream, 7 * 86400)  # 7 days
-        print(f"Trimmed {stream}")
-
-schedule.every().day.at("03:00").do(daily_trim)
-```
-
-## Memory Considerations
-
-```redis
-# Check stream memory usage
-MEMORY USAGE orders
-# Returns: bytes used
-
-# Check overall memory
-INFO memory
-```
-
-**Best Practices:**
-- Use approximate trimming (`~`) for better performance
-- Trim during low-traffic periods
-- Monitor memory usage regularly
-- Set appropriate MAXLEN with XADD for automatic management
-
-📖 [XTRIM Command](https://redis.io/docs/latest/commands/xtrim/)
+- [Redis Streams](https://redis.io/docs/latest/develop/data-types/streams/) — Official Redis Streams data type documentation
 
 ---
 

@@ -5,132 +5,97 @@ source_lesson: "redis-messaging-pubsub-intro"
 
 # Introduction to Pub/Sub
 
-Redis Pub/Sub (Publish/Subscribe) is a messaging paradigm where senders (publishers) don't send messages directly to receivers. Instead, messages are published to channels, and subscribers receive messages from channels they're interested in.
+## Introduction
 
-## How Pub/Sub Works
+Redis Pub/Sub (Publish/Subscribe) is a messaging paradigm where senders (publishers) don't send messages directly to receivers. Instead, messages are published to named channels, and any client that has subscribed to those channels receives them.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Redis Server                            │
-│                                                             │
-│  Publisher A ──PUBLISH──▶ [channel:news] ──▶ Subscriber 1  │
-│                                          ──▶ Subscriber 2  │
-│  Publisher B ──PUBLISH──▶ [channel:sports]──▶ Subscriber 3 │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
+## Key Concepts
 
-**Key Concepts:**
-- **Publisher**: Sends messages to a channel
-- **Channel**: Named message conduit
-- **Subscriber**: Listens to one or more channels
-- **Message**: Data sent through channels
+The three actors in a Pub/Sub system are the publisher, the channel, and the subscriber:
 
-## Fire-and-Forget Model
-
-Pub/Sub is **fire-and-forget**:
-- Messages are not persisted
-- If no subscribers are listening, messages are lost
-- Publishers don't know if anyone received the message
+- **Publisher**: Sends a message to a named channel using `PUBLISH`
+- **Channel**: A named conduit inside Redis — not a persistent data structure
+- **Subscriber**: Registers interest in a channel using `SUBSCRIBE`; receives messages in real time
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  Publisher sends to channel "news":                         │
-│                                                             │
-│  No subscribers? → Message is lost                         │
-│  3 subscribers?  → All 3 receive the message               │
-│  Subscriber joins after? → Misses previous messages        │
-└─────────────────────────────────────────────────────────────┘
+Publisher ──PUBLISH channel msg──▶ [Redis channel] ──▶ Subscriber 1
+                                                   ──▶ Subscriber 2
 ```
 
-## Basic Commands
+## Real World Context
 
-### SUBSCRIBE
+Pub/Sub is ideal for live, ephemeral broadcast scenarios where speed matters more than durability:
 
-Subscribe to one or more channels:
+- Live score updates in a sports app
+- Real-time price tickers in a trading dashboard
+- Chat room broadcasts
+- Live notifications pushed to connected browsers
 
-```redis
-# Subscribe to a single channel
+## Deep Dive
+
+```bash
+# Subscribe to a channel (blocks the connection)
 SUBSCRIBE news
+# => 1) "subscribe"
+# => 2) "news"
+# => 3) (integer) 1
 
-# Subscribe to multiple channels
-SUBSCRIBE news sports weather
+# In another client, publish a message
+PUBLISH news "Hello subscribers!"
+# => (integer) 2   <- number of subscribers who received it
+
+# Subscriber receives:
+# 1) "message"
+# 2) "news"
+# 3) "Hello subscribers!"
 ```
 
-Once subscribed, the client enters **subscribe mode** and can only:
-- Subscribe to more channels
-- Unsubscribe
-- Receive messages
-- PING/QUIT
+A subscribed client cannot issue regular commands — it enters a dedicated Pub/Sub mode where only `SUBSCRIBE`, `UNSUBSCRIBE`, `PSUBSCRIBE`, `PUNSUBSCRIBE`, `PING`, and `RESET` are allowed.
 
-### PUBLISH
+## Common Pitfalls
 
-Send a message to a channel:
+- **Assuming messages persist**: Pub/Sub has no storage — if no subscriber is connected, the message is gone
+- **Using a subscribed connection for other commands**: the connection is locked in Pub/Sub mode until you unsubscribe
+- **Missing messages between subscribe and first message**: there is a race window; subscribe before publishing if ordering matters
 
-```redis
-PUBLISH news "Breaking: Redis 8 released!"
-# Returns: number of subscribers who received the message
-# (integer) 2
-```
+## Best Practices
 
-### UNSUBSCRIBE
+- Use descriptive channel namespaces (e.g., `notifications:user:42`) to avoid collisions
+- Keep message payloads small; use a key or ID and let consumers fetch data from Redis or a database
+- Pair Pub/Sub with a persistent store for any use case where missing a message is not acceptable
 
-```redis
-# Unsubscribe from specific channels
-UNSUBSCRIBE news sports
+## Summary
 
-# Unsubscribe from all channels
-UNSUBSCRIBE
-```
+Pub/Sub decouples message producers from consumers through named channels. Publishers fire messages without knowing who is listening, and subscribers receive messages without knowing who sent them. This decoupling makes it easy to add new consumers without changing publisher code.
 
-## Testing Pub/Sub with redis-cli
+## Code Examples
 
-Open two terminal windows:
+**Basic Pub/Sub**
 
 ```bash
-# Terminal 1: Subscriber
-$ redis-cli
-127.0.0.1:6379> SUBSCRIBE news
-Reading messages... (press Ctrl-C to quit)
-1) "subscribe"
-2) "news"
-3) (integer) 1
+# Terminal 1 — Subscriber
+redis-cli
+> SUBSCRIBE news sports
+# Blocks, waiting for messages
+# 1) "subscribe"
+# 2) "news"
+# 3) (integer) 1
+
+# Terminal 2 — Publisher
+redis-cli
+> PUBLISH news "Breaking: Redis 8 released!"
+# (integer) 1   <- 1 subscriber received it
+
+# Terminal 1 receives:
+# 1) "message"
+# 2) "news"
+# 3) "Breaking: Redis 8 released!"
 ```
 
-```bash
-# Terminal 2: Publisher
-$ redis-cli
-127.0.0.1:6379> PUBLISH news "Hello, subscribers!"
-(integer) 1
-```
-
-Terminal 1 receives:
-```
-1) "message"
-2) "news"
-3) "Hello, subscribers!"
-```
-
-## Pub/Sub Use Cases
-
-✅ **Good for:**
-- Real-time notifications
-- Chat applications
-- Live updates (scores, prices)
-- Event broadcasting
-- Invalidating distributed caches
-
-❌ **Not suitable for:**
-- Reliable message delivery (use Streams)
-- Message persistence (use Streams)
-- Message acknowledgment (use Streams)
-- Work queues (use Lists or Streams)
-
-📖 [Redis Pub/Sub](https://redis.io/docs/latest/develop/pubsub/)
 
 ## Resources
 
-- [Redis Pub/Sub](https://redis.io/docs/latest/develop/pubsub/) — Official Redis Pub/Sub documentation
+- [Redis Pub/Sub](https://redis.io/docs/latest/develop/interact/pubsub/) — Official Redis Pub/Sub documentation
 
 ---
 

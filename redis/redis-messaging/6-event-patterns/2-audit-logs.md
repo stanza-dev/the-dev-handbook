@@ -3,155 +3,89 @@ source_course: "redis-messaging"
 source_lesson: "redis-messaging-audit-logs"
 ---
 
-# Audit Logging with Streams
+# Audit Logs with Redis Streams
 
-Streams are ideal for audit logs: they're append-only, ordered, and support efficient range queries.
+## Introduction
 
-## Audit Log Structure
+Audit logs track every action taken in a system — who did what, when, and with what result. Redis Streams are an excellent audit log backend due to their append-only nature and time-ordered IDs.
 
-```redis
-# Add audit entry
-XADD audit:actions * \
-    timestamp "2024-01-15T10:30:00Z" \
-    user_id "1001" \
-    action "user.login" \
-    ip "192.168.1.100" \
-    user_agent "Mozilla/5.0..." \
-    status "success"
+## Key Concepts
 
-XADD audit:actions * \
-    timestamp "2024-01-15T10:31:00Z" \
-    user_id "1001" \
-    action "document.view" \
-    resource_type "document" \
-    resource_id "doc-123" \
-    status "success"
+- **Append-only log**: stream entries cannot be modified after creation, preserving integrity
+- **Time-ordered IDs**: the millisecond-based stream ID enables precise time-range queries without a separate timestamp field
+- **Two-tier retention**: hot tier (Redis, recent events) + cold tier (S3/BigQuery, long-term compliance)
+- **Domain-separated streams**: `audit:auth`, `audit:data`, `audit:admin` — separate streams per category for different retention and access policies
 
-XADD audit:actions * \
-    timestamp "2024-01-15T10:32:00Z" \
-    user_id "1001" \
-    action "document.delete" \
-    resource_type "document" \
-    resource_id "doc-123" \
-    status "denied" \
-    reason "insufficient_permissions"
+## Real World Context
+
+- GDPR compliance: log every data access to `audit:data` with userId and resource
+- Security: log all auth events including failed login attempts
+- Billing: track every API call for usage-based billing
+
+## Deep Dive
+
+```bash
+# Log every significant action
+XADD audit '*' userId 42 action document:delete resourceId doc-99 ip 192.168.1.1 result success
+
+# Events in a time window (e.g., today from 9am to 5pm)
+XRANGE audit 1691226000000 1691254800000
+
+# Most recent 20 events
+XREVRANGE audit + - COUNT 20
+
+# Trim to 90 days retention
+XTRIM audit:auth MINID ~ 1683454967000
 ```
 
-## Audit Logger Implementation
+Separate streams per domain:
 
-```python
-from datetime import datetime
-import json
-
-class AuditLogger:
-    def __init__(self, redis_client, stream_key='audit:actions'):
-        self.r = redis_client
-        self.stream_key = stream_key
-    
-    def log(self, user_id, action, status='success', **context):
-        entry = {
-            'timestamp': datetime.utcnow().isoformat(),
-            'user_id': str(user_id),
-            'action': action,
-            'status': status,
-            **{k: str(v) for k, v in context.items()}
-        }
-        
-        # Auto-trim to last 1 million entries
-        return self.r.xadd(
-            self.stream_key,
-            entry,
-            maxlen=1000000,
-            approximate=True
-        )
-    
-    def get_user_actions(self, user_id, count=100):
-        """Get recent actions by a user"""
-        # Note: This requires scanning; consider per-user streams for efficiency
-        all_entries = self.r.xrevrange(self.stream_key, '+', '-', count=count * 10)
-        return [
-            {'id': e[0], **e[1]}
-            for e in all_entries
-            if e[1].get('user_id') == str(user_id)
-        ][:count]
-    
-    def get_actions_by_resource(self, resource_type, resource_id, count=100):
-        """Get actions on a specific resource"""
-        all_entries = self.r.xrevrange(self.stream_key, '+', '-', count=count * 10)
-        return [
-            {'id': e[0], **e[1]}
-            for e in all_entries
-            if e[1].get('resource_type') == resource_type
-            and e[1].get('resource_id') == str(resource_id)
-        ][:count]
-    
-    def get_recent_failures(self, count=50):
-        """Get recent failed actions"""
-        all_entries = self.r.xrevrange(self.stream_key, '+', '-', count=count * 5)
-        return [
-            {'id': e[0], **e[1]}
-            for e in all_entries
-            if e[1].get('status') in ('denied', 'error', 'failure')
-        ][:count]
+```bash
+XADD audit:auth '*' ...    # login/logout events
+XADD audit:data '*' ...    # data access events
+XADD audit:admin '*' ...   # admin actions
 ```
 
-## Multi-Stream Architecture
+## Common Pitfalls
 
-For high-volume systems, use multiple streams:
+- **Not separating audit domains**: mixing auth, data access, and admin events in one stream makes retention policies impossible to apply per category
+- **Storing full object payloads**: large entries degrade performance; store only the delta or a reference ID
+- **Relying solely on Redis for long-term compliance**: Redis is not designed for multi-year retention; export to cold storage
 
-```python
-class ScalableAuditLogger:
-    def __init__(self, redis_client):
-        self.r = redis_client
-    
-    def log(self, user_id, action, **context):
-        entry = {
-            'timestamp': datetime.utcnow().isoformat(),
-            'user_id': str(user_id),
-            'action': action,
-            **context
-        }
-        
-        # Main stream (all events)
-        self.r.xadd('audit:all', entry, maxlen=1000000, approximate=True)
-        
-        # Per-user stream
-        self.r.xadd(f'audit:user:{user_id}', entry, maxlen=10000, approximate=True)
-        
-        # Per-action stream
-        action_type = action.split('.')[0]  # e.g., "user" from "user.login"
-        self.r.xadd(f'audit:action:{action_type}', entry, maxlen=100000, approximate=True)
-    
-    def get_user_history(self, user_id, count=100):
-        """Fast lookup for user-specific history"""
-        return self.r.xrevrange(f'audit:user:{user_id}', '+', '-', count=count)
+## Best Practices
+
+- Use domain-separated streams (`audit:auth`, `audit:data`) for per-category retention and access control
+- Set up a nightly export job to move aged-out entries to S3 or BigQuery before XTRIM removes them
+- Always include `userId`, `action`, `resourceId`, and `result` in every audit entry
+
+## Summary
+
+Redis Streams are a natural audit log: append-only, time-ordered, queryable by time range. Use XRANGE with timestamp-based IDs for time-window queries. Implement a two-tier strategy (hot Redis + cold object store) for long-term compliance retention.
+
+## Code Examples
+
+**Audit log implementation**
+
+```bash
+# Write audit events
+XADD audit:auth '*' userId 42 action login ip 203.0.113.5 result success
+XADD audit:data '*' userId 42 action read resourceId doc-99 classification PII
+
+# Query: events in last hour
+# (current timestamp minus 3600 seconds in ms)
+XRANGE audit:auth 1691230967000 + 
+
+# Query: last 50 events reverse chronological
+XREVRANGE audit:data + - COUNT 50
+
+# Trim to 90 days retention
+XTRIM audit:auth MINID ~ 1683454967000
 ```
 
-## Compliance and Retention
 
-```python
-import time
+## Resources
 
-def archive_old_audit_logs(days_to_keep=90):
-    """Archive and delete old audit logs"""
-    cutoff_ms = int((time.time() - days_to_keep * 86400) * 1000)
-    cutoff_id = f"{cutoff_ms}-0"
-    
-    # Get entries to archive
-    old_entries = r.xrange('audit:all', '-', cutoff_id, count=1000)
-    
-    if old_entries:
-        # Archive to cold storage (S3, etc.)
-        archive_to_cold_storage(old_entries)
-        
-        # Delete from Redis
-        r.xtrim('audit:all', minid=cutoff_id, approximate=True)
-
-# Run daily
-archive_old_audit_logs()
-```
-
-📖 [Audit Log Patterns](https://redis.io/docs/latest/develop/data-types/streams/)
+- [Redis Streams](https://redis.io/docs/latest/develop/data-types/streams/) — Official Redis Streams documentation
 
 ---
 

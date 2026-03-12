@@ -9,7 +9,7 @@ Strategies for versioning APIs and managing breaking changes.
 1. [API Versioning Fundamentals](./1-versioning-basics.md)
 2. [Versioning Strategies](./2-versioning-strategies.md)
 3. [Managing Breaking Changes](./3-breaking-changes.md)
-4. [Versioned API Documentation](./4-versioned-swagger.md)
+4. [NestJS API Versioning with Swagger](./4-versioned-swagger.md)
 
 ## Practice Challenges
 

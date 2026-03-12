@@ -7,7 +7,7 @@ Learn how Svelte 5 handles state and updates with the revolutionary Runes system
 ## Lessons
 
 1. [What Are Runes?](./1-are-runes.md)
-2. [Creating Reactive State with $state](./2-state-rune.md)
+2. [Svelte 5 $state Rune: Creating Reactive State](./2-state-rune.md)
 3. [Computed Values with $derived](./3-derived-rune.md)
 4. [Side Effects with $effect](./4-effect-rune.md)
 

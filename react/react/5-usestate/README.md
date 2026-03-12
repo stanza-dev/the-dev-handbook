@@ -8,7 +8,7 @@ Adding state to functional components
 
 1. [useState Basics](./1-usestate-basics.md)
 2. [useState with Objects & Arrays](./2-usestate-objects.md)
-3. [Functional Updates](./3-updater-function.md)
+3. [React useState Functional Updates: Avoid Stale State](./3-updater-function.md)
 
 ## Practice Challenges
 

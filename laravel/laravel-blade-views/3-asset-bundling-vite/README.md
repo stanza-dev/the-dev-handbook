@@ -6,7 +6,7 @@ Bundle CSS and JavaScript with Laravel's default build tool
 
 ## Lessons
 
-1. [Introduction to Vite in Laravel](./1-vite-fundamentals.md)
+1. [Laravel + Vite: Asset Bundling Fundamentals](./1-vite-fundamentals.md)
 2. [Advanced Vite Configuration](./2-vite-advanced.md)
 
 ## Practice Challenges

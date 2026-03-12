@@ -3,7 +3,7 @@ source_course: "postgresql-json"
 source_lesson: "json-concatenation-deletion"
 ---
 
-# Concatenation and Deletion Operators
+# PostgreSQL JSON: Concatenation (||) and Deletion (-) Operators
 
 JSONB supports operators for combining values and removing keys.
 

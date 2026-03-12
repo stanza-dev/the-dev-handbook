@@ -5,158 +5,112 @@ source_lesson: "redis-scripting-lua-debug"
 
 # Script Flags and Debugging
 
-Optimize and debug your Lua scripts for production use.
+## Introduction
 
-## Script Flags
+Redis 7.0 introduced script flags — special directives in a Lua script header that declare the script's access patterns to Redis. These flags enable safer execution on replicas and improve cluster compatibility. This lesson also covers the essential SCRIPT management commands for production.
 
-Redis 7.0+ supports script flags for better control:
+## Key Concepts
+
+- **Script flags** — header line `#!lua flags=...` declaring script behavior
+- **no-writes** — script makes no writes; safe for EVAL_RO and replica execution
+- **allow-oom** — script can run even when Redis is over its maxmemory limit
+- **SCRIPT LOAD** — caches a script and returns its SHA1 hash for use with EVALSHA
+- **SCRIPT EXISTS** — checks if given SHA1 hashes are in the server's script cache
+- **SCRIPT FLUSH** — clears the entire script cache
+
+## Real World Context
+
+Your application has a read-heavy Lua script that fetches aggregated analytics from multiple keys. Without script flags, Redis cannot confirm the script is safe for replica execution. Adding `#!lua flags=no-writes` allows replicas to serve this script, reducing load on the primary.
+
+## Deep Dive
+
+Script flags are placed on the very first line:
 
 ```lua
 #!lua flags=no-writes
--- This script is read-only and can run on replicas
-
-return redis.call('GET', KEYS[1])
+-- This script only reads; safe for replica execution
+-- KEYS[1] = the counter key
+local val = redis.call('GET', KEYS[1])
+return val or '0'
 ```
 
-### Available Flags
+Available flags:
 
-| Flag | Description |
-|------|-------------|
-| `no-writes` | Script doesn't write data |
-| `allow-oom` | Run even when memory limit reached |
-| `allow-stale` | Run on stale replica |
-| `no-cluster` | Disable in cluster mode |
-| `allow-cross-slot-keys` | Allow keys from different slots |
+- `no-writes` — script makes no write calls; allows EVAL_RO
+- `allow-oom` — script can execute when server is at maxmemory
+- `allow-repl` — enable manual replication control (advanced)
+- `no-cluster` — disallow execution in cluster mode
 
-```lua
-#!lua flags=no-writes,allow-stale
--- Read-only script that accepts stale data
-
-local value = redis.call('GET', KEYS[1])
-return value or 'default'
-```
-
-## Error Handling
-
-```lua
--- Good error handling pattern
-local function safe_get_number(key)
-    local value = redis.call('GET', key)
-    if value == false then
-        return nil, 'KEY_NOT_FOUND'
-    end
-    local num = tonumber(value)
-    if num == nil then
-        return nil, 'NOT_A_NUMBER'
-    end
-    return num, nil
-end
-
-local balance, err = safe_get_number(KEYS[1])
-if err then
-    return redis.error_reply(err)
-end
-
--- Continue with balance...
-```
-
-## redis.pcall for Error Recovery
-
-```lua
--- Try operation, handle failure gracefully
-local result = redis.pcall('INCR', KEYS[1])
-
-if type(result) == 'table' and result.err then
-    -- INCR failed (probably not a number)
-    redis.call('SET', KEYS[1], 1)
-    return 1
-end
-
-return result
-```
-
-## Debugging Techniques
-
-### Using redis.log
-
-```lua
--- Log at different levels
-redis.log(redis.LOG_DEBUG, 'Debug message')
-redis.log(redis.LOG_VERBOSE, 'Verbose message')
-redis.log(redis.LOG_NOTICE, 'Notice message')
-redis.log(redis.LOG_WARNING, 'Warning message')
-
--- Example: Debug complex logic
-local balance = redis.call('GET', KEYS[1])
-redis.log(redis.LOG_DEBUG, 'Balance for ' .. KEYS[1] .. ': ' .. tostring(balance))
-```
-
-### Script Debugging Mode
+Managing the script cache:
 
 ```bash
-# Start Redis CLI in debug mode
-redis-cli --ldb --eval myscript.lua key1 key2 , arg1 arg2
+# Load and cache a script
+SCRIPT LOAD "#!lua flags=no-writes\nreturn redis.call('GET', KEYS[1])"
+# => "abc123sha1"
 
-# Debug commands:
-# s - step into
-# n - step over
-# c - continue
-# p <var> - print variable
-# b <line> - set breakpoint
-# w - where (show stack)
-# e <code> - evaluate Lua code
+# Verify it's cached
+SCRIPT EXISTS abc123sha1
+# => 1) (integer) 1
+
+# Execute by SHA1 (no script text sent over network)
+EVALSHA abc123sha1 1 mykey
+
+# Clear all cached scripts (use with caution)
+SCRIPT FLUSH
 ```
 
-## Performance Best Practices
+## Common Pitfalls
+
+1. **Placing flags on any line other than the first.** The `#!lua flags=...` directive must be the very first line; otherwise Redis ignores it completely.
+2. **Declaring no-writes but calling a write command.** If the script calls SET with no-writes declared, Redis raises an error at runtime on replicas.
+3. **Running SCRIPT FLUSH without a reload plan.** After SCRIPT FLUSH, all EVALSHA calls return NOSCRIPT until scripts are re-uploaded with SCRIPT LOAD.
+
+## Best Practices
+
+1. Add `no-writes` to all read-only scripts to unlock replica-safe execution and improve horizontal scaling.
+2. Implement NOSCRIPT retry logic in client code: catch NOSCRIPT, call SCRIPT LOAD, then retry EVALSHA.
+3. Use SCRIPT EXISTS in health checks to verify scripts are loaded before traffic starts.
+
+## Summary
+
+- Script flags (`#!lua flags=...`) must be on the first line of the script
+- `no-writes` enables EVAL_RO and safe replica execution
+- SCRIPT LOAD caches a script server-side and returns its SHA1
+- SCRIPT EXISTS checks whether scripts are in cache (1 = cached, 0 = not)
+- SCRIPT FLUSH clears all cached scripts; plan a reload procedure before using it
+
+## Code Examples
+
+**Lua script with no-writes flag for replica safety**
 
 ```lua
--- BAD: Creating tables in hot path
-for i = 1, 1000 do
-    local result = {}  -- Allocates memory each iteration
-    table.insert(result, i)
-end
-
--- GOOD: Reuse tables
-local result = {}
-for i = 1, 1000 do
-    result[i] = i
-end
-
--- BAD: String concatenation in loops
-local str = ''
-for i = 1, 100 do
-    str = str .. redis.call('GET', 'key:' .. i)  -- Creates new string each time
-end
-
--- GOOD: Use table.concat
-local parts = {}
-for i = 1, 100 do
-    parts[i] = redis.call('GET', 'key:' .. i)
-end
-local str = table.concat(parts, '')
+#!lua flags=no-writes
+-- Read-only: safe for replica execution
+-- KEYS[1] = the key to fetch
+local val = redis.call('GET', KEYS[1])
+return val or '0'
 ```
 
-## Script Management
+**Script cache management: LOAD, EXISTS, EVALSHA**
 
-```redis
-# Check if script exists
-SCRIPT EXISTS <sha1> [sha1 ...]
+```bash
+# Load and cache
+SCRIPT LOAD "#!lua flags=no-writes\nreturn redis.call('GET', KEYS[1])"
+# => 'abc123sha1'
 
-# Kill running script
-SCRIPT KILL
+# Verify cached
+SCRIPT EXISTS abc123sha1
+# => 1) (integer) 1
 
-# Clear script cache
-SCRIPT FLUSH
-
-# Debug mode
-SCRIPT DEBUG YES|SYNC|NO
+# Run by SHA1
+EVALSHA abc123sha1 1 mykey
 ```
 
-📖 [Script Commands](https://redis.io/docs/latest/commands/?group=scripting)
 
 ## Resources
 
-- [Scripting Commands](https://redis.io/docs/latest/commands/?group=scripting) — Redis scripting command reference
+- [Lua API Reference](https://redis.io/docs/latest/develop/interact/programmability/lua-api/) — Redis Lua API including script flags
+- [Redis Scripting Commands](https://redis.io/docs/latest/commands/?group=scripting) — SCRIPT subcommands reference
 
 ---
 
