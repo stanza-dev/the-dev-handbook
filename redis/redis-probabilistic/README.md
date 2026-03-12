@@ -8,14 +8,14 @@
 
 | | Section | Lessons |
 |---|---------|---------|
-| 🎲 | [Introduction to Probabilistic Computing](./1-probabilistic-intro/) | 1 lesson |
-| 🔢 | [HyperLogLog for Cardinality](./2-hyperloglog/) | 1 lesson |
-| 🌸 | [Bloom Filters for Membership](./3-bloom-filters/) | 1 lesson |
-| 🐦 | [Cuckoo Filters and Item Deletion](./4-cuckoo-filters/) | 2 lessons |
-| 📈 | [Count-Min Sketch for Frequency](./5-count-min-sketch/) | 1 lesson |
-| 🏆 | [Top-K and t-digest](./6-topk-tdigest/) | 2 lessons |
+| 🎲 | [Introduction to Probabilistic Computing](./1-probabilistic-intro/) | 3 lessons |
+| 🔢 | [HyperLogLog for Cardinality](./2-hyperloglog/) | 3 lessons |
+| 🌸 | [Bloom Filters for Membership](./3-bloom-filters/) | 3 lessons |
+| 🐦 | [Cuckoo Filters and Item Deletion](./4-cuckoo-filters/) | 3 lessons |
+| 📈 | [Count-Min Sketch for Frequency](./5-count-min-sketch/) | 3 lessons |
+| 🏆 | [Top-K and t-digest](./6-topk-tdigest/) | 3 lessons |
 
-**8 lessons** · **13 interactive challenges**
+**18 lessons** · **18 interactive challenges**
 
 ## Want the Interactive Experience?
 

@@ -7,6 +7,8 @@ Count unique items with constant memory using HyperLogLog.
 ## Lessons
 
 1. [Understanding HyperLogLog](./1-hll-intro.md)
+2. [HyperLogLog Internals and Registers](./2-hll-internals.md)
+3. [HyperLogLog Merging Patterns](./3-hll-merging.md)
 
 ## Practice Challenges
 

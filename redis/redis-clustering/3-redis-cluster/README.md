@@ -8,6 +8,7 @@ Master Redis Cluster for horizontal scaling with automatic sharding.
 
 1. [Redis Cluster Architecture](./1-cluster-intro.md)
 2. [Setting Up Redis Cluster](./2-cluster-setup.md)
+3. [Cluster Client Libraries and Multi-Key Operations](./3-cluster-clients.md)
 
 ## Practice Challenges
 

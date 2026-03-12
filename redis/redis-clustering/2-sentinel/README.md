@@ -8,6 +8,7 @@ Deploy Redis Sentinel for automatic master detection and failover.
 
 1. [Introduction to Redis Sentinel](./1-sentinel-intro.md)
 2. [Deploying Redis Sentinel](./2-sentinel-setup.md)
+3. [Sentinel Client Integration and Best Practices](./3-client-integration.md)
 
 ## Practice Challenges
 

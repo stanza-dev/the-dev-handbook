@@ -8,12 +8,14 @@ Learn Cuckoo filters that support deletion, unlike Bloom filters.
 
 1. [Cuckoo Filters: Bloom with Deletion](./1-cuckoo-deep.md)
 2. [Cuckoo Filter Use Cases](./2-cuckoo-patterns.md)
+3. [Cuckoo Filter Internals and Sizing](./3-cuckoo-sizing.md)
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: Deleting from Cuckoo Filter
 - 🧩 Multiple Choice: Cuckoo vs Bloom
+- 🧩 Challenge: Cuckoo Filter Properties
 
 → [Practice in your IDE](https://stanza.dev/courses/redis-probabilistic)

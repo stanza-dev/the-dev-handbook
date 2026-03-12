@@ -5,39 +5,41 @@ source_lesson: "redis-clustering-disaster-recovery"
 
 # Disaster Recovery Planning
 
-Prepare for the worst with proper DR strategies and testing.
+## Introduction
 
-## RPO and RTO Concepts
+Disaster recovery planning ensures your Redis deployment can survive catastrophic failures. This involves defining acceptable data loss (RPO), acceptable downtime (RTO), and building procedures to meet those targets.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Recovery Point Objective (RPO)                             │
-│  How much data can you afford to lose?                      │
-│  • RPO = 0: No data loss (sync replication)                │
-│  • RPO = 1 minute: Up to 1 minute of data loss             │
-├─────────────────────────────────────────────────────────────┤
-│  Recovery Time Objective (RTO)                              │
-│  How long can you be down?                                  │
-│  • RTO = 0: Instant failover (active-active)               │
-│  • RTO = 5 minutes: Automatic Sentinel failover            │
-│  • RTO = 1 hour: Manual intervention required              │
-└─────────────────────────────────────────────────────────────┘
-```
+## Key Concepts
 
-## Backup Strategies
+- **RPO (Recovery Point Objective)**: Maximum acceptable data loss, measured in time
+- **RTO (Recovery Time Objective)**: Maximum acceptable downtime until service is restored
+- **RDB Snapshot**: Point-in-time binary backup of the Redis dataset
+- **AOF (Append Only File)**: Write-ahead log for point-in-time recovery
 
-### RDB Snapshots for DR
+## Real World Context
 
+Every production Redis deployment needs a documented DR plan. Without one, a datacenter failure means scrambling under pressure to figure out recovery procedures, likely resulting in data loss and extended downtime.
+
+## Deep Dive
+
+### RPO and RTO
+
+| Strategy | RPO | RTO |
+|----------|-----|-----|
+| Active-Active | ~0 | ~0 |
+| Sentinel failover | Seconds of data | 5-15 seconds |
+| Manual failover | Minutes of data | Minutes to hours |
+| Restore from backup | Hours of data | Hours |
+
+### Backup Strategies
+
+**RDB Snapshots for DR:**
 ```redis
-# Force immediate snapshot
 BGSAVE
-
-# Check last save time
 LASTSAVE
 ```
 
 ```bash
-# Backup script
 #!/bin/bash
 DATE=$(date +%Y%m%d_%H%M%S)
 redis-cli BGSAVE
@@ -46,21 +48,12 @@ cp /var/lib/redis/dump.rdb /backup/redis/dump_$DATE.rdb
 aws s3 cp /backup/redis/dump_$DATE.rdb s3://my-backups/redis/
 ```
 
-### AOF for Point-in-Time Recovery
-
+**AOF for Point-in-Time Recovery:**
 ```redis
-# Rewrite AOF to compact it
 BGREWRITEAOF
 ```
 
-```bash
-# Backup AOF file
-cp /var/lib/redis/appendonly.aof /backup/redis/aof_$DATE.aof
-```
-
-## Failover Procedures
-
-### Planned Failover (Maintenance)
+### Planned Failover Procedure
 
 ```bash
 # 1. Disable writes on primary
@@ -75,55 +68,20 @@ redis-cli -h replica REPLICAOF NO ONE
 
 # 4. Update DNS/clients to point to new primary
 
-# 5. Perform maintenance on old primary
-
-# 6. Rejoin as replica (optional)
+# 5. Rejoin old primary as replica (optional)
 redis-cli -h old-primary REPLICAOF new-primary 6379
 ```
 
 ### Emergency Failover
 
-```python
-def emergency_failover(old_primary, new_primary):
-    """Manual failover when primary is unreachable"""
-    
-    # 1. Verify primary is truly down
-    try:
-        old_primary.ping()
-        print("Primary is up! Aborting.")
-        return False
-    except:
-        print("Primary confirmed down")
-    
-    # 2. Find best replica (most up-to-date)
-    best_replica = None
-    best_offset = -1
-    
-    for replica in replicas:
-        try:
-            info = replica.info('replication')
-            offset = info.get('slave_repl_offset', 0)
-            if offset > best_offset:
-                best_offset = offset
-                best_replica = replica
-        except:
-            continue
-    
-    # 3. Promote best replica
-    best_replica.execute_command('REPLICAOF', 'NO', 'ONE')
-    
-    # 4. Point other replicas to new primary
-    for replica in replicas:
-        if replica != best_replica:
-            replica.execute_command('REPLICAOF', new_primary_host, 6379)
-    
-    # 5. Update application configuration
-    update_dns(new_primary_host)
-    
-    return True
-```
+When the primary is unreachable:
+1. Verify primary is truly down
+2. Find the replica with the highest replication offset
+3. Promote that replica with `REPLICAOF NO ONE`
+4. Point other replicas to the new primary
+5. Update application configuration/DNS
 
-## DR Testing
+### DR Testing
 
 **Monthly tests:**
 - Restore from backup to test environment
@@ -135,7 +93,38 @@ def emergency_failover(old_primary, new_primary):
 - Execute full failover procedure
 - Measure actual RTO/RPO
 
-📖 [Redis Persistence](https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/)
+## Common Pitfalls
+
+1. **Never testing backup restoration** -- Backups that cannot be restored are useless. Regularly restore backups to a test environment to verify integrity.
+2. **Assuming Sentinel handles everything** -- Sentinel handles single-node failures, not datacenter failures. Cross-region DR requires additional planning.
+
+## Best Practices
+
+1. **Document runbooks** -- Write step-by-step procedures for both planned and emergency failover. Engineers under stress need clear instructions.
+2. **Automate backup rotation** -- Keep daily backups for a week, weekly for a month, and monthly for a year. Automate upload to off-site storage.
+
+## Summary
+
+- Define RPO and RTO targets before choosing a DR strategy
+- Use RDB snapshots for periodic backups and AOF for point-in-time recovery
+- Document and practice both planned and emergency failover procedures
+- Test backup restoration monthly and full DR quarterly
+- Store backups off-site (e.g., S3) for true disaster resilience
+
+## Code Examples
+
+**Automated Redis backup script with S3 upload**
+
+```bash
+#!/bin/bash
+# Automated Redis backup script
+DATE=$(date +%Y%m%d_%H%M%S)
+redis-cli BGSAVE
+sleep 5
+cp /var/lib/redis/dump.rdb /backup/redis/dump_$DATE.rdb
+aws s3 cp /backup/redis/dump_$DATE.rdb s3://my-backups/redis/
+```
+
 
 ## Resources
 

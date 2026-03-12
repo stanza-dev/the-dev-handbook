@@ -5,25 +5,24 @@ source_lesson: "redis-probabilistic-cms-intro"
 
 # Count-Min Sketch Explained
 
-Count-Min Sketch (CMS) estimates how many times items occur in a stream using fixed memory, regardless of the number of unique items.
+## Introduction
 
-## The Problem
+Counting how often things happen sounds trivial until you have billions of events per day. Count-Min Sketch (CMS) solves frequency estimation in constant memory, making it the go-to structure when you need approximate counts at massive scale.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Problem: Count item frequencies in a data stream          │
-│                                                             │
-│  Stream: apple, banana, apple, cherry, apple, banana       │
-│                                                             │
-│  Exact: {"apple": 3, "banana": 2, "cherry": 1}             │
-│  Memory: O(number of unique items)                         │
-│                                                             │
-│  CMS: Fixed-size counter matrix                            │
-│  Memory: O(1) - constant regardless of items               │
-└─────────────────────────────────────────────────────────────┘
-```
+## Key Concepts
 
-## How It Works
+- **Frequency estimation**: Approximating how many times a specific item has appeared in a data stream.
+- **Counter matrix**: A grid of counters with `d` rows (hash functions) and `w` columns (counter slots) that stores compressed frequency information.
+- **Hash collision**: When two different items map to the same counter position, inflating counts. CMS mitigates this by using multiple hash functions and taking the minimum.
+- **Overestimation bias**: CMS can only overestimate counts (never underestimate), because collisions add to counters but never subtract.
+
+## Real World Context
+
+Anytime you need to answer "how many times has X happened?" at scale, CMS is your friend. Ad impression counting, network traffic analysis, page view tracking, and query popularity ranking all benefit from CMS. A single CMS can replace millions of individual counters while using only a few kilobytes of memory.
+
+## Deep Dive
+
+CMS works by hashing each item through `d` independent hash functions. Each hash maps the item to one column in its row. On insertion, all `d` positions are incremented. On query, all `d` positions are read and the minimum value is returned.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -39,57 +38,58 @@ Count-Min Sketch (CMS) estimates how many times items occur in a stream using fi
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Key Properties
-
-- **Never underestimates**: Count is always ≥ true count
-- **May overestimate**: Due to hash collisions
-- **Fixed memory**: Configurable width × depth
-- **Fast**: O(depth) for both add and query
-
-## Basic Commands
-
-### CMS.INITBYDIM: Create by Dimensions
+Redis provides two ways to create a CMS:
 
 ```redis
-# Create with specific dimensions
+# By explicit dimensions (width × depth)
 CMS.INITBYDIM wordcount 2000 5
-# 2000 columns × 5 rows
-```
 
-### CMS.INITBYPROB: Create by Error Rate
-
-```redis
-# Create with error and probability parameters
+# By error rate and probability
 CMS.INITBYPROB wordcount 0.001 0.01
-# 0.001 = error margin
-# 0.01 = probability of exceeding error
+# 0.001 = error margin (epsilon)
+# 0.01 = probability of exceeding error (delta)
 ```
 
-### CMS.INCRBY: Increment Counts
+Once created, you add and query items:
 
 ```redis
-# Increment single item
-CMS.INCRBY wordcount "apple" 1
-# Returns: [count] (new estimated count)
-
-# Increment multiple items
+# Increment counts
 CMS.INCRBY wordcount "apple" 3 "banana" 2 "cherry" 1
-# Returns: [apple_count, banana_count, cherry_count]
-```
 
-### CMS.QUERY: Get Counts
-
-```redis
-# Query single item
-CMS.QUERY wordcount "apple"
-# Returns: [estimated_count]
-
-# Query multiple items
+# Query estimated counts
 CMS.QUERY wordcount "apple" "banana" "cherry"
 # Returns: [3, 2, 1] (approximately)
 ```
 
-## Practical Example: Page View Counter
+You can also merge multiple sketches, which is useful for combining counts across time windows or distributed nodes:
+
+```redis
+CMS.MERGE combined 2 sketch1 sketch2
+CMS.MERGE combined 2 sketch1 sketch2 WEIGHTS 1 2
+```
+
+## Common Pitfalls
+
+1. **Treating CMS counts as exact** — CMS only provides upper-bound estimates. If your application requires exact counts for small datasets, use a hash map instead.
+2. **Using too few columns (width)** — A narrow sketch causes more hash collisions, leading to larger overestimates. Always size your sketch based on expected error tolerance.
+3. **Forgetting that CMS never underestimates** — If CMS.QUERY returns 0, the item truly has never been seen. But a non-zero result may be inflated by collisions.
+
+## Best Practices
+
+1. **Use CMS.INITBYPROB for most cases** — Specifying error rate and probability is more intuitive than choosing raw dimensions. Let Redis compute optimal width and depth.
+2. **Combine with Top-K for trending analysis** — CMS alone cannot tell you which items are most frequent. Pair it with TOPK.RESERVE to maintain a ranked list of heavy hitters.
+3. **Merge sketches for time-windowed analysis** — Create per-hour or per-day sketches and merge them for broader time ranges without re-processing raw data.
+
+## Summary
+
+- Count-Min Sketch estimates item frequencies in constant memory using a matrix of counters and multiple hash functions.
+- It never underestimates: reported counts are always greater than or equal to the true count.
+- CMS.INITBYPROB lets you specify error tolerance directly; CMS.QUERY returns the minimum across hash functions.
+- Ideal for page views, network traffic, ad impressions, and any high-volume counting problem.
+
+## Code Examples
+
+**Basic CMS page view counter using CMS.INITBYPROB, CMS.INCRBY, and CMS.QUERY**
 
 ```python
 import redis
@@ -100,58 +100,36 @@ class PageViewCounter:
     def __init__(self):
         self.key = 'pageviews:counter'
         try:
-            # Error rate 0.1%, 99% confidence
             r.execute_command('CMS.INITBYPROB', self.key, 0.001, 0.01)
         except redis.ResponseError:
             pass  # Already exists
-    
+
     def record_view(self, page_url):
         """Record a page view"""
         r.execute_command('CMS.INCRBY', self.key, page_url, 1)
-    
+
     def get_views(self, page_url):
         """Get approximate view count"""
         result = r.execute_command('CMS.QUERY', self.key, page_url)
         return result[0]
-    
+
     def get_multiple_views(self, *page_urls):
         """Get view counts for multiple pages"""
         result = r.execute_command('CMS.QUERY', self.key, *page_urls)
         return dict(zip(page_urls, result))
 
-# Usage
 counter = PageViewCounter()
 counter.record_view('/home')
 counter.record_view('/about')
 counter.record_view('/home')
-
 print(counter.get_views('/home'))  # ~2
-print(counter.get_multiple_views('/home', '/about', '/contact'))
 ```
 
-## CMS.MERGE: Combine Sketches
-
-```redis
-# Merge multiple sketches
-CMS.MERGE combined 2 sketch1 sketch2
-
-# With weights (for weighted average)
-CMS.MERGE combined 2 sketch1 sketch2 WEIGHTS 1 2
-```
-
-## Use Cases
-
-1. **Web analytics**: Page view counts
-2. **Network monitoring**: Packet frequency by IP
-3. **Natural language**: Word frequency in documents
-4. **Click tracking**: Ad click counts
-5. **Search queries**: Query popularity
-
-📖 [Count-Min Sketch](https://redis.io/docs/latest/develop/data-types/probabilistic/count-min-sketch/)
 
 ## Resources
 
 - [Count-Min Sketch](https://redis.io/docs/latest/develop/data-types/probabilistic/count-min-sketch/) — Redis Count-Min Sketch documentation
+- [CMS Commands](https://redis.io/docs/latest/commands/?group=cms) — Full reference for all CMS commands
 
 ---
 

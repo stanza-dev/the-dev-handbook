@@ -5,95 +5,85 @@ source_lesson: "redis-probabilistic-tdigest"
 
 # t-digest: Percentile Estimation
 
-t-digest accurately estimates percentiles (median, 95th, 99th) of a data stream using fixed memory.
+## Introduction
 
-## The Problem
+Percentiles answer the questions that averages hide. "What's the 99th percentile response time?" tells you far more about user experience than the mean. t-digest computes accurate percentile estimates from streaming data using fixed memory, making it essential for latency monitoring and SLA tracking.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Problem: Find the 99th percentile response time           │
-│                                                             │
-│  Exact: Store all values → Sort → Find position            │
-│  Memory: O(n) - grows with data                            │
-│                                                             │
-│  t-digest: Streaming percentile estimation                 │
-│  Memory: O(1) - fixed compression parameter                │
-└─────────────────────────────────────────────────────────────┘
-```
+## Key Concepts
 
-## Basic Commands
+- **Quantile**: A value below which a given fraction of observations fall. The 0.95 quantile (95th percentile) is the value below which 95% of data points lie.
+- **Compression parameter**: Controls the accuracy-memory trade-off. Higher compression means more accuracy and more memory. Default is 100; values of 200-500 are common in production.
+- **CDF (Cumulative Distribution Function)**: The inverse of quantile — given a value, CDF tells you what fraction of observations are less than or equal to it.
+- **Centroid**: t-digest internally groups nearby values into centroids (weighted clusters). Centroids near the tails (extremes) are kept smaller for higher accuracy where it matters most.
 
-### TDIGEST.CREATE: Create Structure
+## Real World Context
+
+Every production system needs latency percentiles. SLAs are defined in terms of p50, p95, and p99. Without t-digest, computing percentiles requires storing every single observation and sorting them — an O(n log n) memory and time cost that grows without bound.
+
+## Deep Dive
+
+### Creating a t-digest
 
 ```redis
-# Create t-digest with default compression (100)
+# Default compression (100)
 TDIGEST.CREATE latency
 
-# With custom compression (higher = more accurate, more memory)
+# Higher compression for more accuracy
 TDIGEST.CREATE latency COMPRESSION 500
 ```
 
-### TDIGEST.ADD: Add Values
+### Adding Values
 
 ```redis
-# Add single value
-TDIGEST.ADD latency 45.2
-
-# Add multiple values
+# Add individual values
 TDIGEST.ADD latency 45.2 52.1 38.7 61.3 49.8
 
-# Add with weights (for pre-aggregated data)
-TDIGEST.ADD latency 45.2 10 52.1 5
-# 45.2 appeared 10 times, 52.1 appeared 5 times
+# Values are added to the streaming digest immediately
 ```
 
-### TDIGEST.QUANTILE: Get Percentiles
+### Querying Percentiles with TDIGEST.QUANTILE
 
 ```redis
-# Get median (50th percentile)
+# Get the median (50th percentile)
 TDIGEST.QUANTILE latency 0.5
 # Returns: [48.5]
 
-# Get multiple percentiles
-TDIGEST.QUANTILE latency 0.5 0.95 0.99
-# Returns: [48.5, 95.2, 128.7]
-
-# Common SLA percentiles
-TDIGEST.QUANTILE latency 0.5 0.9 0.95 0.99 0.999
+# Get multiple percentiles at once
+TDIGEST.QUANTILE latency 0.5 0.9 0.95 0.99
+# Returns: [48.5, 95.2, 120.1, 128.7]
 ```
 
-### TDIGEST.CDF: Cumulative Distribution
+### Querying the CDF with TDIGEST.CDF
 
 ```redis
-# What percentile is value 50?
+# What fraction of values are ≤ 50ms?
 TDIGEST.CDF latency 50
-# Returns: [0.52] (52% of values are ≤ 50)
+# Returns: [0.52] → 52% of values are ≤ 50ms
 
 # Multiple values
 TDIGEST.CDF latency 50 100 150
 # Returns: [0.52, 0.89, 0.97]
 ```
 
-### Other Commands
+### Other Useful Commands
 
 ```redis
-# Get min and max values
+# Min and max values
 TDIGEST.MIN latency
 TDIGEST.MAX latency
 
-# Get trimmed mean (ignoring outliers)
+# Trimmed mean (exclude outliers)
 TDIGEST.TRIMMED_MEAN latency 0.1 0.9
-# Mean excluding bottom 10% and top 10%
+# Mean of values between 10th and 90th percentiles
 
 # Merge multiple digests
 TDIGEST.MERGE combined COMPRESSION 200 2 latency1 latency2
 ```
 
-## Practical Example: Response Time Monitoring
+### Practical Example: API Latency Monitor
 
 ```python
 import redis
-import time
 
 r = redis.Redis()
 
@@ -103,93 +93,120 @@ class LatencyMonitor:
         try:
             r.execute_command('TDIGEST.CREATE', self.key, 'COMPRESSION', compression)
         except redis.ResponseError:
-            pass  # Already exists
-    
+            pass
+
     def record(self, latency_ms):
-        """Record a latency measurement"""
+        """Record a latency measurement."""
         r.execute_command('TDIGEST.ADD', self.key, latency_ms)
-    
+
     def get_percentiles(self):
-        """Get standard SLA percentiles"""
+        """Get standard SLA percentiles."""
         result = r.execute_command(
-            'TDIGEST.QUANTILE', self.key,
-            0.5, 0.9, 0.95, 0.99
+            'TDIGEST.QUANTILE', self.key, 0.5, 0.9, 0.95, 0.99
         )
-        return {
-            'p50': result[0],
-            'p90': result[1],
-            'p95': result[2],
-            'p99': result[3]
-        }
-    
-    def get_stats(self):
-        """Get min, max, and percentiles"""
-        min_val = r.execute_command('TDIGEST.MIN', self.key)
-        max_val = r.execute_command('TDIGEST.MAX', self.key)
-        percentiles = self.get_percentiles()
-        return {
-            'min': min_val,
-            'max': max_val,
-            **percentiles
-        }
+        return {'p50': result[0], 'p90': result[1], 'p95': result[2], 'p99': result[3]}
 
-# Usage
-monitor = LatencyMonitor('api:endpoint')
+    def check_sla(self, threshold_ms):
+        """What percentage of requests are under the SLA threshold?"""
+        result = r.execute_command('TDIGEST.CDF', self.key, threshold_ms)
+        return round(result[0] * 100, 2)
 
-# Record latencies
-for latency in [45, 52, 48, 120, 55, 42, 67, 51]:
-    monitor.record(latency)
+monitor = LatencyMonitor('api:users')
+for ms in [45, 52, 48, 120, 55, 42, 67, 51, 95, 110]:
+    monitor.record(ms)
 
-print(monitor.get_percentiles())
-# {'p50': 51.5, 'p90': 100.0, 'p95': 120.0, 'p99': 120.0}
+print(monitor.get_percentiles())  # {'p50': 51.5, 'p90': 115.0, ...}
+print(f"{monitor.check_sla(100)}% of requests under 100ms SLA")
 ```
 
-## Time-Windowed Percentiles
+### Time-Windowed Percentiles
+
+Create per-minute digests and merge them for broader windows:
 
 ```python
-from datetime import datetime
+from datetime import datetime, timedelta
 
-def record_latency_windowed(latency):
-    """Record latency in current minute's t-digest"""
-    minute = datetime.now().strftime('%Y-%m-%d:%H:%M')
+def record_latency_windowed(latency_ms):
+    """Record latency in the current minute's t-digest."""
+    minute = datetime.utcnow().strftime('%Y-%m-%d:%H:%M')
     key = f'latency:{minute}'
-    
-    # Create if not exists (will error if exists, that's fine)
     try:
         r.execute_command('TDIGEST.CREATE', key)
-        r.expire(key, 3600)  # Keep for 1 hour
-    except:
+        r.expire(key, 3600)
+    except redis.ResponseError:
         pass
-    
-    r.execute_command('TDIGEST.ADD', key, latency)
+    r.execute_command('TDIGEST.ADD', key, latency_ms)
 
 def get_hourly_percentiles():
-    """Merge last 60 minutes and get percentiles"""
+    """Merge last 60 minutes and get percentiles."""
+    now = datetime.utcnow()
     keys = []
-    now = datetime.now()
     for i in range(60):
         minute = (now - timedelta(minutes=i)).strftime('%Y-%m-%d:%H:%M')
-        keys.append(f'latency:{minute}')
-    
-    # Filter to existing keys
-    existing = [k for k in keys if r.exists(k)]
-    
-    if not existing:
+        key = f'latency:{minute}'
+        if r.exists(key):
+            keys.append(key)
+    if not keys:
         return None
-    
-    # Merge into temporary key
-    r.execute_command('TDIGEST.MERGE', 'latency:temp', len(existing), *existing)
-    result = r.execute_command('TDIGEST.QUANTILE', 'latency:temp', 0.5, 0.95, 0.99)
-    r.delete('latency:temp')
-    
-    return result
+    r.execute_command('TDIGEST.MERGE', 'latency:hourly_tmp',
+                      'COMPRESSION', 200, len(keys), *keys)
+    result = r.execute_command('TDIGEST.QUANTILE',
+                               'latency:hourly_tmp', 0.5, 0.95, 0.99)
+    r.delete('latency:hourly_tmp')
+    return {'p50': result[0], 'p95': result[1], 'p99': result[2]}
 ```
 
-📖 [t-digest Commands](https://redis.io/docs/latest/develop/data-types/probabilistic/t-digest/)
+## Common Pitfalls
+
+1. **Confusing QUANTILE and CDF** — QUANTILE takes a fraction (0.95) and returns a value. CDF takes a value and returns a fraction. They are inverses of each other.
+2. **Using default compression for tail-sensitive workloads** — The default compression of 100 is fine for p50 but may lose accuracy at p99 and beyond. Use COMPRESSION 500 for SLA-critical monitoring.
+
+## Best Practices
+
+1. **Use TDIGEST.TRIMMED_MEAN to ignore outliers** — When a single 10-second timeout skews your average, trimmed mean between the 5th and 95th percentiles gives a more representative central tendency.
+2. **Merge per-window digests for flexible time ranges** — Rather than one ever-growing digest, create per-minute or per-hour digests and merge on demand. This lets you query any arbitrary time range.
+
+## Summary
+
+- t-digest estimates percentiles from streaming data in fixed memory using the COMPRESSION parameter.
+- TDIGEST.QUANTILE returns values at given percentile ranks; TDIGEST.CDF does the inverse.
+- Higher compression (200-500) improves accuracy at the tails (p99, p99.9) where SLAs are defined.
+- Time-windowed digests with TDIGEST.MERGE enable flexible historical percentile queries.
+
+## Code Examples
+
+**API latency monitoring with TDIGEST.QUANTILE for percentiles and TDIGEST.CDF for SLA compliance**
+
+```python
+import redis
+
+r = redis.Redis()
+
+# Create a t-digest for API latency monitoring
+try:
+    r.execute_command('TDIGEST.CREATE', 'latency:api', 'COMPRESSION', 200)
+except redis.ResponseError:
+    pass
+
+# Record latency samples
+latencies = [45, 52, 48, 120, 55, 42, 67, 51, 95, 110, 88, 73]
+for ms in latencies:
+    r.execute_command('TDIGEST.ADD', 'latency:api', ms)
+
+# Get SLA percentiles
+result = r.execute_command('TDIGEST.QUANTILE', 'latency:api', 0.5, 0.95, 0.99)
+print(f'p50={result[0]:.1f}ms, p95={result[1]:.1f}ms, p99={result[2]:.1f}ms')
+
+# Check what percentage of requests are under 100ms
+cdf = r.execute_command('TDIGEST.CDF', 'latency:api', 100)
+print(f'{cdf[0] * 100:.1f}% of requests are under 100ms')
+```
+
 
 ## Resources
 
 - [t-digest](https://redis.io/docs/latest/develop/data-types/probabilistic/t-digest/) — Redis t-digest documentation
+- [t-digest Commands](https://redis.io/docs/latest/commands/?group=tdigest) — Full reference for all t-digest commands
 
 ---
 

@@ -5,81 +5,109 @@ source_lesson: "redis-probabilistic-hll-intro"
 
 # Understanding HyperLogLog
 
-HyperLogLog (HLL) is a probabilistic algorithm for counting unique items (cardinality estimation) using only 12 KB of memory regardless of how many items you add.
+## Introduction
 
-## How It Works (Simplified)
+HyperLogLog (HLL) is a probabilistic algorithm that counts unique items using only 12 KB of memory, no matter how many items you add. Whether you are tracking 100 users or 1 billion, the memory footprint stays the same. This lesson covers the core commands — PFADD, PFCOUNT, and PFMERGE — and shows you how to use them for real analytics.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  The idea: Hash items and look at leading zeros            │
-│                                                             │
-│  Item "Alice" → hash → 0001...  (3 leading zeros)          │
-│  Item "Bob"   → hash → 0000001... (6 leading zeros)        │
-│                                                             │
-│  The more unique items you add, the more likely you are    │
-│  to see hashes with many leading zeros.                    │
-│                                                             │
-│  Max leading zeros observed ≈ log2(cardinality)            │
-└─────────────────────────────────────────────────────────────┘
-```
+## Key Concepts
 
-Redis uses 16,384 registers for better accuracy.
+- **Cardinality**: The number of distinct elements in a set. HyperLogLog estimates this value.
+- **PFADD**: Adds one or more elements to a HyperLogLog. Returns 1 if the internal registers changed, 0 otherwise.
+- **PFCOUNT**: Returns the approximate cardinality. When called with multiple keys, it returns the union cardinality.
+- **PFMERGE**: Merges multiple HyperLogLogs into one, useful for aggregating time-windowed data.
+- **Standard error**: HyperLogLog's error rate is 0.81%, meaning for a true count of 1,000,000, the estimate will typically fall between 991,900 and 1,008,100.
 
-## Basic Commands
+## Real World Context
 
-### PFADD: Add Items
+Every analytics platform needs to answer questions like "how many unique users visited this page today?" or "how many distinct search queries did we receive this week?" Storing every user ID or query string to count them exactly becomes prohibitively expensive at scale. HyperLogLog lets you answer these questions with 12 KB per counter, making it feasible to maintain thousands of counters (one per page, per day, per feature) without worrying about memory.
+
+## Deep Dive
+
+### Adding Items with PFADD
+
+PFADD adds elements to a HyperLogLog and returns whether the cardinality estimate changed:
 
 ```redis
-# Add single item
+# Add a single item
 PFADD visitors "user:1001"
-# Returns: 1 (cardinality changed)
+# Returns: 1 (cardinality estimate changed)
 
-# Add multiple items
+# Add multiple items at once
 PFADD visitors "user:1002" "user:1003" "user:1004"
 # Returns: 1
 
-# Adding duplicate
+# Adding a duplicate does not change the estimate
 PFADD visitors "user:1001"
 # Returns: 0 (cardinality unchanged)
 ```
 
-### PFCOUNT: Get Cardinality
+The return value is useful for understanding whether new unique items were encountered, but it is not a guarantee of uniqueness — it reflects whether internal registers were modified.
+
+### Counting with PFCOUNT
+
+PFCOUNT returns the approximate cardinality of one or more HyperLogLogs:
 
 ```redis
-# Count unique items
+# Count unique items in a single HLL
 PFCOUNT visitors
 # Returns: 4 (approximately)
 
-# Count across multiple HLLs
+# Count the union across multiple HLLs
 PFCOUNT visitors:day1 visitors:day2 visitors:day3
-# Returns: union cardinality
+# Returns: unique items across all three days
 ```
 
-### PFMERGE: Combine HLLs
+When called with multiple keys, PFCOUNT computes the union — a user who visited on both day 1 and day 2 is counted only once.
+
+### Merging with PFMERGE
+
+PFMERGE combines multiple HyperLogLogs into a destination key:
 
 ```redis
-# Merge multiple HLLs into one
+# Merge daily HLLs into a weekly aggregate
 PFMERGE visitors:week visitors:mon visitors:tue visitors:wed
 
-# The destination contains union of all items
+# The destination now contains the union
 PFCOUNT visitors:week
 ```
 
-## Accuracy
+This is essential for building roll-up aggregations — merge daily HLLs into weekly, weekly into monthly.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Standard Error: 0.81%                                      │
-│                                                             │
-│  Example: True count = 1,000,000                           │
-│  PFCOUNT returns: 991,900 to 1,008,100 (most of the time) │
-│                                                             │
-│  Memory: 12 KB (always!)                                   │
-│  Exact would need: 1M × 36 bytes = 36 MB                   │
-└─────────────────────────────────────────────────────────────┘
+### Memory Usage
+
+A HyperLogLog always uses approximately 12 KB, regardless of how many items have been added:
+
+```redis
+# Check memory usage
+MEMORY USAGE visitors
+# Returns: approximately 12,304 bytes
 ```
 
-## Practical Example: Daily/Weekly Unique Visitors
+Redis uses a sparse encoding for small HyperLogLogs (fewer than a threshold of registers set), which uses even less memory. Once enough distinct items are added, it automatically converts to the dense 12 KB representation.
+
+## Common Pitfalls
+
+1. **Using PFCOUNT with many keys in hot paths** — When PFCOUNT is called with multiple keys, Redis computes the union on the fly. For large numbers of keys, this takes time. Use PFMERGE to pre-compute aggregates instead of calling PFCOUNT with dozens of keys on every request.
+2. **Expecting PFADD return value to detect duplicates** — PFADD returns 0 when registers do not change, but this does not reliably indicate a duplicate. Due to the probabilistic nature, a genuinely new item might not change any register, and PFADD would return 0.
+3. **Forgetting that HLLs cannot be subtracted** — You cannot remove an item from a HyperLogLog or compute set difference. If you need "visitors on day 1 but not day 2," HLL cannot help you directly.
+
+## Best Practices
+
+1. **Use time-bucketed keys** — Create one HLL per time period (e.g., `visitors:2024-01-15`) and merge them for aggregates. This lets you expire old data and keep long-term roll-ups.
+2. **Set TTLs on granular keys** — Daily HLLs can be expired after merging into weekly/monthly aggregates, keeping memory usage predictable.
+3. **Use PFMERGE for dashboards** — Pre-merge HLLs during off-peak hours rather than computing unions on every dashboard load.
+
+## Summary
+
+- HyperLogLog counts unique items with 0.81% standard error using only 12 KB of memory.
+- PFADD adds items, PFCOUNT estimates cardinality, PFMERGE combines multiple HLLs.
+- Multi-key PFCOUNT computes the union cardinality (no double-counting).
+- Use time-bucketed keys with PFMERGE for daily/weekly/monthly roll-ups.
+- HLLs cannot remove items or compute set differences.
+
+## Code Examples
+
+**Daily visitor tracking with weekly roll-up aggregation using PFMERGE**
 
 ```python
 import redis
@@ -88,56 +116,37 @@ from datetime import datetime, timedelta
 r = redis.Redis()
 
 def track_visitor(user_id):
-    """Track visitor for today"""
+    """Track visitor for today."""
     today = datetime.now().strftime('%Y-%m-%d')
     r.pfadd(f'visitors:{today}', user_id)
 
 def get_daily_uniques(date):
-    """Get unique visitors for a specific day"""
+    """Get unique visitors for a specific day."""
     return r.pfcount(f'visitors:{date}')
 
 def get_weekly_uniques():
-    """Get unique visitors for last 7 days"""
+    """Get unique visitors for last 7 days (union)."""
     keys = []
     for i in range(7):
         date = (datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d')
         keys.append(f'visitors:{date}')
-    return r.pfcount(*keys)  # Union of all days
+    return r.pfcount(*keys)
 
-def create_weekly_hll():
-    """Merge daily HLLs into weekly for storage"""
+def create_weekly_rollup():
+    """Merge daily HLLs into weekly for long-term storage."""
     keys = []
     for i in range(7):
         date = (datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d')
         keys.append(f'visitors:{date}')
-    
     week = datetime.now().strftime('%Y-W%W')
     r.pfmerge(f'visitors:week:{week}', *keys)
 ```
 
-## Use Cases
-
-1. **Unique visitors per page/day/month**
-2. **Unique search queries**
-3. **Unique IP addresses**
-4. **Unique products viewed**
-5. **Unique events/actions**
-
-## Memory Usage
-
-```redis
-# Check memory of a HyperLogLog
-MEMORY USAGE visitors
-# Returns: approximately 12,304 bytes (12 KB)
-
-# Same for 1 item or 1 billion items!
-```
-
-📖 [HyperLogLog Commands](https://redis.io/docs/latest/commands/?group=hyperloglog)
 
 ## Resources
 
 - [HyperLogLog](https://redis.io/docs/latest/develop/data-types/probabilistic/hyperloglogs/) — Redis HyperLogLog documentation
+- [HyperLogLog Commands](https://redis.io/docs/latest/commands/?group=hyperloglog) — PFADD, PFCOUNT, and PFMERGE command reference
 
 ---
 

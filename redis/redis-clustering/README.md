@@ -8,14 +8,14 @@
 
 | | Section | Lessons |
 |---|---------|---------|
-| 🔄 | [Replication Fundamentals](./1-replication-fundamentals/) | 2 lessons |
-| 🛡️ | [Sentinel for Automated Failover](./2-sentinel/) | 2 lessons |
-| 🌐 | [Redis Cluster Deep Dive](./3-redis-cluster/) | 2 lessons |
-| ⚙️ | [Operating Production Clusters](./4-cluster-operations/) | 2 lessons |
-| 🌍 | [Cross-Region and Multi-Datacenter Deployments](./5-cross-region-deployments/) | 2 lessons |
-| 📊 | [Monitoring and Troubleshooting](./6-monitoring-troubleshooting/) | 2 lessons |
+| 🔄 | [Replication Fundamentals](./1-replication-fundamentals/) | 3 lessons |
+| 🛡️ | [Sentinel for Automated Failover](./2-sentinel/) | 3 lessons |
+| 🌐 | [Redis Cluster Deep Dive](./3-redis-cluster/) | 3 lessons |
+| ⚙️ | [Operating Production Clusters](./4-cluster-operations/) | 3 lessons |
+| 🌍 | [Cross-Region and Multi-Datacenter Deployments](./5-cross-region-deployments/) | 3 lessons |
+| 📊 | [Monitoring and Troubleshooting](./6-monitoring-troubleshooting/) | 3 lessons |
 
-**12 lessons** · **15 interactive challenges**
+**18 lessons** · **18 interactive challenges**
 
 ## Want the Interactive Experience?
 
