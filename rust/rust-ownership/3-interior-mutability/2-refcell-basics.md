@@ -3,9 +3,21 @@ source_course: "rust-ownership"
 source_lesson: "rust-ownership-refcell-basics"
 ---
 
-# RefCell<T>: Borrow Rules at Runtime
+# RefCell<T>: Runtime Borrow Checking
 
-`RefCell<T>` enforces borrowing rules at **runtime** instead of compile time.
+## Introduction
+RefCell<T> moves Rust's borrow checking from compile time to runtime, allowing you to mutate data through shared references for any type — not just Copy types. The tradeoff is that violating the borrow rules causes a runtime panic instead of a compile error.
+
+## Key Concepts
+- **RefCell<T>**: A container that enforces Rust's borrowing rules at runtime, panicking if they are violated.
+- **Ref<T>**: A smart pointer returned by `borrow()` that acts like `&T` and tracks the immutable borrow.
+- **RefMut<T>**: A smart pointer returned by `borrow_mut()` that acts like `&mut T` and tracks the mutable borrow.
+
+## Real World Context
+RefCell is commonly used in test mocks where a trait method takes `&self` but the mock needs to record calls internally. It is also essential for the `Rc<RefCell<T>>` pattern that enables shared mutable state in single-threaded graph structures.
+
+## Deep Dive
+RefCell provides `borrow()` and `borrow_mut()` methods that track borrows at runtime:
 
 ```rust
 use std::cell::RefCell;
@@ -15,31 +27,29 @@ let x = RefCell::new(5);
 {
     let mut borrow = x.borrow_mut();
     *borrow += 1;
-}  // Mutable borrow ends
+}  // Mutable borrow ends when guard drops
 
 println!("{}", x.borrow());  // 6
 ```
 
-## The Methods
+The runtime borrow rules mirror the compile-time rules:
 
 | Method | Returns | Panics if |
 |--------|---------|----------|
 | `borrow()` | `Ref<T>` | Already mutably borrowed |
 | `borrow_mut()` | `RefMut<T>` | Already borrowed (any) |
-| `try_borrow()` | `Result<Ref<T>, _>` | Never |
-| `try_borrow_mut()` | `Result<RefMut<T>, _>` | Never |
+| `try_borrow()` | `Result<Ref<T>, _>` | Never (returns Err) |
+| `try_borrow_mut()` | `Result<RefMut<T>, _>` | Never (returns Err) |
 
-## Runtime Panics!
+Violating the rules panics at runtime:
 
 ```rust
 let r = RefCell::new(5);
-let a = r.borrow();
-let b = r.borrow_mut();  // PANIC! Already borrowed immutably
+let a = r.borrow();         // Immutable borrow
+let b = r.borrow_mut();     // PANIC! Already borrowed immutably
 ```
 
-## Rc<RefCell<T>> Pattern
-
-Combine for multiple owners with mutation:
+The `Rc<RefCell<T>>` pattern combines shared ownership with interior mutability:
 
 ```rust
 use std::rc::Rc;
@@ -52,17 +62,23 @@ clone.borrow_mut().push(4);
 println!("{:?}", shared.borrow());  // [1, 2, 3, 4]
 ```
 
-## When to Use RefCell
+## Common Pitfalls
+1. **Holding borrows too long** — A `Ref` or `RefMut` guard keeps the borrow active until it is dropped. Holding it across a call that also borrows the RefCell will panic.
+2. **Using RefCell when Cell suffices** — If the type is Copy, Cell is simpler and has zero runtime overhead.
 
-1. When you're sure the borrow rules are followed, but compiler can't prove it
-2. Mock objects in tests
-3. Graph structures with shared mutable nodes
+## Best Practices
+1. **Keep borrow scopes short** — Drop the `Ref`/`RefMut` guard as soon as possible. Use blocks `{ }` to limit the scope.
+2. **Use try_borrow for recoverable errors** — When a panic would be unacceptable, use `try_borrow()` and handle the error.
 
-See [RefCell](https://doc.rust-lang.org/std/cell/struct.RefCell.html).
+## Summary
+- RefCell<T> enforces borrow rules at runtime with panics on violations.
+- `borrow()` returns Ref<T> (shared), `borrow_mut()` returns RefMut<T> (exclusive).
+- Rc<RefCell<T>> enables shared mutable state in single-threaded code.
+- RefCell is not thread-safe — use Mutex or RwLock for concurrent access.
 
 ## Code Examples
 
-**Mock with RefCell**
+**Mock with RefCell — the trait requires &self but the mock needs to record messages internally**
 
 ```rust
 use std::cell::RefCell;
@@ -90,15 +106,12 @@ impl Messenger for MockMessenger {
         self.messages.borrow_mut().push(msg.to_string());
     }
 }
-
-#[test]
-fn test_sends_message() {
-    let mock = MockMessenger::new();
-    mock.send("hello");
-    assert_eq!(mock.messages.borrow().len(), 1);
-}
 ```
 
+
+## Resources
+
+- [RefCell Documentation](https://doc.rust-lang.org/std/cell/struct.RefCell.html) — Official API reference for RefCell
 
 ---
 

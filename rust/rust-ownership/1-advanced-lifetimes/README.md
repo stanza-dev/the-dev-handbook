@@ -13,8 +13,10 @@ Mastering the hardest part of Rust.
 
 ## Practice Challenges
 
-This section includes **1 interactive challenge** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: Static Lifetime Quiz
+- 🧩 Challenge: Lifetime Elision Rule Order
+- 🔗 Matching: Variance Matching
 
 → [Practice in your IDE](https://stanza.dev/courses/rust-ownership)

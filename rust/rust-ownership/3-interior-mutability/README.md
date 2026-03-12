@@ -12,9 +12,10 @@ Mutating data even when you have an immutable reference.
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: RefCell Panic
+- 🧩 Challenge: Interior Mutability Selection
 - 🧩 Multiple Choice: Interior Mutability Types
 
 → [Practice in your IDE](https://stanza.dev/courses/rust-ownership)

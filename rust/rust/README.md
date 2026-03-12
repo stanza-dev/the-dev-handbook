@@ -2,7 +2,7 @@
 
 > Master the fundamentals of Rust, from ownership and borrowing to pattern matching and traits.
 
-**Rust 1.83 (2024 Edition)** · Beginner → Intermediate
+**Rust 1.94 (2024 Edition)** · Beginner → Intermediate
 
 ## Sections
 
@@ -15,7 +15,7 @@
 | 🗃️ | [Collections & Error Handling](./5-collections-errors/) | 3 lessons |
 | 🧬 | [Traits & Generics Fundamentals](./6-traits-generics/) | 3 lessons |
 
-**19 lessons** · **16 interactive challenges**
+**19 lessons** · **25 interactive challenges**
 
 ## Want the Interactive Experience?
 

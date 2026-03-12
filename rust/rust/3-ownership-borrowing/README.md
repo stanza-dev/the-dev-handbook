@@ -12,10 +12,11 @@ The unique feature that makes Rust memory safe without a Garbage Collector.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Ownership Move Quiz
+- 🧩 Challenge: Copy Types Select
+- ✏️ Fill in the Blank: Dangling Reference
 - 🧩 Multiple Choice: Borrowing Rules Quiz
-- 🧩 Multiple Choice: Dangling Reference
 
 → [Practice in your IDE](https://stanza.dev/courses/rust)

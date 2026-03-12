@@ -12,10 +12,11 @@ Understanding why Rust exists and how to use its world-class tooling.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Cargo Check Usage
+- 🧩 Challenge: Project Setup Ordering
 - 🧩 Multiple Choice: Mutability Error
-- 🧩 Multiple Choice: Shadowing vs Mutation
+- ✏️ Fill in the Blank: Shadowing vs Mutation
 
 → [Practice in your IDE](https://stanza.dev/courses/rust)

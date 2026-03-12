@@ -3,9 +3,25 @@ source_course: "rust"
 source_lesson: "rust-methods-impl"
 ---
 
-# Methods: Functions on Structs
+# Methods and Associated Functions
 
-Methods are defined inside an `impl` block.
+## Introduction
+
+Structs on their own are just data containers. The `impl` block is where you add behavior to your types by defining methods and associated functions. Methods operate on instances of a struct, while associated functions act as constructors or utility functions. Together, they provide encapsulation similar to what classes offer in other languages.
+
+## Key Concepts
+
+- **Method**: A function defined inside an `impl` block that takes `self` (or a reference to it) as its first parameter. Called with dot syntax: `instance.method()`.
+- **Associated function**: A function inside an `impl` block that does NOT take `self`. Called with `::` syntax: `Type::function()`. Often used as constructors.
+- **Self receiver**: The first parameter of a method. `&self` borrows immutably, `&mut self` borrows mutably, and `self` takes ownership.
+
+## Real World Context
+
+Every real Rust project defines methods on its structs. A `Database` struct has a `.query()` method. An `HttpRequest` struct has `.headers()` and `.body()` methods. The `impl` block is how you associate logic with data, keeping your codebase organized and your APIs intuitive.
+
+## Deep Dive
+
+Define methods inside an `impl` block. The method receiver determines what level of access the method has:
 
 ```rust
 struct Rectangle {
@@ -14,18 +30,18 @@ struct Rectangle {
 }
 
 impl Rectangle {
-    // Method: takes &self as first parameter
+    // Immutable borrow — reads data only
     fn area(&self) -> u32 {
         self.width * self.height
     }
-    
-    // Method that mutates
+
+    // Mutable borrow — can modify the instance
     fn double(&mut self) {
         self.width *= 2;
         self.height *= 2;
     }
-    
-    // Method that consumes self
+
+    // Takes ownership — consumes the instance
     fn into_square(self) -> Rectangle {
         let side = self.width.max(self.height);
         Rectangle { width: side, height: side }
@@ -33,44 +49,45 @@ impl Rectangle {
 }
 ```
 
-## Method Receivers
+The three receiver types map directly to ownership and borrowing rules:
 
 | Receiver | Access | Ownership |
-|----------|--------|----------|
+|----------|--------|-----------|
 | `&self` | Read only | Borrowed |
 | `&mut self` | Read/write | Mutably borrowed |
 | `self` | Full | Owned (consumed) |
 
-## Associated Functions
-
-Functions without `self` (like static methods):
+Associated functions do not take `self` and are often used as constructors:
 
 ```rust
 impl Rectangle {
-    // Associated function (not a method)
-    fn square(size: u32) -> Rectangle {
-        Rectangle { width: size, height: size }
+    fn square(size: u32) -> Self {
+        Self { width: size, height: size }
     }
 }
 
-let sq = Rectangle::square(10); // Call with ::
+let sq = Rectangle::square(10);
 ```
 
-## Multiple impl Blocks
+Note the use of `Self` as a shorthand for the implementing type.
 
-```rust
-impl Rectangle {
-    fn area(&self) -> u32 { self.width * self.height }
-}
+## Common Pitfalls
 
-impl Rectangle {
-    fn can_hold(&self, other: &Rectangle) -> bool {
-        self.width > other.width && self.height > other.height
-    }
-}
-```
+1. **Using `self` when `&self` suffices** — Taking `self` by value consumes the instance, making it unusable afterward. Most methods should use `&self` or `&mut self` unless the method is intentionally transforming the value.
+2. **Confusing method calls and associated function calls** — Methods use dot syntax (`rect.area()`), while associated functions use `::` syntax (`Rectangle::square(10)`). Mixing them up causes compiler errors.
 
-See [Method Syntax](https://doc.rust-lang.org/stable/book/ch05-03-method-syntax.html).
+## Best Practices
+
+1. **Implement a `new` constructor** — By convention, Rust types provide a `fn new(...) -> Self` associated function. This is the standard constructor pattern in the ecosystem.
+2. **Use `Self` instead of repeating the type name** — Inside an `impl` block, `Self` refers to the type being implemented. It makes refactoring easier and code more readable.
+
+## Summary
+
+- Methods are defined in `impl` blocks and take `&self`, `&mut self`, or `self` as the first parameter.
+- The receiver type controls whether the method reads, modifies, or consumes the instance.
+- Associated functions have no `self` parameter and are called with `::` syntax; they are often constructors.
+- Use `Self` as a shorthand for the implementing type inside `impl` blocks.
+- Follow the `new` constructor convention for idiomatic Rust APIs.
 
 ## Code Examples
 
@@ -91,6 +108,11 @@ let rect = Rectangle::new(10, 20);
 println!("Is square? {}", rect.is_square());
 ```
 
+
+## Resources
+
+- [Method Syntax](https://doc.rust-lang.org/stable/book/ch05-03-method-syntax.html) — Official guide to defining methods on structs
+- [Rust By Example - Methods](https://doc.rust-lang.org/rust-by-example/fn/methods.html) — Hands-on examples of methods and associated functions
 
 ---
 

@@ -12,9 +12,11 @@ Understanding scalar types, compound types, and type inference.
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Array Bounds Checking
+- 🔗 Matching: Integer Types Matching
 - 🧩 Multiple Choice: String vs &str
+- 🧩 Challenge: String Method Ordering
 
 → [Practice in your IDE](https://stanza.dev/courses/rust)

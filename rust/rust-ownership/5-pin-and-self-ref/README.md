@@ -12,9 +12,10 @@ Understanding immovable types for async and beyond.
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Unpin Meaning
+- 🧩 Challenge: Pin Creation Order
 - 🧩 Multiple Choice: Async Unpin
 
 → [Practice in your IDE](https://stanza.dev/courses/rust-ownership)

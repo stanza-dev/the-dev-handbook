@@ -3,9 +3,25 @@ source_course: "rust"
 source_lesson: "rust-result-error-handling"
 ---
 
-# Recoverable Errors with Result
+# Error Handling with Result
 
-Rust doesn't have exceptions. It uses the `Result` enum.
+## Introduction
+
+Rust does not have exceptions. Instead, it uses the `Result<T, E>` enum for recoverable errors and `panic!` for unrecoverable ones. This design forces you to handle errors explicitly, leading to more robust programs.
+
+## Key Concepts
+
+- **Result<T, E>**: An enum with two variants: `Ok(T)` for success and `Err(E)` for failure. It is returned by any operation that can fail.
+- **The `?` operator**: Syntactic sugar that unwraps `Ok` or returns `Err` early from the enclosing function, propagating the error to the caller.
+- **unwrap / expect**: Convenience methods that extract the `Ok` value or panic on `Err`. `expect` lets you attach a custom panic message.
+
+## Real World Context
+
+Every production Rust application uses `Result` extensively: reading files, parsing configuration, making network requests, querying databases. The `?` operator makes error propagation concise, and libraries like `anyhow` and `thiserror` build on `Result` to provide ergonomic error handling at scale.
+
+## Deep Dive
+
+The `Result` enum is defined as:
 
 ```rust
 enum Result<T, E> {
@@ -14,65 +30,56 @@ enum Result<T, E> {
 }
 ```
 
-## Basic Usage
+You handle it with `match`, which forces you to deal with both cases:
 
 ```rust
 use std::fs::File;
 
-let greeting_file = File::open("hello.txt");
-
-let greeting_file = match greeting_file {
-    Ok(file) => file,
-    Err(error) => panic!("Problem opening file: {:?}", error),
+let file = match File::open("config.toml") {
+    Ok(f) => f,
+    Err(e) => panic!("Cannot open config: {:?}", e),
 };
 ```
 
-## Matching Different Errors
+For quick prototyping, `unwrap` and `expect` provide shortcuts:
 
 ```rust
-use std::fs::File;
-use std::io::ErrorKind;
-
-let file = match File::open("hello.txt") {
-    Ok(file) => file,
-    Err(error) => match error.kind() {
-        ErrorKind::NotFound => match File::create("hello.txt") {
-            Ok(fc) => fc,
-            Err(e) => panic!("Problem creating file: {:?}", e),
-        },
-        other_error => panic!("Problem opening file: {:?}", other_error),
-    },
-};
+let file = File::open("config.toml").unwrap();
+let file = File::open("config.toml")
+    .expect("config.toml must exist in project root");
 ```
 
-## unwrap and expect
+The `?` operator is the idiomatic way to propagate errors. It replaces verbose match arms with a single character:
 
 ```rust
-// Panic if Err
-let file = File::open("hello.txt").unwrap();
-
-// Panic with custom message
-let file = File::open("hello.txt")
-    .expect("hello.txt should exist in project root");
-```
-
-## The ? Operator
-
-Propagates errors up the call stack:
-
-```rust
-use std::fs::File;
 use std::io::{self, Read};
 
-fn read_username_from_file() -> Result<String, io::Error> {
-    let mut file = File::open("hello.txt")?; // Returns early if Err
-    let mut username = String::new();
-    file.read_to_string(&mut username)?;
-    Ok(username)
+fn read_config() -> Result<String, io::Error> {
+    let mut content = String::new();
+    File::open("config.toml")?.read_to_string(&mut content)?;
+    Ok(content)
 }
 ```
 
-See [Recoverable Errors with Result](https://doc.rust-lang.org/stable/book/ch09-02-recoverable-errors-with-result.html).
+Each `?` either unwraps the `Ok` value and continues, or returns the `Err` from the function immediately.
+
+## Common Pitfalls
+
+1. **Using `unwrap` in library code** — `unwrap` panics on error, crashing the program. In libraries, always return `Result` so callers can decide how to handle failures.
+2. **Ignoring `Result` warnings** — Rust warns when a `Result` is unused. Never suppress this warning; either handle the error or explicitly ignore it with `let _ = ...`.
+
+## Best Practices
+
+1. **Use `?` for propagation** — It keeps error-handling code concise and readable. Reserve `match` for cases where you need to handle specific error variants differently.
+2. **Use `expect` with descriptive messages** — When you do need to unwrap (e.g., in tests or `main`), use `expect("why this should not fail")` so the panic message explains the assumption that was violated.
+
+## Summary
+
+- `Result<T, E>` replaces exceptions with explicit, type-safe error handling.
+- Use `match` for granular error handling, `?` for propagation, and `expect` for cases with clear invariants.
+- Never use `unwrap` in production library code.
+- The `?` operator works in any function that returns `Result` (or `Option`).
+- Rust's error model catches unhandled errors at compile time.
 
 ## Code Examples
 

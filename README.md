@@ -116,7 +116,7 @@ Maintained by [Stanza](https://stanza.dev) — Learn coding faster right in your
 - 🔌 [Rust for Embedded Systems](./rust/rust-embedded/) — 10 lessons
 - λ [Functional Rust](./rust/rust-functional/) — 10 lessons
 - 🔮 [Rust Metaprogramming](./rust/rust-metaprogramming/) — 10 lessons
-- 🧠 [Rust Ownership & Memory Model](./rust/rust-ownership/) — 15 lessons
+- 🧠 [Rust Ownership & Memory Model](./rust/rust-ownership/) — 16 lessons
 - 🚀 [Rust Performance](./rust/rust-performance/) — 10 lessons
 - 🎭 [Advanced Traits & Generics](./rust/rust-traits/) — 11 lessons
 - ⚠️ [Unsafe Rust & FFI](./rust/rust-unsafe/) — 10 lessons

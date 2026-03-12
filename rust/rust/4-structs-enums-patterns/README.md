@@ -13,9 +13,12 @@ Modeling data with algebraic data types.
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **5 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Method Receiver Self
+- 🔗 Matching: Enum Variant Matching
+- ✏️ Fill in the Blank: let else Divergence
 - 🧩 Multiple Choice: Match Exhaustiveness
+- 🧩 Challenge: Match Flow Ordering
 
 → [Practice in your IDE](https://stanza.dev/courses/rust)

@@ -12,10 +12,11 @@ Standard library tools and the Result type.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Hashmap Get Return
+- ✏️ Fill in the Blank: Unwrap vs Expect
 - 🧩 Multiple Choice: Question Mark Operator
-- 🧩 Multiple Choice: Unwrap vs Expect
+- 🧩 Challenge: Vec Length After Operations
 
 → [Practice in your IDE](https://stanza.dev/courses/rust)

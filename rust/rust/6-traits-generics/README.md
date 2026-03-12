@@ -12,10 +12,11 @@ Writing reusable and polymorphic code.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: Implement Trait Syntax
-- ✏️ Fill in the Blank: Derive Macro
 - 🧩 Multiple Choice: Monomorphization Quiz
+- ✏️ Fill in the Blank: Derive Macro
+- 🔗 Matching: Trait Concepts Matching
 
 → [Practice in your IDE](https://stanza.dev/courses/rust)

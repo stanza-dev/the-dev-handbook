@@ -12,9 +12,10 @@ Managing memory on the heap.
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Rc Thread Safety
 - ✏️ Fill in the Blank: Box Recursive Type
+- 🔗 Matching: Smart Pointer Use Cases
 
 → [Practice in your IDE](https://stanza.dev/courses/rust-ownership)
