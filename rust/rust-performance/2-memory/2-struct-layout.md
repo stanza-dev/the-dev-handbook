@@ -3,40 +3,39 @@ source_course: "rust-performance"
 source_lesson: "rust-perf-struct-layout"
 ---
 
-# Struct Layout in Rust
+# Struct Layout & Packing
 
-## Default Layout
+## Introduction
 
-Rust reorders fields for optimal alignment:
+Rust's default struct layout reorders fields for optimal alignment and minimal padding. Understanding how the compiler lays out your types lets you minimize memory usage and improve cache utilization.
+
+## Key Concepts
+
+### Default Layout
+
+Rust is free to reorder fields to minimize padding:
 
 ```rust
-// You write:
 struct Example {
     a: u8,   // 1 byte
     b: u64,  // 8 bytes
     c: u16,  // 2 bytes
 }
-
-// Rust may reorder to:
-// b: u64 (offset 0)
-// c: u16 (offset 8)
-// a: u8  (offset 10)
-// padding: 5 bytes
-// Total: 16 bytes (aligned to 8)
+// Rust reorders to: b(8) + c(2) + a(1) + padding(5) = 16 bytes
 ```
 
-## #[repr(C)]: C-Compatible Layout
+### `#[repr(C)]`: C-Compatible Layout
 
 ```rust
 #[repr(C)]
 struct CExample {
-    a: u8,   // offset 0, 1 byte + 7 padding
-    b: u64,  // offset 8, 8 bytes
-    c: u16,  // offset 16, 2 bytes + 6 padding
+    a: u8,   // offset 0, +7 padding
+    b: u64,  // offset 8
+    c: u16,  // offset 16, +6 padding
 }  // Total: 24 bytes (worse!)
 ```
 
-## #[repr(packed)]: No Padding
+### `#[repr(packed)]`: No Padding
 
 ```rust
 #[repr(packed)]
@@ -44,66 +43,105 @@ struct Packed {
     a: u8,
     b: u64,
     c: u16,
-}  // Total: 11 bytes
-
-// Warning: Unaligned access is slow!
-// And taking references to packed fields is unsafe
-let x = &packed.b;  // Compile error without unsafe!
+}  // Total: 11 bytes, but unaligned access is slow
 ```
 
-## Checking Size and Alignment
+## Real World Context
+
+Network protocols and file formats use `repr(C)` for FFI compatibility. Game engines carefully control struct sizes to fit more entities in cache. Serialization libraries rely on predictable layouts.
+
+## Deep Dive
+
+### Checking Size and Alignment
 
 ```rust
 use std::mem::{size_of, align_of};
 
-println!("Size: {}", size_of::<Example>());
-println!("Align: {}", align_of::<Example>());
-
-// Or at compile time:
-const SIZE: usize = size_of::<Example>();
+println!("Size: {}", size_of::<Example>());   // 16
+println!("Align: {}", align_of::<Example>()); // 8
 ```
 
-## Optimizing Struct Size
+### Null Pointer Optimization
+
+Rust uses niche optimization: `Option<&T>` is the same size as `&T` because null is used for `None`:
 
 ```rust
-// Bad: 24 bytes with padding
-struct Bad {
-    a: u8,
-    b: u64,
-    c: u8,
-}
+assert_eq!(size_of::<&u64>(), 8);
+assert_eq!(size_of::<Option<&u64>>(), 8); // Free Option!
 
-// Good: 16 bytes, group by alignment
-struct Good {
-    b: u64,  // 8-byte aligned first
-    a: u8,
-    c: u8,
-}  // 2 bytes padding at end
+// Also works for Box, NonNull, NonZeroU64, etc.
+assert_eq!(size_of::<Option<Box<u64>>>(), 8);
 ```
+
+### Optimizing Enum Size
+
+```rust
+// Large variant makes the whole enum large
+enum Message {
+    Quit,
+    Text(String),           // 24 bytes
+    Data([u8; 1024]),       // 1024 bytes!
+}
+// size_of::<Message>() = 1032 (discriminant + largest variant)
+
+// Fix: Box the large variant
+enum MessageOptimized {
+    Quit,
+    Text(String),
+    Data(Box<[u8; 1024]>),  // 8 bytes (pointer)
+}
+// size_of::<MessageOptimized>() = 32
+```
+
+## Common Pitfalls
+
+- Using `#[repr(packed)]` without understanding the performance cost — unaligned access is slow on most architectures and references to packed fields are unsafe.
+- Assuming field order in default layout — Rust provides no guarantees.
+- Creating enums with one disproportionately large variant — Box it instead.
+
+## Best Practices
+
+- Let the compiler optimize layout (default repr) unless you need FFI compatibility.
+- Use `size_of` and `align_of` to verify your assumptions.
+- Box large enum variants to keep the enum small.
+- Use `NonZeroU*` types when zero is not a valid value to enable niche optimization.
+
+## Summary
+
+Rust reorders struct fields to minimize padding by default. Use `repr(C)` for FFI, avoid `repr(packed)` unless necessary, leverage null pointer optimization with `Option`, and Box large enum variants. Always verify sizes with `std::mem::size_of`.
 
 ## Code Examples
 
-**Size optimization**
+**Null pointer optimization and enum size reduction**
 
 ```rust
-use std::mem::{size_of, align_of};
+use std::mem::size_of;
+use std::num::NonZeroU64;
+
+// Null pointer optimization
+assert_eq!(size_of::<&u64>(), 8);
+assert_eq!(size_of::<Option<&u64>>(), 8); // Same size!
+assert_eq!(size_of::<Box<u64>>(), 8);
+assert_eq!(size_of::<Option<Box<u64>>>(), 8); // Same size!
+assert_eq!(size_of::<Option<NonZeroU64>>(), 8); // Same size!
 
 // Enum size optimization
-// Null pointer optimization makes Option<&T> same size as &T!
-
-println!("&u8: {}", size_of::<&u8>());           // 8
-println!("Option<&u8>: {}", size_of::<Option<&u8>>()); // 8 (not 16!)
-
-// Box, NonNull, etc also get this optimization
-println!("Box<u8>: {}", size_of::<Box<u8>>());     // 8
-println!("Option<Box<u8>>: {}", size_of::<Option<Box<u8>>>()); // 8
-
-// NonZero types enable similar optimization
-use std::num::NonZeroU64;
-println!("NonZeroU64: {}", size_of::<NonZeroU64>()); // 8
-println!("Option<NonZeroU64>: {}", size_of::<Option<NonZeroU64>>()); // 8
+enum Large {
+    A,
+    B([u8; 1024]),
+}
+enum Small {
+    A,
+    B(Box<[u8; 1024]>),
+}
+println!("Large: {} bytes", size_of::<Large>());  // 1028
+println!("Small: {} bytes", size_of::<Small>());  // 16
 ```
 
+
+## Resources
+
+- [Rust Reference — Type Layout](https://doc.rust-lang.org/reference/type-layout.html) — Official documentation on Rust type layout rules
 
 ---
 

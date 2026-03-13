@@ -3,15 +3,21 @@ source_course: "rust-async"
 source_lesson: "rust-async-state-machines"
 ---
 
-# How Async Compiles to State Machines
+# Async State Machines
 
-Every `async fn` becomes a state machine.
+## Introduction
+
+Every `async fn` compiles into an enum-based state machine. Each `.await` point becomes a variant, and local variables that live across await points are stored in the enum. Understanding this helps you reason about future sizes and performance.
+
+## Key Concepts
+
+An async function like this:
 
 ```rust
 async fn example() -> i32 {
-    let a = step_one().await;   // State 1
-    let b = step_two(a).await;  // State 2
-    a + b                       // State 3 (final)
+    let a = step_one().await;   // Suspension point 1
+    let b = step_two(a).await;  // Suspension point 2
+    a + b
 }
 ```
 
@@ -19,57 +25,71 @@ Compiles roughly to:
 
 ```rust
 enum ExampleFuture {
-    State1 { step_one_future: StepOneFuture },
-    State2 { a: i32, step_two_future: StepTwoFuture },
+    State0 { step_one_fut: StepOneFuture },
+    State1 { a: i32, step_two_fut: StepTwoFuture },
     Complete,
 }
 ```
 
-## State Transitions
+## Real World Context
 
-Each `.await` point is a potential suspension point:
+This transformation is why Rust async has zero-cost overhead — there's no heap allocation for the state machine itself. It's a plain enum on the stack (or wherever the future is stored).
 
+## Deep Dive
+
+**State transitions on poll:**
+
+```text
+State0 --poll()--> Pending (step_one not done)
+       --poll()--> State1 (step_one complete, start step_two)
+
+State1 --poll()--> Pending (step_two not done)
+       --poll()--> Ready(a + b)
 ```
-State1 ──poll()──► Pending (waiting for step_one)
-       └──poll()──► State2 (step_one complete, start step_two)
 
-State2 ──poll()──► Pending (waiting for step_two)  
-       └──poll()──► Ready(a + b)
-```
-
-## Memory Layout
-
-The state machine stores all local variables that live across await points:
+**Memory layout matters.** The enum is as large as its biggest variant. Variables alive across `.await` are stored in the state machine:
 
 ```rust
-async fn memory_example() {
-    let large_buffer = vec![0u8; 1024]; // Stored in state machine
-    some_async().await;                  // Suspension point
-    println!("{:?}", large_buffer);     // Still needed after await
+async fn bloated() {
+    let buf = vec![0u8; 1024]; // Stored across await!
+    some_async().await;
+    println!("{:?}", buf);
 }
-// Future size includes large_buffer!
 ```
 
-## Optimization Tip
-
-Drop large values before await points:
+**Optimization: drop before await.**
 
 ```rust
-async fn optimized() {
+async fn lean() {
     {
-        let large = vec![0u8; 1024];
-        process(&large);
-    } // large dropped here
-    some_async().await; // Future is smaller!
+        let buf = vec![0u8; 1024];
+        process(&buf);
+    } // buf dropped here
+    some_async().await; // Future is smaller
 }
 ```
+
+## Common Pitfalls
+
+- Holding large buffers or collections across `.await` inflates the future size
+- Deeply nested async calls produce deeply nested state machines
+- `Box::pin` may be needed if future sizes are too large for the stack
+
+## Best Practices
+
+- Scope large temporaries so they drop before await points
+- Use `std::mem::size_of_val(&my_future())` to inspect future sizes
+- Consider `Box::pin` for recursive async functions
+
+## Summary
+
+Async functions become enum state machines. Each `.await` is a suspension point and a new variant. Variables alive across awaits inflate the future's size. Drop large values before awaiting to keep futures lean.
 
 ## Code Examples
 
-**Future size inspection**
+**Inspecting future sizes to understand the state machine**
 
 ```rust
-// Check Future size
 use std::mem::size_of_val;
 
 async fn small() -> i32 { 42 }
@@ -81,11 +101,16 @@ async fn large() -> i32 {
 }
 
 fn main() {
-    println!("small: {} bytes", size_of_val(&small()));
-    println!("large: {} bytes", size_of_val(&large()));
+    println!("small future: {} bytes", size_of_val(&small()));
+    println!("large future: {} bytes", size_of_val(&large()));
+    // large is significantly bigger because buffer lives across await
 }
 ```
 
+
+## Resources
+
+- [How Rust Async Works](https://rust-lang.github.io/async-book/01_getting_started/04_async_await_primer.html) — Async Book primer on how async/await compiles
 
 ---
 

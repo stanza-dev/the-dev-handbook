@@ -2,18 +2,20 @@
 
 > Part of [Rust Performance](https://stanza.dev/courses/rust-performance)
 
-Single instruction, multiple data.
+Single Instruction Multiple Data, auto-vectorization, and safe intrinsics.
 
 ## Lessons
 
-1. [Portable SIMD](./1-simd-basics.md)
-2. [Practical SIMD Patterns](./2-simd-practical.md)
+1. [SIMD Fundamentals](./1-simd-basics.md)
+2. [Safe std::arch Intrinsics](./2-safe-intrinsics.md)
+3. [Practical SIMD Patterns](./3-simd-practical.md)
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: SIMD Acronym
-- 🧩 Multiple Choice: SIMD Alignment
+- ✏️ Fill in the Blank: Safe Intrinsics Since 1.87
+- 🧩 Challenge: Auto-Vectorization Techniques
 
 → [Practice in your IDE](https://stanza.dev/courses/rust-performance)

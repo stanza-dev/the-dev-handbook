@@ -1,53 +1,37 @@
 ---
 source_course: "rust-async"
-source_lesson: "rust-async-async-basics"
+source_lesson: "rust-async-basics"
 ---
 
 # Async/Await Fundamentals
 
-Async programming in Rust allows writing non-blocking code that looks synchronous.
+## Introduction
 
-## The async Keyword
+Rust's `async`/`.await` lets you write non-blocking code that reads like synchronous code. The `async` keyword transforms a function into one that returns an `impl Future` instead of its declared return type. The `.await` keyword suspends execution until the future resolves.
+
+Since the 2024 edition, `Future` and `IntoFuture` are in the prelude — no imports needed.
+
+## Key Concepts
+
+**The `async` keyword** transforms a function body into a state machine wrapped in a `Future`:
 
 ```rust
 async fn fetch_data() -> String {
-    // This returns impl Future<Output = String>, not String!
+    // Returns impl Future<Output = String>, NOT String directly
     "data".to_string()
 }
 ```
 
-The `async` keyword transforms the function into one that returns a `Future`. The function body becomes the state machine that the Future will execute.
-
-## The await Keyword
+**The `.await` keyword** suspends the current future until the awaited one resolves:
 
 ```rust
 async fn process() {
-    let data = fetch_data().await; // Suspends until complete
+    let data = fetch_data().await; // Suspend here
     println!("Got: {data}");
 }
 ```
 
-**Critical insight:** Nothing happens until you `.await` or poll the Future!
-
-```rust
-let future = fetch_data(); // Future created but NOT started
-// ... other code ...
-let data = future.await;   // NOW it executes
-```
-
-## What async/await Compiles To
-
-```rust
-// This:
-async fn foo() -> i32 { 42 }
-
-// Roughly becomes:
-fn foo() -> impl Future<Output = i32> {
-    async { 42 }
-}
-```
-
-## Async Blocks
+**Async blocks** create anonymous futures that capture their environment:
 
 ```rust
 let my_future = async {
@@ -57,16 +41,45 @@ let my_future = async {
 };
 ```
 
-Async blocks capture their environment and create anonymous Future types.
+## Real World Context
 
-See [Async Programming in Rust](https://rust-lang.github.io/async-book/).
+Async Rust powers high-performance servers (Axum, Actix), database drivers (sqlx), and HTTP clients (reqwest). Any I/O-bound workload benefits from async.
+
+## Deep Dive
+
+Futures in Rust are **lazy** — nothing happens until you `.await` or poll them:
+
+```rust
+let future = fetch_data(); // Future created, NOT started
+// ... other code ...
+let data = future.await;   // NOW it executes
+```
+
+This is fundamentally different from JavaScript Promises or Go goroutines, which start immediately.\n\nSince Rust 1.85, **async closures** provide a first-class way to create closures that return futures:\n\n```rust\n// async closure — can borrow from captures (unlike || async {})\nlet name = String::from(\"Alice\");\nlet greet = async || {\n    println!(\"Hello, {name}\"); // borrows name\n};\ngreet().await;\n```\n\nThe `AsyncFn`, `AsyncFnMut`, and `AsyncFnOnce` traits (in the 2024 edition prelude) are the async equivalents of `Fn`, `FnMut`, and `FnOnce`.
+
+## Common Pitfalls
+
+- Forgetting `.await` — the future never executes and the compiler warns about unused `Future`
+- Assuming futures run in the background once created — they don't
+- Mixing sync and async code without `spawn_blocking`
+
+## Best Practices
+
+- Always `.await` or explicitly spawn futures you create
+- Keep async functions focused on I/O; offload CPU work to blocking threads
+- Use `async move` blocks when you need to transfer ownership into the future
+- Since Rust 1.85, use `async closures` (`async || {}`) when you need closures that return futures and borrow from captures — the `AsyncFn`, `AsyncFnMut`, and `AsyncFnOnce` traits power this
+
+## Summary
+
+`async` creates futures, `.await` drives them. Futures are lazy and do nothing until polled. The 2024 edition puts `Future` in the prelude. Async blocks capture their environment like closures. Since Rust 1.85, async closures (`async || {}`) provide native support for closures that return futures.
 
 ## Code Examples
 
-**Lazy evaluation of futures**
+**Lazy evaluation of futures — nothing executes until .await**
 
 ```rust
-// Futures are lazy!
+// Futures are lazy — nothing runs until awaited
 async fn expensive() -> i32 {
     println!("Computing..."); // Only prints when awaited
     42
@@ -83,7 +96,7 @@ async fn main_async() {
 
 ## Resources
 
-- [Async Book](https://rust-lang.github.io/async-book/) — The official async Rust book
+- [Async Book](https://rust-lang.github.io/async-book/) — The official async programming in Rust book
 
 ---
 

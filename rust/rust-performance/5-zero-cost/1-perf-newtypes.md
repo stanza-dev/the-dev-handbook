@@ -3,111 +3,149 @@ source_course: "rust-performance"
 source_lesson: "rust-perf-newtypes"
 ---
 
-# The Newtype Pattern
+# Newtypes: Type Safety at Zero Cost
 
-Wrap a type for added safety with zero runtime cost:
+## Introduction
+
+The newtype pattern wraps an existing type in a single-field struct, providing type safety and API boundaries with zero runtime overhead. The compiler optimizes the wrapper away completely.
+
+## Key Concepts
+
+### Basic Newtype
 
 ```rust
-// Without newtype - easy to mix up
-fn connect(host: &str, port: u16, timeout_ms: u64) { }
-connect("localhost", 5000, 8080);  // Oops! Swapped port and timeout
+struct UserId(u64);
+struct OrderId(u64);
 
-// With newtypes - compile-time safety
-struct Port(u16);
-struct TimeoutMs(u64);
+fn get_user(id: UserId) -> User { ... }
+fn get_order(id: OrderId) -> Order { ... }
 
-fn connect(host: &str, port: Port, timeout: TimeoutMs) { }
-connect("localhost", Port(8080), TimeoutMs(5000));  // Clear!
-// connect("localhost", TimeoutMs(5000), Port(8080));  // Compile error!
+// Compile error: cannot pass OrderId where UserId expected
+get_user(OrderId(42)); // Error!
 ```
 
-## Zero Cost
+Both `UserId` and `OrderId` are `u64` at runtime, but the compiler prevents mixing them up.
+
+### `repr(transparent)`
+
+```rust
+#[repr(transparent)]
+struct Meters(f64);
+```
+
+`repr(transparent)` guarantees the newtype has the exact same memory layout as its inner type. This is essential for FFI and transmutation safety.
+
+## Real World Context
+
+Newtypes are ubiquitous in production Rust: database IDs, validated strings, units of measurement, and API boundary types. They are the foundation of type-driven development.
+
+## Deep Dive
+
+### Implementing Traits for Newtypes
+
+```rust
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct Celsius(f64);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct Fahrenheit(f64);
+
+impl Celsius {
+    fn to_fahrenheit(self) -> Fahrenheit {
+        Fahrenheit(self.0 * 9.0 / 5.0 + 32.0)
+    }
+}
+
+impl From<Celsius> for Fahrenheit {
+    fn from(c: Celsius) -> Self {
+        c.to_fahrenheit()
+    }
+}
+```
+
+### Validation on Construction
+
+```rust
+struct NonEmptyString(String);
+
+impl NonEmptyString {
+    fn new(s: String) -> Option<Self> {
+        if s.is_empty() {
+            None
+        } else {
+            Some(NonEmptyString(s))
+        }
+    }
+
+    fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+```
+
+### Zero Cost Verified
+
+```rust
+use std::mem::size_of;
+assert_eq!(size_of::<u64>(), size_of::<UserId>()); // Both 8 bytes
+```
+
+The compiler generates identical machine code for operations on `UserId` and `u64`.
+
+## Common Pitfalls
+
+- Forgetting `#[repr(transparent)]` when the newtype is used in FFI.
+- Implementing `Deref` to the inner type — this makes the newtype transparent to all methods, defeating the purpose.
+- Not deriving `Clone`, `Copy`, `Hash` etc. when the inner type supports them.
+
+## Best Practices
+
+- Use newtypes for any domain ID, measurement, or validated string.
+- Derive common traits rather than implementing them manually.
+- Use `repr(transparent)` when FFI compatibility is needed.
+- Avoid `Deref` to the inner type; provide explicit accessor methods instead.
+
+## Summary
+
+Newtypes provide compile-time type safety with zero runtime overhead. The compiler erases the wrapper entirely, generating the same machine code as the inner type. Use them liberally for domain modeling.
+
+## Code Examples
+
+**Newtype pattern with repr(transparent) for zero-cost type safety**
 
 ```rust
 use std::mem::size_of;
 
-struct UserId(u64);
-
-assert_eq!(size_of::<u64>(), size_of::<UserId>());  // Same size!
-// No overhead - it's just a u64 with a different type
-```
-
-## #[repr(transparent)]
-
-Guarantees same layout as the inner type:
-
-```rust
 #[repr(transparent)]
-struct Wrapper(u32);
-
-// Safe to transmute between Wrapper and u32
-// Useful for FFI
-```
-
-## Common Uses
-
-```rust
-// Units
-struct Meters(f64);
-struct Feet(f64);
-
-impl Meters {
-    fn to_feet(self) -> Feet {
-        Feet(self.0 * 3.28084)
-    }
-}
-
-// IDs that shouldn't mix
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct UserId(u64);
+
+#[repr(transparent)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct OrderId(u64);
 
-// Validated strings
-struct Email(String);
+fn process_user(id: UserId) {
+    println!("Processing user {}", id.0);
+}
 
-impl Email {
-    fn new(s: &str) -> Result<Self, &'static str> {
-        if s.contains('@') {
-            Ok(Email(s.to_string()))
-        } else {
-            Err("Invalid email")
-        }
-    }
+fn main() {
+    let user = UserId(42);
+    let order = OrderId(42);
+
+    process_user(user);   // OK
+    // process_user(order); // Compile error!
+
+    // Zero cost: same size as u64
+    assert_eq!(size_of::<UserId>(), size_of::<u64>());
+    assert_eq!(size_of::<OrderId>(), size_of::<u64>());
 }
 ```
 
-## Code Examples
 
-**Newtype with Deref**
+## Resources
 
-```rust
-// Newtype with Deref for convenience
-use std::ops::Deref;
-
-struct Name(String);
-
-impl Deref for Name {
-    type Target = str;
-    
-    fn deref(&self) -> &str {
-        &self.0
-    }
-}
-
-let name = Name("Alice".to_string());
-
-// Can use &str methods directly
-println!("Length: {}", name.len());
-println!("Upper: {}", name.to_uppercase());
-
-// But still type-safe
-fn greet(name: &Name) {
-    println!("Hello, {name}!");
-}
-
-greet(&name);  // Works
-// greet(&"Bob".to_string());  // Error: expected &Name
-```
-
+- [The Newtype Pattern in Rust](https://doc.rust-lang.org/book/ch19-04-advanced-types.html#using-the-newtype-pattern-for-type-safety-and-abstraction) — The Rust Book's section on newtypes
+- [repr(transparent) Reference](https://doc.rust-lang.org/reference/type-layout.html#the-transparent-representation) — Official documentation on transparent representation
 
 ---
 

@@ -3,89 +3,86 @@ source_course: "rust-async"
 source_lesson: "rust-async-channels"
 ---
 
-# Tokio Channels
+# Async Channels Deep Dive
 
-## mpsc: Multiple Producer, Single Consumer
+## Introduction
 
+Tokio provides four channel types for async communication: `mpsc`, `oneshot`, `broadcast`, and `watch`. Each solves a different messaging pattern. Combined with the actor pattern, channels become the backbone of concurrent application architecture.
+
+## Key Concepts
+
+| Channel | Producers | Consumers | Buffer | Use Case |
+|---------|-----------|-----------|--------|----------|
+| `mpsc` | Many | One | Bounded | Task communication |
+| `oneshot` | One | One | None | Request-response |
+| `broadcast` | One+ | Many | Ring buffer | Pub/sub |
+| `watch` | One | Many | Latest only | Config/state updates |
+
+## Real World Context
+
+Actor systems, command buses, configuration hot-reload, fan-out notification systems, and request-response patterns for background workers.
+
+## Deep Dive
+
+**mpsc** — bounded, backpressure-aware:
 ```rust
-use tokio::sync::mpsc;
+let (tx, mut rx) = tokio::sync::mpsc::channel::<String>(100);
+tx.send("hello".into()).await.unwrap();
+let msg = rx.recv().await; // Some("hello")
+```
 
-let (tx, mut rx) = mpsc::channel::<String>(100); // Buffer size
+**oneshot** — single value, single use:
+```rust
+let (tx, rx) = tokio::sync::oneshot::channel();
+tx.send(42).unwrap(); // No await needed
+let val = rx.await.unwrap(); // 42
+```
 
-// Sender (can be cloned)
-tokio::spawn(async move {
-    tx.send("hello".to_string()).await.unwrap();
-});
+**broadcast** — all subscribers get every message:
+```rust
+let (tx, _) = tokio::sync::broadcast::channel(16);
+let mut rx1 = tx.subscribe();
+let mut rx2 = tx.subscribe();
+tx.send("to all".into()).unwrap();
+```
 
-// Receiver
-while let Some(msg) = rx.recv().await {
-    println!("Got: {msg}");
+**watch** — latest value only, no queue:
+```rust
+let (tx, mut rx) = tokio::sync::watch::channel("initial");
+tx.send("updated").unwrap();
+rx.changed().await.unwrap();
+println!("{}", *rx.borrow()); // "updated"
+```
+
+**Actor pattern** — channels as message queues:
+```rust
+enum Cmd {
+    Get { key: String, resp: oneshot::Sender<Option<String>> },
+    Set { key: String, value: String },
 }
 ```
 
-## oneshot: Single Value
+## Common Pitfalls
 
-```rust
-use tokio::sync::oneshot;
+- Using unbounded channels — no backpressure, memory grows unbounded
+- Dropping all senders without the receiver noticing — check for `None`
+- Using broadcast when watch suffices — broadcast buffers every message
 
-let (tx, rx) = oneshot::channel();
+## Best Practices
 
-tokio::spawn(async move {
-    let result = expensive_computation().await;
-    tx.send(result).unwrap();
-});
+- Prefer bounded `mpsc` with reasonable buffer sizes
+- Use `oneshot` for request-response in actor patterns
+- Use `watch` for configuration that only needs the latest value
 
-let value = rx.await.unwrap();
-```
+## Summary
 
-## broadcast: Multiple Consumers
-
-```rust
-use tokio::sync::broadcast;
-
-let (tx, _) = broadcast::channel::<String>(16);
-let mut rx1 = tx.subscribe();
-let mut rx2 = tx.subscribe();
-
-tx.send("to all".to_string()).unwrap();
-// Both rx1 and rx2 receive "to all"
-```
-
-## watch: Latest Value Only
-
-```rust
-use tokio::sync::watch;
-
-let (tx, mut rx) = watch::channel("initial");
-
-// Sender updates value
-tx.send("updated").unwrap();
-
-// Receiver gets latest value
-println!("Current: {}", *rx.borrow());
-
-// Wait for changes
-rx.changed().await.unwrap();
-println!("New: {}", *rx.borrow());
-```
-
-## Channel Selection
-
-| Type | Producers | Consumers | Buffering | Use Case |
-|------|-----------|-----------|-----------|----------|
-| mpsc | Many | One | Yes | Task communication |
-| oneshot | One | One | No | Request-response |
-| broadcast | One | Many | Yes | Pub/sub |
-| watch | One | Many | Latest only | Config updates |
-
-See [Channels](https://tokio.rs/tokio/tutorial/channels).
+`mpsc` for many-to-one with backpressure. `oneshot` for single request-response. `broadcast` for pub/sub fan-out. `watch` for latest-value state. The actor pattern combines `mpsc` + `oneshot` for structured concurrency.
 
 ## Code Examples
 
-**Actor pattern with request-response**
+**Actor pattern using mpsc for commands and oneshot for responses**
 
 ```rust
-// Actor pattern with channels
 use tokio::sync::{mpsc, oneshot};
 
 enum Command {
@@ -95,7 +92,6 @@ enum Command {
 
 async fn actor(mut rx: mpsc::Receiver<Command>) {
     let mut state = std::collections::HashMap::new();
-    
     while let Some(cmd) = rx.recv().await {
         match cmd {
             Command::Get { key, resp } => {
@@ -112,7 +108,7 @@ async fn actor(mut rx: mpsc::Receiver<Command>) {
 
 ## Resources
 
-- [Tokio Channels](https://tokio.rs/tokio/tutorial/channels) — Complete guide to Tokio channels
+- [Tokio Channels](https://tokio.rs/tokio/tutorial/channels) — Complete guide to Tokio's async channels
 
 ---
 

@@ -2,19 +2,19 @@
 
 > Benchmarking, profiling, SIMD, memory layout, and release optimizations.
 
-**Rust 1.83** · Advanced → Expert
+**Rust 1.94** · Advanced → Expert
 
 ## Sections
 
 | | Section | Lessons |
 |---|---------|---------|
-| ⏱️ | [Benchmarking](./1-benchmarking/) | 2 lessons |
-| 🧠 | [Memory Optimization](./2-memory/) | 2 lessons |
-| ⚡ | [SIMD & Vectorization](./3-simd/) | 2 lessons |
-| ⚙️ | [Release Profiles](./4-profiles/) | 2 lessons |
-| 💎 | [Zero-Cost Abstractions](./5-zero-cost/) | 2 lessons |
+| ⏱️ | [Benchmarking](./1-benchmarking/) | 3 lessons |
+| 🧠 | [Memory Optimization](./2-memory/) | 3 lessons |
+| ⚡ | [SIMD & Vectorization](./3-simd/) | 3 lessons |
+| ⚙️ | [Release Profiles](./4-profiles/) | 3 lessons |
+| 🎯 | [Zero-Cost Abstractions](./5-zero-cost/) | 3 lessons |
 
-**10 lessons** · **10 interactive challenges**
+**15 lessons** · **15 interactive challenges**
 
 ## Want the Interactive Experience?
 

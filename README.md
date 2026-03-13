@@ -7,6 +7,22 @@
 
 Maintained by [Stanza](https://stanza.dev) — Learn coding faster right in your IDE, Slack, emails and the web.
 
+## Pedagogical Structure
+
+Every lesson follows a consistent pedagogical structure designed for progressive learning:
+
+| # | Section | Purpose |
+|---|---------|---------|
+| 1 | **Introduction** | Sets the context — what you will learn and why it matters |
+| 2 | **Key Concepts** | Core definitions and mental models to build on |
+| 3 | **Real World Context** | Practical scenarios showing where and how this applies |
+| 4 | **Deep Dive** | Detailed technical explanation with annotated code examples |
+| 5 | **Common Pitfalls** | Mistakes learners frequently make and how to avoid them |
+| 6 | **Best Practices** | Guidelines and conventions used in production codebases |
+| 7 | **Summary** | Key takeaways to reinforce retention |
+
+Each lesson flows from conceptual understanding to practical application to edge cases, so we recommend following them in order.
+
 ## Courses
 
 ### ⚛️ React
@@ -112,13 +128,13 @@ Maintained by [Stanza](https://stanza.dev) — Learn coding faster right in your
 ### 🦀 Rust
 
 - ⚡ [Asynchronous Rust](./rust/rust-async/) — 15 lessons
-- 🧵 [Concurrent Rust](./rust/rust-concurrency/) — 11 lessons
+- 🧵 [Concurrent Rust](./rust/rust-concurrency/) — 20 lessons
 - 🔌 [Rust for Embedded Systems](./rust/rust-embedded/) — 10 lessons
 - λ [Functional Rust](./rust/rust-functional/) — 10 lessons
 - 🔮 [Rust Metaprogramming](./rust/rust-metaprogramming/) — 10 lessons
 - 🧠 [Rust Ownership & Memory Model](./rust/rust-ownership/) — 16 lessons
-- 🚀 [Rust Performance](./rust/rust-performance/) — 10 lessons
-- 🎭 [Advanced Traits & Generics](./rust/rust-traits/) — 11 lessons
+- 🚀 [Rust Performance](./rust/rust-performance/) — 15 lessons
+- 🎭 [Advanced Traits & Generics](./rust/rust-traits/) — 20 lessons
 - ⚠️ [Unsafe Rust & FFI](./rust/rust-unsafe/) — 10 lessons
 - 🦀 [Rust Essentials](./rust/rust/) — 19 lessons
 

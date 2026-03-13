@@ -6,15 +6,16 @@ How async/await actually works under the hood.
 
 ## Lessons
 
-1. [Understanding Async/Await](./1-async-basics.md)
-2. [The Future Trait Internals](./2-trait-deep.md)
+1. [Async/Await Fundamentals](./1-async-basics.md)
+2. [The Future Trait Internals](./2-future-internals.md)
 3. [Async State Machines](./3-state-machines.md)
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **3 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: Poll Return Type
-- 🧩 Multiple Choice: Waker Role
+- 🧩 Challenge: Async Execution Order
+- 🧩 Multiple Choice: The Waker's Purpose
 
 → [Practice in your IDE](https://stanza.dev/courses/rust-async)

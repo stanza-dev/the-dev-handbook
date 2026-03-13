@@ -2,7 +2,7 @@
 
 > Master Futures, Tokio, and non-blocking I/O for high-performance concurrent applications.
 
-**Rust 1.83** · Advanced → Expert
+**Rust 1.94** · Advanced → Expert
 
 ## Sections
 
@@ -14,7 +14,7 @@
 | 🌊 | [Streams & Async Iteration](./4-streams/) | 3 lessons |
 | 🚦 | [Async Synchronization](./5-async-sync/) | 3 lessons |
 
-**15 lessons** · **10 interactive challenges**
+**15 lessons** · **15 interactive challenges**
 
 ## Want the Interactive Experience?
 

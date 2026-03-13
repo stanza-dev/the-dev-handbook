@@ -3,25 +3,32 @@ source_course: "rust-async"
 source_lesson: "rust-async-stream-adapters"
 ---
 
-# StreamExt Adapters
+# Stream Adapters & Combinators
 
-The `StreamExt` trait provides combinator methods similar to Iterator.
+## Introduction
 
-## Common Adapters
+Like iterators, streams have a rich set of adapters via `StreamExt`. These let you transform, filter, combine, and control the flow of async data without manual state management.
+
+## Key Concepts
 
 | Adapter | Description |
 |---------|-------------|
 | `map` | Transform each item |
-| `filter` | Keep items matching predicate |
-| `filter_map` | Filter and transform |
-| `take` | Take first N items |
-| `skip` | Skip first N items |
-| `take_while` | Take while predicate is true |
+| `filter` | Keep items matching a predicate |
+| `take` / `skip` | Limit items |
 | `merge` | Interleave two streams |
-| `chain` | Concatenate streams |
-| `throttle` | Rate limit items |
-| `timeout` | Timeout per item |
+| `chain` | Concatenate two streams sequentially |
+| `throttle` | Rate-limit item emission |
+| `buffer_unordered` | Process N items concurrently, any order |
+| `buffered` | Process N items concurrently, preserve order |
 
+## Real World Context
+
+Processing a stream of HTTP requests with bounded concurrency (`buffer_unordered`), merging WebSocket messages from multiple connections (`merge`), rate-limiting API calls (`throttle`).
+
+## Deep Dive
+
+**Chaining adapters:**
 ```rust
 use tokio_stream::StreamExt;
 
@@ -33,54 +40,66 @@ let result: Vec<_> = stream
     .await;
 ```
 
-## Buffered Execution
-
+**Buffered concurrent processing:**
 ```rust
 use futures::stream::StreamExt;
 
-// Process items concurrently (up to 10 at a time)
 stream
     .map(|item| async move { process(item).await })
-    .buffer_unordered(10)  // Concurrent with no order guarantee
+    .buffer_unordered(10)  // Up to 10 concurrent, any order
     .for_each(|result| async { handle(result) })
     .await;
-
-// Or with ordering preserved:
-stream
-    .map(|item| async move { process(item).await })
-    .buffered(10)  // Concurrent but ordered
-    .collect::<Vec<_>>()
-    .await;
 ```
 
-## Merging Streams
+**`buffered` vs `buffer_unordered`:**
+- `buffered(n)` — concurrent but results come out in input order
+- `buffer_unordered(n)` — concurrent, results come out as they finish
 
+**Merging streams:**
 ```rust
-use tokio_stream::StreamExt;
-
-let combined = stream1.merge(stream2);
-// Items interleaved from both streams
+let combined = stream_a.merge(stream_b);
+// Items interleaved from both streams as they arrive
 ```
+
+## Common Pitfalls
+
+- `buffer_unordered(1000)` on network requests — overwhelms the server
+- Confusing `buffered` (ordered) with `buffer_unordered` (unordered)
+- Forgetting that `chain` is sequential — second stream starts only after first ends
+
+## Best Practices
+
+- Use `buffer_unordered` with a reasonable concurrency limit (10-100)
+- Prefer `buffer_unordered` over `buffered` unless ordering matters
+- Use `throttle` for rate limiting external API calls
+
+## Summary
+
+`StreamExt` provides `map`, `filter`, `take`, `merge`, `chain`, `throttle`, `buffered`, and `buffer_unordered`. Use `buffer_unordered(n)` for bounded concurrent processing. Adapters compose cleanly like iterator chains.
 
 ## Code Examples
 
-**Concurrent HTTP requests**
+**Bounded concurrent HTTP requests using buffer_unordered**
 
 ```rust
 use futures::stream::{self, StreamExt};
 
-async fn process_urls(urls: Vec<String>) -> Vec<Response> {
+async fn fetch_all(urls: Vec<String>) -> Vec<String> {
     stream::iter(urls)
         .map(|url| async move {
-            reqwest::get(&url).await
+            reqwest::get(&url).await?.text().await
         })
-        .buffer_unordered(10) // 10 concurrent requests
+        .buffer_unordered(10) // 10 concurrent requests max
         .filter_map(|r| async { r.ok() })
         .collect()
         .await
 }
 ```
 
+
+## Resources
+
+- [StreamExt](https://docs.rs/futures/latest/futures/stream/trait.StreamExt.html) — Full StreamExt API reference
 
 ---
 
