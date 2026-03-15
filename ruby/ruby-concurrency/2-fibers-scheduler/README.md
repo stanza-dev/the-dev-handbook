@@ -13,10 +13,11 @@ Lightweight concurrency with Fibers and the Fiber Scheduler.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
-- 🔗 Matching: Fiber vs Thread
 - 🧩 Challenge: Fiber Communication
 - 🧩 Multiple Choice: Fiber Scheduler Purpose
+- 🔗 Matching: Fiber vs Thread
+- 🧩 Challenge: Fiber Cleanup Behavior
 
 → [Practice in your IDE](https://stanza.dev/courses/ruby-concurrency)

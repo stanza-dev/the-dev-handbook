@@ -140,9 +140,9 @@ Each lesson flows from conceptual understanding to practical application to edge
 
 ### 💎 Ruby
 
-- 🧵 [Concurrency in Modern Ruby](./ruby/ruby-concurrency/) — 16 lessons
+- 🧵 [Concurrency in Modern Ruby](./ruby/ruby-concurrency/) — 21 lessons
 - 🪄 [Ruby Metaprogramming Workshop](./ruby/ruby-metaprogramming/) — 20 lessons
-- ⚙️ [Ruby Internals & Performance](./ruby/ruby-performance/) — 16 lessons
+- ⚙️ [Ruby Internals & Performance](./ruby/ruby-performance/) — 20 lessons
 - 💎 [Ruby Language Foundations](./ruby/ruby/) — 28 lessons
 
 ### 🐘 PHP
@@ -194,6 +194,13 @@ Each lesson flows from conceptual understanding to practical application to edge
 - ⚙️ [Server-Side Programming with PL/pgSQL](./postgresql/postgresql-plpgsql/) — 15 lessons
 - 🔄 [High Availability & Replication in PostgreSQL](./postgresql/postgresql-replication/) — 17 lessons
 - 🔐 [PostgreSQL Security & Access Control](./postgresql/postgresql-security/) — 16 lessons
+
+### Paperclip
+
+- 🔌 [Paperclip Adapters & Agent Runtimes](./paperclip/paperclip-adapters/) — 15 lessons
+- 🌐 [Paperclip REST API](./paperclip/paperclip-api/) — 15 lessons
+- 📎 [Paperclip Fundamentals](./paperclip/paperclip-fundamentals/) — 18 lessons
+- 🚀 [Paperclip Setup & Deployment](./paperclip/paperclip-setup/) — 15 lessons
 
 ### Ruby-on-rails
 

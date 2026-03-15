@@ -13,10 +13,11 @@ Benchmark, StackProf, Vernier, and flame graphs.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🔗 Matching: StackProf Modes
-- 🧩 Multiple Choice: Reducing GC Pressure
 - 🧩 Multiple Choice: Reading Flamegraphs
+- ✏️ Fill in the Blank: Reducing GC Pressure
+- 🧩 Challenge: Profiling Workflow
 
 → [Practice in your IDE](https://stanza.dev/courses/ruby-performance)

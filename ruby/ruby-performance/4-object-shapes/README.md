@@ -13,10 +13,11 @@ How Ruby optimizes instance variable access with object shapes.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Variable Definition Order
 - 🧩 Challenge: Instance Variable Best Practices
 - ✏️ Fill in the Blank: Benefits of Consistent Shapes
+- 🧩 Challenge: Shape Depth Limit
 
 → [Practice in your IDE](https://stanza.dev/courses/ruby-performance)

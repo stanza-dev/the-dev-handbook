@@ -13,10 +13,11 @@ Understanding YJIT (production-ready) and ZJIT (experimental in Ruby 4.0).
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
-- 🧩 Challenge: Enabling JIT
+- 🧩 Challenge: Enabling YJIT
 - 🧩 Challenge: ZJIT in Ruby 4.0
 - 🧩 Multiple Choice: Type Stability
+- ✏️ Fill in the Blank: YJIT Diagnostic Flags
 
 → [Practice in your IDE](https://stanza.dev/courses/ruby-performance)

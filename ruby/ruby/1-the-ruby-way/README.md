@@ -15,8 +15,8 @@ Understanding the philosophy: everything is an object, and developer happiness c
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Challenge: Understanding Truthiness
 - ✏️ Fill in the Blank: Object Classes
+- 🧩 Challenge: Understanding Truthiness
 - ✏️ Fill in the Blank: Safe Navigation Operator
 
 → [Practice in your IDE](https://stanza.dev/courses/ruby)

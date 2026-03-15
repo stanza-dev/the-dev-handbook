@@ -1,6 +1,6 @@
 # 💎 Ruby Language Foundations
 
-> Master the elegant syntax and core philosophy of Ruby. From basic objects to advanced Enumerable patterns and modern Ruby 4.0 features including Set as a core class and improved pattern matching.
+> Master the elegant syntax and core philosophy of Ruby. From basic objects to advanced Enumerable patterns and modern Ruby 4.0 features including Set as a core class and Array#rfind, plus Ruby 3.4's chilled string literals.
 
 **Ruby 4.0** · Beginner → Intermediate
 

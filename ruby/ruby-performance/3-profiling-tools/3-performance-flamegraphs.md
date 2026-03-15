@@ -3,18 +3,27 @@ source_course: "ruby-performance"
 source_lesson: "ruby-performance-flamegraphs"
 ---
 
-# Flamegraphs
+# Visualizing with Flamegraphs
 
-Flamegraphs are visualizations of profiled stack traces that make hotspots immediately obvious.
+## Introduction
+A table of method names and sample counts can be hard to scan when you have hundreds of methods. Flamegraphs transform profiling data into a visual stack chart where performance bottlenecks jump out immediately.
 
-## Reading a Flamegraph
+## Key Concepts
+- **Flamegraph**: A visualization of sampled stack traces where the x-axis represents the proportion of samples and the y-axis represents call depth.
+- **Plateau**: A wide bar at the top of the stack, indicating a method that consumes significant CPU time directly (high self time).
+- **Speedscope / Firefox Profiler**: Browser-based tools that render interactive flamegraphs from JSON profiling data.
 
-- **X-axis**: Population (how often that stack was sampled)
-- **Y-axis**: Stack depth (callers below, callees above)
-- **Width**: Proportional to time spent
-- **Color**: Usually random or grouped by category
+## Real World Context
+When triaging a slow endpoint, engineers share flamegraph screenshots in pull requests and incident channels. A single image tells the story faster than pages of profiler text output.
 
-## Wide Bars = Hotspots
+## Deep Dive
+Flamegraphs encode three things visually:
+
+- **Width** of a bar is proportional to how many samples included that method. Wider bars mean more time.
+- **Vertical position** shows the call hierarchy. The bottom is the entry point (e.g., `main`), and the top holds leaf methods doing actual work.
+- **Color** is typically random or grouped by module. It carries no performance meaning.
+
+A simplified ASCII flamegraph looks like this, where `slow_method` is the hotspot:
 
 ```
                     +--slow_method--+
@@ -23,21 +32,23 @@ Flamegraphs are visualizations of profiled stack traces that make hotspots immed
 +------------------main------------------------+
 ```
 
-Wide bars at the TOP indicate methods using CPU time directly.
-
-## Generating Flamegraphs
+To generate a flamegraph from StackProf, pass `raw: true` when profiling:
 
 ```ruby
-# With StackProf
+require 'stackprof'
+
 StackProf.run(mode: :cpu, raw: true, out: 'profile.dump') do
   your_code
 end
-
-# Convert to flamegraph
-# stackprof profile.dump --d3-flamegraph > flame.html
 ```
 
-## Using Vernier (Modern Alternative)
+Then convert the dump to an interactive HTML flamegraph:
+
+```bash
+stackprof profile.dump --d3-flamegraph > flame.html
+```
+
+Vernier is a modern alternative that outputs JSON compatible with Firefox Profiler and Speedscope:
 
 ```ruby
 require 'vernier'
@@ -45,16 +56,47 @@ require 'vernier'
 Vernier.profile(out: 'profile.json') do
   your_code
 end
-
-# Open profile.json in Firefox Profiler or Speedscope
+# Open profile.json at https://profiler.firefox.com or https://speedscope.app
 ```
 
-## Tips for Analysis
+Vernier captures thread activity and GC pauses automatically, giving richer context than StackProf alone.
 
-1. Look for **wide plateaus** at the top
-2. Check for **unexpected depth** (too many layers)
-3. Compare **before/after** optimizations
-4. Filter by **specific threads** if needed
+## Common Pitfalls
+1. **Confusing width with call count** — A wide bar means more *samples*, not necessarily more calls. A method called once but running for 500ms will be wider than a method called 10,000 times but finishing in 1ms total.
+2. **Ignoring the top of the stack** — Beginners focus on the wide bars at the bottom (entry points). The actionable hotspots are the wide bars at the *top*, where the CPU actually spends time.
+
+## Best Practices
+1. **Compare before and after** — Generate flamegraphs before and after your optimization. The visual diff makes it obvious whether you shrunk the right hotspot.
+2. **Use Vernier for GC visibility** — Vernier annotates GC pauses directly in the flamegraph, so you can see whether garbage collection is a significant contributor.
+
+## Summary
+- Flamegraphs turn profiler data into a visual chart where wide bars at the top indicate hotspots.
+- Use `stackprof --d3-flamegraph` or Vernier with Speedscope/Firefox Profiler for interactive exploration.
+- Always compare flamegraphs before and after optimization to verify your changes had the intended effect.
+
+## Code Examples
+
+**Profiling an ActiveRecord query with Vernier — the output can be opened in Firefox Profiler for an interactive flamegraph.**
+
+```ruby
+require 'vernier'
+
+# Profile a block and write output for Firefox Profiler
+Vernier.profile(out: 'profile.json') do
+  users = User.where(active: true).includes(:posts)
+  users.each { |u| u.posts.map(&:title) }
+end
+
+# Open the resulting file:
+# 1. Go to https://profiler.firefox.com
+# 2. Drag and drop profile.json
+# 3. Look for wide bars at the top of the flamegraph
+```
+
+
+## Resources
+
+- [Vernier GitHub Repository](https://github.com/jhawthorn/vernier) — Next-generation Ruby profiler with GC annotations and Firefox Profiler integration
 
 ---
 

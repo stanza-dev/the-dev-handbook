@@ -13,10 +13,12 @@ Condition Variables, Queues, and synchronization patterns.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **5 interactive challenges** available on Stanza:
 
 - 🧩 Challenge: ConditionVariable Mechanics
 - 🧩 Multiple Choice: Queue Blocking Behavior
 - 🔗 Matching: Synchronization Primitives
+- 🧩 Challenge: Compare-and-Set Result
+- ✏️ Fill in the Blank: Spurious Wakeup Guard
 
 → [Practice in your IDE](https://stanza.dev/courses/ruby-concurrency)

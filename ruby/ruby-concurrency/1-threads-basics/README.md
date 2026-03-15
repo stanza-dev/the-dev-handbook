@@ -13,10 +13,11 @@ Understanding MRI's threading model, the GVL, and thread safety.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: Thread Safety
-- 🧩 Challenge: GVL Benefits
 - 🧩 Multiple Choice: Thread Exceptions
+- 🧩 Challenge: GVL Benefits
+- 🧩 Challenge: Deadlock Prevention
 
 → [Practice in your IDE](https://stanza.dev/courses/ruby-concurrency)
