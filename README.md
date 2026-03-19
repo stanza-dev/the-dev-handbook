@@ -130,8 +130,8 @@ Each lesson flows from conceptual understanding to practical application to edge
 - ⚡ [Asynchronous Rust](./rust/rust-async/) — 15 lessons
 - 🧵 [Concurrent Rust](./rust/rust-concurrency/) — 20 lessons
 - 🔌 [Rust for Embedded Systems](./rust/rust-embedded/) — 10 lessons
-- λ [Functional Rust](./rust/rust-functional/) — 10 lessons
-- 🔮 [Rust Metaprogramming](./rust/rust-metaprogramming/) — 10 lessons
+- λ [Functional Rust](./rust/rust-functional/) — 15 lessons
+- 🔮 [Rust Metaprogramming](./rust/rust-metaprogramming/) — 15 lessons
 - 🧠 [Rust Ownership & Memory Model](./rust/rust-ownership/) — 16 lessons
 - 🚀 [Rust Performance](./rust/rust-performance/) — 15 lessons
 - 🎭 [Advanced Traits & Generics](./rust/rust-traits/) — 20 lessons

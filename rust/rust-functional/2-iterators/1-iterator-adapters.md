@@ -3,120 +3,166 @@ source_course: "rust-functional"
 source_lesson: "rust-func-iterator-adapters"
 ---
 
-# Iterator Adapters
+# Chaining Iterator Adapters
 
-Adapters transform iterators lazily (nothing happens until consumed).
+## Introduction
+Iterators in Rust are lazy — adapter methods like `map`, `filter`, and `flat_map` build up a pipeline that does no work until a consumer method like `collect` or `sum` drives the iteration. This lesson covers the most important adapters and how to chain them into expressive data pipelines.
 
-## Common Adapters
+## Key Concepts
+- **Iterator adapter**: A method on an iterator that returns a new iterator with modified behavior. Adapters are lazy — they build a chain but do not execute it.
+- **Consumer (terminal operation)**: A method like `collect()`, `sum()`, `count()`, or `for_each()` that drives the iterator chain to completion.
+- **Lazy evaluation**: No element is processed until a consumer requests it. This means an infinite range like `0..` is perfectly safe as long as you limit consumption.
+
+## Real World Context
+Iterator chains are the idiomatic way to process collections in Rust. They often compile down to the same machine code as hand-written loops, thanks to the compiler's ability to inline and optimize iterator adapters. If you have used `.map().filter()` in JavaScript, Python, or Java streams, Rust's iterators will feel familiar — but with zero-cost abstraction guarantees.
+
+## Deep Dive
+
+### Core adapters
+
+Here are the adapters you will use most often. Each one takes an iterator and returns a new iterator:
 
 ```rust
-let numbers = vec![1, 2, 3, 4, 5];
+let temperatures = vec![72.0, 68.5, 75.3, 80.1, 65.0];
 
-// map: Transform each element
-let doubled: Vec<_> = numbers.iter().map(|x| x * 2).collect();
-// [2, 4, 6, 8, 10]
-
-// filter: Keep matching elements
-let evens: Vec<_> = numbers.iter().filter(|x| *x % 2 == 0).collect();
-// [2, 4]
-
-// filter_map: Filter and transform in one
-let parsed: Vec<i32> = ["1", "two", "3"].iter()
-    .filter_map(|s| s.parse().ok())
+// map: transform each element
+let celsius: Vec<f64> = temperatures.iter()
+    .map(|f| (f - 32.0) * 5.0 / 9.0)
     .collect();
-// [1, 3]
+// [22.2, 20.3, 24.1, 26.7, 18.3] (approximate)
 
-// flat_map: Map then flatten
-let flattened: Vec<_> = [[1, 2], [3, 4]].iter()
-    .flat_map(|arr| arr.iter())
+// filter: keep elements matching a predicate
+let warm: Vec<&f64> = temperatures.iter()
+    .filter(|&&temp| temp > 70.0)
     .collect();
-// [1, 2, 3, 4]
+// [72.0, 75.3, 80.1]
+
+// filter_map: filter and transform in one step
+let parsed: Vec<i32> = ["10", "abc", "30", "xyz"].iter()
+    .filter_map(|s| s.parse::<i32>().ok())
+    .collect();
+// [10, 30]
 ```
 
-## Positioning Adapters
+Each adapter returns a new iterator struct. No allocation or computation happens until `collect()` consumes the chain.
+
+### Positioning adapters
+
+These adapters control which elements pass through:
 
 ```rust
-let nums = 1..=10;
+let numbers = 1..=100;
 
-// take: First N elements
-let first_3: Vec<_> = nums.clone().take(3).collect();  // [1, 2, 3]
+// take: yield only the first N elements
+let first_five: Vec<i32> = numbers.clone().take(5).collect();
+// [1, 2, 3, 4, 5]
 
-// skip: Skip first N elements
-let skip_3: Vec<_> = nums.clone().skip(3).collect();  // [4, 5, ..., 10]
+// skip: discard the first N elements
+let after_ten: Vec<i32> = numbers.clone().skip(95).collect();
+// [96, 97, 98, 99, 100]
 
-// take_while / skip_while
-let while_small: Vec<_> = nums.clone().take_while(|&x| x < 5).collect();  // [1, 2, 3, 4]
+// take_while: yield elements while predicate is true
+let small: Vec<i32> = numbers.clone().take_while(|&x| x < 4).collect();
+// [1, 2, 3]
 ```
 
-## Combining Adapters
+These are especially useful with infinite iterators — `take(n)` makes them finite.
+
+### Chaining multiple adapters
+
+The real power emerges when you chain several adapters together:
 
 ```rust
-let data = vec!["hello", "world", "rust", "programming"];
+let log_lines = vec![
+    "INFO: server started",
+    "ERROR: connection refused",
+    "DEBUG: query executed",
+    "ERROR: timeout exceeded",
+    "INFO: request handled",
+];
 
-let result: Vec<_> = data.iter()
-    .filter(|s| s.len() > 4)      // Keep long words
-    .map(|s| s.to_uppercase())    // Uppercase
-    .take(2)                       // First 2
+let error_report: Vec<String> = log_lines.iter()
+    .filter(|line| line.starts_with("ERROR"))
+    .enumerate()
+    .map(|(index, line)| format!("#{}: {}", index + 1, &line[7..]))
     .collect();
-// ["HELLO", "WORLD"]
+// ["#1: connection refused", "#2: timeout exceeded"]
 ```
 
-## Lazy Evaluation
+Each adapter transforms the stream one step at a time, and the compiler fuses them into a single pass over the data.
+
+### Lazy evaluation in action
+
+Because adapters are lazy, unused pipelines do nothing:
 
 ```rust
-let iter = (0..1_000_000)
+let pipeline = (0..1_000_000)
     .map(|x| {
-        println!("Processing {x}");  // Never prints!
+        println!("processing {x}"); // Never prints!
         x * 2
     });
-// Nothing happens yet - iterators are lazy!
+// No output — the iterator has not been consumed
 
-let first = iter.take(1).collect::<Vec<_>>();
-// Now only "Processing 0" prints
+let first: Vec<i32> = pipeline.take(2).collect();
+// Now only "processing 0" and "processing 1" print
 ```
 
-See [Iterators](https://doc.rust-lang.org/book/ch13-02-iterators.html).
+Only two elements are processed, even though the range has a million entries.
+
+## Common Pitfalls
+1. **Forgetting to consume the iterator** — Calling `.map().filter()` without a terminal operation does nothing. The compiler warns about unused `Iterator` values.
+2. **Using `filter` with double references** — `iter().filter()` passes `&&T` to the predicate. Use `|&&x|` or `|x| **x` to dereference.
+3. **Collecting into the wrong type** — `collect()` needs a type annotation. Use turbofish (`::<Vec<_>>`) or annotate the binding.
+
+## Best Practices
+1. **Prefer `filter_map` over `filter` + `map`** — When filtering and transforming, `filter_map` is more concise and avoids an intermediate `Option` unwrap.
+2. **Use `take` with infinite iterators** — Ranges like `0..` are safe when bounded by `take(n)`.
+3. **Profile before optimizing** — Iterator chains usually optimize well, but if you suspect overhead, check the generated assembly with `cargo asm`.
+
+## Summary
+- Iterator adapters (map, filter, flat_map, take, skip) are lazy transformations.
+- Consumers (collect, sum, for_each, count) drive the chain to completion.
+- Chains compile to efficient, single-pass code.
+- Always consume your iterator — unused chains do nothing.
+- Use type annotations with collect() to specify the output collection.
 
 ## Code Examples
 
-**Iterator adapter examples**
+**Practical iterator chains — log parsing with filter_map, pairing with zip, and concatenation with chain**
 
 ```rust
-// Practical iterator chain
-fn process_logs(logs: &[&str]) -> Vec<String> {
+// A practical log-processing pipeline
+fn extract_error_codes(logs: &[&str]) -> Vec<u32> {
     logs.iter()
-        .filter(|line| !line.starts_with('#'))  // Skip comments
-        .filter(|line| !line.is_empty())        // Skip empty
-        .map(|line| line.trim())                // Trim whitespace
-        .filter(|line| line.contains("ERROR")) // Only errors
-        .enumerate()                            // Add index
-        .map(|(i, line)| format!("{}: {}", i + 1, line))
+        .filter(|line| line.starts_with("ERROR"))
+        .filter_map(|line| {
+            // Extract numeric code from "ERROR[1234]: ..."
+            let start = line.find('[')? + 1;
+            let end = line.find(']')?;
+            line[start..end].parse::<u32>().ok()
+        })
         .collect()
 }
 
-// zip: Pair up two iterators
-let names = ["Alice", "Bob", "Charlie"];
-let scores = [95, 87, 92];
+// zip: pair elements from two iterators
+let students = ["Alice", "Bob", "Charlie"];
+let grades = [92, 85, 97];
 
-let results: Vec<_> = names.iter()
-    .zip(scores.iter())
-    .map(|(name, score)| format!("{name}: {score}"))
+let report: Vec<String> = students.iter()
+    .zip(grades.iter())
+    .map(|(name, grade)| format!("{name}: {grade}%"))
     .collect();
-// ["Alice: 95", "Bob: 87", "Charlie: 92"]
+// ["Alice: 92%", "Bob: 85%", "Charlie: 97%"]
 
-// chain: Concatenate iterators
-let combined: Vec<_> = (1..=3).chain(7..=9).collect();
-// [1, 2, 3, 7, 8, 9]
-
-// cycle: Repeat infinitely
-let pattern: Vec<_> = [1, 2, 3].iter().cycle().take(8).collect();
-// [1, 2, 3, 1, 2, 3, 1, 2]
+// chain: concatenate two iterators
+let combined: Vec<i32> = (1..=3).chain(8..=10).collect();
+// [1, 2, 3, 8, 9, 10]
 ```
 
 
 ## Resources
 
-- [Iterators](https://doc.rust-lang.org/book/ch13-02-iterators.html) — Rust Book chapter on iterators
+- [Processing a Series of Items with Iterators](https://doc.rust-lang.org/book/ch13-02-iterators.html) — Official Rust Book chapter on iterators, adapters, and consumers
 
 ---
 

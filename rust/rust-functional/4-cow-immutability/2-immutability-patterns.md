@@ -3,102 +3,121 @@ source_course: "rust-functional"
 source_lesson: "rust-func-immutability-patterns"
 ---
 
-# Embracing Immutability
+# Immutability Patterns
 
-Rust defaults to immutable, encouraging functional patterns.
+## Introduction
+Rust defaults to immutable bindings, encouraging a functional style where data is transformed rather than mutated in place. This lesson covers practical patterns for working with immutable data: shadowing, the builder pattern, and transformation pipelines.
 
-## Shadowing for Transformation
+## Key Concepts
+- **Shadowing**: Rebinding a variable name with `let` to a new value, rather than mutating the original.
+- **Builder pattern**: A struct with chainable methods that produce a final, immutable configuration object.
+- **Transformation over mutation**: Creating new collections via iterator pipelines instead of modifying existing ones.
+
+## Real World Context
+Immutability makes code easier to reason about, especially in concurrent programs where shared mutable state is the root of most bugs. Rust's ownership system makes immutable patterns zero-cost — there is no garbage collector overhead for creating new values.
+
+## Deep Dive
+
+### Shadowing for step-by-step transformation
+
+Instead of mutating a variable, create new bindings with the same name:
 
 ```rust
-// Instead of mutation:
-let mut x = 5;
-x = x + 1;
-
-// Use shadowing:
-let x = 5;
-let x = x + 1;  // New binding, not mutation
+let input = "  42  ";
+let input = input.trim();        // &str, whitespace removed
+let input: i32 = input.parse().unwrap(); // i32, parsed
+let input = input * 2;           // i32, doubled
+assert_eq!(input, 84);
 ```
 
-## Builder Pattern
+Each `let` creates a new binding. The previous value is dropped (or the borrow ends). This is not mutation — each step can even change the type.
+
+### The builder pattern
+
+Builders let you configure complex objects step by step, producing an immutable result:
 
 ```rust
-struct Config {
+struct ServerConfig {
     host: String,
     port: u16,
+    max_connections: usize,
 }
 
-struct ConfigBuilder {
+struct ServerConfigBuilder {
     host: String,
     port: u16,
+    max_connections: usize,
 }
 
-impl ConfigBuilder {
+impl ServerConfigBuilder {
     fn new() -> Self {
-        ConfigBuilder {
-            host: "localhost".into(),
+        ServerConfigBuilder {
+            host: "127.0.0.1".into(),
             port: 8080,
+            max_connections: 100,
         }
     }
-    
+
     fn host(mut self, host: impl Into<String>) -> Self {
         self.host = host.into();
-        self  // Return self for chaining
+        self
     }
-    
+
     fn port(mut self, port: u16) -> Self {
         self.port = port;
         self
     }
-    
-    fn build(self) -> Config {
-        Config {
+
+    fn max_connections(mut self, max: usize) -> Self {
+        self.max_connections = max;
+        self
+    }
+
+    fn build(self) -> ServerConfig {
+        ServerConfig {
             host: self.host,
             port: self.port,
+            max_connections: self.max_connections,
         }
     }
 }
+```
 
-let config = ConfigBuilder::new()
-    .host("example.com")
+The builder consumes `self` at each step (taking ownership), so the chain is type-safe. The final `build()` returns an immutable `ServerConfig`:
+
+```rust
+let config = ServerConfigBuilder::new()
+    .host("0.0.0.0")
     .port(443)
+    .max_connections(10_000)
     .build();
 ```
 
-## Transforming Instead of Mutating
+### Transformation over mutation
+
+Instead of modifying a collection in place, create a new one:
 
 ```rust
-// Mutation:
-fn add_one_mut(numbers: &mut Vec<i32>) {
-    for n in numbers.iter_mut() {
-        *n += 1;
+// Mutation style (imperative)
+fn add_tax_mut(prices: &mut Vec<f64>, rate: f64) {
+    for price in prices.iter_mut() {
+        *price *= 1.0 + rate;
     }
 }
 
-// Transformation (functional):
-fn add_one(numbers: Vec<i32>) -> Vec<i32> {
-    numbers.into_iter().map(|n| n + 1).collect()
-}
-
-// Or with references:
-fn add_one_ref(numbers: &[i32]) -> Vec<i32> {
-    numbers.iter().map(|n| n + 1).collect()
+// Transformation style (functional)
+fn add_tax(prices: &[f64], rate: f64) -> Vec<f64> {
+    prices.iter().map(|price| price * (1.0 + rate)).collect()
 }
 ```
 
-## Code Examples
+The transformation style is easier to test (no side effects), compose, and parallelize. The original data remains unchanged for other uses.
 
-**Immutable update patterns**
+### Immutable state updates
+
+For application state, create new versions rather than mutating:
 
 ```rust
-// Functional data pipeline
-fn process_data(data: &[Record]) -> Summary {
-    data.iter()
-        .filter(|r| r.is_valid())
-        .map(|r| r.normalize())
-        .fold(Summary::new(), |acc, r| acc.add(r))
-}
-
-// Immutable state updates (like Redux)
 #[derive(Clone)]
 struct AppState {
     count: i32,
@@ -112,20 +131,74 @@ impl AppState {
             ..self.clone()
         }
     }
-    
+
     fn add_item(&self, item: String) -> Self {
-        let mut items = self.items.clone();
-        items.push(item);
-        AppState { items, ..self.clone() }
+        let mut new_items = self.items.clone();
+        new_items.push(item);
+        AppState {
+            items: new_items,
+            ..self.clone()
+        }
     }
 }
-
-let state = AppState { count: 0, items: vec![] };
-let state = state.increment();
-let state = state.add_item("hello".into());
-// Each step creates new state, original untouched
 ```
 
+Each method returns a new state. The original is untouched, enabling easy undo/redo and state history.
+
+## Common Pitfalls
+1. **Excessive cloning for immutability** — Cloning large data structures just to avoid mutation can be expensive. Use `Cow`, `Rc`, or `Arc` for shared ownership instead.
+2. **Confusing shadowing with mutation** — Shadowing creates a new binding. The old value may still exist if references to it remain.
+3. **Builder without consuming `self`** — If builder methods take `&mut self` instead of `self`, users can accidentally reuse a partially-built builder.
+
+## Best Practices
+1. **Use shadowing for sequential transformations** — It makes the data flow explicit and avoids naming intermediate values.
+2. **Consume `self` in builder methods** — This prevents misuse and makes the builder pattern type-safe.
+3. **Combine immutability with iterators** — Iterator chains naturally produce new data without mutation.
+
+## Summary
+- Rust defaults to immutable bindings, encouraging functional data flow.
+- Shadowing replaces mutation for step-by-step transformations.
+- The builder pattern produces immutable objects from a chainable API.
+- Transformation pipelines create new collections rather than modifying existing ones.
+- Use `Cow`, `Rc`, or `Arc` to avoid expensive clones for shared data.
+
+## Code Examples
+
+**An immutable sales data pipeline using fold and iterator transformations — the original data is never modified**
+
+```rust
+// Immutable data processing pipeline
+struct SalesRecord {
+    product: String,
+    amount: f64,
+    region: String,
+}
+
+fn summarize_by_region(records: &[SalesRecord]) -> Vec<(String, f64)> {
+    use std::collections::HashMap;
+
+    let totals: HashMap<&str, f64> = records.iter()
+        .fold(HashMap::new(), |mut acc, record| {
+            *acc.entry(&record.region).or_insert(0.0) += record.amount;
+            acc
+        });
+
+    // Transform into sorted Vec without mutating the HashMap
+    let mut result: Vec<(String, f64)> = totals
+        .into_iter()
+        .map(|(region, total)| (region.to_string(), total))
+        .collect();
+
+    result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+    result
+}
+// Original records remain unchanged — pure transformation
+```
+
+
+## Resources
+
+- [Variables and Mutability](https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html) — Rust Book chapter on variables, mutability, and shadowing
 
 ---
 

@@ -2,19 +2,19 @@
 
 > Declarative macros, procedural macros, derive macros, and code generation.
 
-**Rust 1.83** · Advanced → Expert
+**Rust 1.94** · Advanced → Expert
 
 ## Sections
 
 | | Section | Lessons |
 |---|---------|---------|
-| 📜 | [Declarative Macros](./1-declarative-macros/) | 2 lessons |
-| ⚙️ | [Procedural Macros Setup](./2-proc-macro-setup/) | 2 lessons |
-| 🏭 | [Custom Derive Macros](./3-custom-derive/) | 2 lessons |
-| 🏷️ | [Attribute Macros](./4-attribute-macros/) | 2 lessons |
-| 📞 | [Function-Like Macros](./5-function-macros/) | 2 lessons |
+| 📜 | [Declarative Macros](./1-declarative-macros/) | 3 lessons |
+| ⚙️ | [Procedural Macros Setup](./2-proc-macro-setup/) | 3 lessons |
+| 🏭 | [Custom Derive Macros](./3-custom-derive/) | 3 lessons |
+| 🏷️ | [Attribute Macros](./4-attribute-macros/) | 3 lessons |
+| 📞 | [Function-Like Macros](./5-function-macros/) | 3 lessons |
 
-**10 lessons** · **10 interactive challenges**
+**15 lessons** · **20 interactive challenges**
 
 ## Want the Interactive Experience?
 
