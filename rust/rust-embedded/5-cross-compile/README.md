@@ -8,12 +8,15 @@ Building for different targets.
 
 1. [Target Triples](./1-target-triples.md)
 2. [Testing with QEMU](./2-testing-qemu.md)
+3. [Naked Functions and Inline Assembly](./3-fn-asm.md)
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Target Triple Components
-- 🧩 Multiple Choice: QEMU Benefit
+- ✏️ Fill in the Blank: Build Configuration
+- 🧩 Challenge: Project Setup Steps
+- 🧩 Challenge: Testing Strategies
 
 → [Practice in your IDE](https://stanza.dev/courses/rust-embedded)

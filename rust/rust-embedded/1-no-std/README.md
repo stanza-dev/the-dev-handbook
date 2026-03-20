@@ -8,12 +8,15 @@ Core library and heap allocation.
 
 1. [#![no_std]](./1-std-basics.md)
 2. [The alloc Crate](./2-alloc-crate.md)
+3. [Rust Edition 2024 for Embedded](./3-2024-changes.md)
 
 ## Practice Challenges
 
-This section includes **2 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Panic Handler Requirement
-- 🧩 Multiple Choice: Core vs Std
+- ✏️ Fill in the Blank: Core vs Std
+- 🧩 Multiple Choice: Edition 2024 no_mangle
+- 🧩 Challenge: No-Std Binary Setup
 
 → [Practice in your IDE](https://stanza.dev/courses/rust-embedded)
