@@ -16,6 +16,6 @@ This section includes **3 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: CTE Syntax
 - 🧩 Multiple Choice: Window Function Partitioning
-- 🧩 Multiple Choice: LAG Function
+- 🔗 Matching: Window Functions Matching
 
 → [Practice in your IDE](https://stanza.dev/courses/postgresql-fundamentals)

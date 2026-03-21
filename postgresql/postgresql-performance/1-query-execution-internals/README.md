@@ -15,7 +15,7 @@ Understand how PostgreSQL plans and executes queries.
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Understanding Cost
-- 🧩 Multiple Choice: Index Only Scan
+- 🧩 Challenge: Index Only Scan Requirements
 - 🧩 Multiple Choice: Bitmap Scan Purpose
 
 → [Practice in your IDE](https://stanza.dev/courses/postgresql-performance)

@@ -8,13 +8,14 @@ Understand PostgreSQL's MVCC and keep your database healthy.
 
 1. [Understanding MVCC](./1-performance-mvcc.md)
 2. [VACUUM Operations](./2-vacuum-operations.md)
+3. [Advanced VACUUM Strategies](./3-advanced-vacuum.md)
 
 ## Practice Challenges
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: Dead Tuples
+- 🧩 Challenge: Dead Tuples
 - 🧩 Multiple Choice: VACUUM FULL Usage
-- 🧩 Multiple Choice: Autovacuum Trigger
+- 🧩 Challenge: Autovacuum Trigger Formula
 
 → [Practice in your IDE](https://stanza.dev/courses/postgresql-performance)

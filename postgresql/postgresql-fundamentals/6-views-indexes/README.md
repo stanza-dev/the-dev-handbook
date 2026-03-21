@@ -14,8 +14,8 @@ Create views for reusable queries and understand indexes for performance.
 
 This section includes **3 interactive challenges** available on Stanza:
 
-- 🧩 Multiple Choice: View Benefits
-- 🧩 Multiple Choice: Index Column Order
+- 🧩 Challenge: View Benefits
+- 🧩 Challenge: Multi-Column Index Usage
 - 🧩 Multiple Choice: EXPLAIN Scan Types
 
 → [Practice in your IDE](https://stanza.dev/courses/postgresql-fundamentals)

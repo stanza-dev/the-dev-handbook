@@ -15,7 +15,7 @@ Design related tables and query across multiple tables with JOIN operations.
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Choosing the Right JOIN
-- 🧩 Multiple Choice: ON DELETE CASCADE
-- 🧩 Multiple Choice: INNER JOIN Result
+- 🔗 Matching: ON DELETE Actions
+- 🧩 Challenge: INNER JOIN Result
 
 → [Practice in your IDE](https://stanza.dev/courses/postgresql-fundamentals)

@@ -15,7 +15,7 @@ Install PostgreSQL, understand its architecture, and write your first queries.
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: PostgreSQL Architecture
-- 🧩 Multiple Choice: Auto-Incrementing Columns
 - ✏️ Fill in the Blank: Listing Tables
+- 🧩 Multiple Choice: Auto-Incrementing Columns
 
 → [Practice in your IDE](https://stanza.dev/courses/postgresql-fundamentals)

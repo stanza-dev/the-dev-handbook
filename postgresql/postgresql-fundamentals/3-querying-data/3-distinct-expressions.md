@@ -5,7 +5,23 @@ source_lesson: "postgresql-fundamentals-distinct-expressions"
 
 # DISTINCT and Calculated Columns
 
-## Removing Duplicates with DISTINCT
+## Introduction
+Beyond basic SELECT, PostgreSQL provides powerful features for transforming data: removing duplicates with DISTINCT, conditional logic with CASE, and a rich library of built-in functions. These tools let you shape query results without changing the underlying data.
+
+## Key Concepts
+- **DISTINCT**: Removes duplicate rows from the result set. Only unique combinations of the selected columns are returned.
+- **DISTINCT ON**: A PostgreSQL-specific feature that returns the first row for each distinct value of the specified columns, based on the ORDER BY clause.
+- **CASE expression**: SQL's if-then-else logic. It returns different values based on conditions, useful for categorizing data in queries.
+- **Built-in functions**: PostgreSQL provides hundreds of functions for string manipulation, date arithmetic, math operations, and more.
+
+## Real World Context
+DISTINCT ON is a PostgreSQL superpower — it solves "get the latest record per group" problems in a single query, which would require window functions or subqueries in other databases. CASE expressions are used everywhere from building report columns to conditional aggregation.
+
+## Deep Dive
+
+### Removing Duplicates with DISTINCT
+
+DISTINCT eliminates duplicate rows from results:
 
 ```sql
 -- Unique authors
@@ -15,9 +31,11 @@ SELECT DISTINCT author FROM books;
 SELECT DISTINCT author, published_year FROM books;
 ```
 
-## DISTINCT ON (PostgreSQL-specific)
+With multiple columns, DISTINCT applies to the combination — each unique (author, published_year) pair appears once.
 
-Get the first row for each group:
+### DISTINCT ON (PostgreSQL-specific)
+
+DISTINCT ON returns the first row for each group based on ORDER BY:
 
 ```sql
 -- Most recent book by each author
@@ -27,7 +45,11 @@ FROM books
 ORDER BY author, published_year DESC;
 ```
 
-## Calculated Columns
+This returns one row per author — the one with the highest published_year. It is much simpler than the equivalent window function approach.
+
+### Calculated Columns
+
+You can perform arithmetic and string operations directly in SELECT:
 
 ```sql
 -- Arithmetic expressions
@@ -44,12 +66,14 @@ SELECT
 FROM users;
 ```
 
-## CASE Expressions
+The `||` operator concatenates strings in PostgreSQL.
 
-Conditional logic in queries:
+### CASE Expressions
+
+CASE provides conditional logic in queries:
 
 ```sql
--- Simple CASE
+-- Categorize books by length
 SELECT 
     title,
     pages,
@@ -60,7 +84,7 @@ SELECT
     END AS length_category
 FROM books;
 
--- CASE for conditional aggregation
+-- Conditional aggregation
 SELECT 
     COUNT(*) AS total_books,
     COUNT(CASE WHEN published_year >= 2000 THEN 1 END) AS modern_books,
@@ -68,9 +92,12 @@ SELECT
 FROM books;
 ```
 
-## Built-in Functions
+CASE inside COUNT is a powerful pattern for computing multiple conditional counts in a single query.
 
 ### String Functions
+
+PostgreSQL provides many string manipulation functions:
+
 ```sql
 SELECT 
     UPPER(title) AS uppercase_title,
@@ -82,7 +109,12 @@ SELECT
 FROM books;
 ```
 
+These functions return transformed values without modifying the stored data.
+
 ### Date Functions
+
+Date functions are essential for time-based queries:
+
 ```sql
 SELECT 
     created_at,
@@ -94,7 +126,12 @@ SELECT
 FROM users;
 ```
 
+EXTRACT pulls individual components from timestamps. AGE calculates the difference between a timestamp and now.
+
 ### Math Functions
+
+Common math functions for numerical operations:
+
 ```sql
 SELECT 
     ROUND(price, 2) AS rounded,
@@ -105,7 +142,42 @@ SELECT
 FROM products;
 ```
 
-📖 [Functions and Operators](https://www.postgresql.org/docs/18/functions.html)
+ROUND is especially useful for formatting monetary values in reports.
+
+## Common Pitfalls
+1. **Using DISTINCT ON without ORDER BY** — DISTINCT ON requires ORDER BY to determine which row is "first" for each group. Without it, the result is unpredictable.
+2. **Forgetting ELSE in CASE** — If no WHEN condition matches and there is no ELSE, CASE returns NULL. Always include ELSE unless you intentionally want NULL.
+
+## Best Practices
+1. **Use DISTINCT ON for "latest per group" queries** — It is cleaner and often faster than window functions or correlated subqueries for this common pattern.
+2. **Use CASE for conditional aggregation** — Instead of running separate queries for different categories, use CASE inside aggregate functions to compute everything in one pass.
+
+## Summary
+- DISTINCT removes duplicate rows; DISTINCT ON returns the first row per group.
+- CASE provides if-then-else logic directly in queries.
+- PostgreSQL has rich built-in functions for strings (UPPER, LENGTH, REPLACE), dates (EXTRACT, AGE), and math (ROUND, CEIL, FLOOR).
+- Use `||` for string concatenation and arithmetic operators for calculated columns.
+- DISTINCT ON is a PostgreSQL-specific feature that simplifies "first per group" queries.
+
+## Code Examples
+
+**DISTINCT ON to get the latest order for each customer — a common pattern that replaces complex window function queries**
+
+```sql
+-- DISTINCT ON: get the most recent order per customer
+SELECT DISTINCT ON (customer_id)
+    customer_id,
+    id AS order_id,
+    total,
+    created_at
+FROM orders
+ORDER BY customer_id, created_at DESC;
+```
+
+
+## Resources
+
+- [Functions and Operators](https://www.postgresql.org/docs/18/functions.html) — Complete reference for PostgreSQL built-in functions and operators
 
 ---
 

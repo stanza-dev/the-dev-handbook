@@ -10,12 +10,12 @@
 |---|---------|---------|
 | 🔬 | [Query Execution Internals](./1-query-execution-internals/) | 3 lessons |
 | 📇 | [Indexing Strategies](./2-indexing-strategies/) | 3 lessons |
-| 📦 | [Table Partitioning](./3-partitioning/) | 2 lessons |
-| 🧹 | [VACUUM & Maintenance](./4-vacuum-maintenance/) | 2 lessons |
-| 📊 | [Monitoring & Diagnostics](./5-monitoring-diagnostics/) | 2 lessons |
-| 🎛️ | [Statistics & Planner Tuning](./6-advanced-statistics/) | 2 lessons |
+| 📦 | [Table Partitioning](./3-partitioning/) | 3 lessons |
+| 🧹 | [VACUUM & Maintenance](./4-vacuum-maintenance/) | 3 lessons |
+| 📊 | [Monitoring & Diagnostics](./5-monitoring-diagnostics/) | 3 lessons |
+| 🎛️ | [Statistics & Planner Tuning](./6-advanced-statistics/) | 3 lessons |
 
-**14 lessons** · **18 interactive challenges**
+**18 lessons** · **18 interactive challenges**
 
 ## Want the Interactive Experience?
 

@@ -15,7 +15,7 @@ Design effective indexes for your workload.
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: GIN Index Use Case
+- ✏️ Fill in the Blank: Partial Index Usage
 - 🧩 Multiple Choice: BRIN Index Suitability
-- 🧩 Multiple Choice: Partial Index Usage
 
 → [Practice in your IDE](https://stanza.dev/courses/postgresql-performance)

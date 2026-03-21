@@ -17,7 +17,7 @@ This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Precise Decimal Storage
 - ✏️ Fill in the Blank: Checking for NULL
-- ✏️ Fill in the Blank: Getting Inserted ID
 - 🧩 Multiple Choice: Safe UPDATE Practices
+- ✏️ Fill in the Blank: Getting Inserted ID
 
 → [Practice in your IDE](https://stanza.dev/courses/postgresql-fundamentals)

@@ -5,16 +5,34 @@ source_lesson: "postgresql-performance-explain-basics"
 
 # EXPLAIN Fundamentals
 
-EXPLAIN is your primary tool for understanding query performance.
+## Introduction
 
-## Basic EXPLAIN
+EXPLAIN is your primary tool for understanding query performance. It reveals the execution plan the planner chose and, with ANALYZE, shows actual runtime metrics. Mastering EXPLAIN output is the single most important skill for PostgreSQL performance work.
+
+## Key Concepts
+
+- **EXPLAIN**: Shows the planned execution strategy without running the query.
+- **EXPLAIN ANALYZE**: Actually executes the query and reports real timing and row counts alongside the estimates.
+- **Plan node**: A single operation in the execution tree (e.g., Seq Scan, Hash Join).
+- **Startup cost vs total cost**: Work before the first row vs work for all rows.
+- **Loops**: How many times a node was executed (important for nested loops).
+
+## Real World Context
+
+When a production query takes 30 seconds instead of 30 milliseconds, EXPLAIN ANALYZE is how you find out why. It shows you exactly where time is spent - whether it is a missing index causing a sequential scan, a bad join strategy, or stale statistics producing wrong row estimates.
+
+## Deep Dive
+
+### Basic EXPLAIN
+
+The simplest form shows the planned strategy without executing the query:
 
 ```sql
--- Show the execution plan (without running)
 EXPLAIN SELECT * FROM users WHERE email = 'alice@example.com';
 ```
 
-Output:
+The output reveals which scan type was chosen and the estimated cost:
+
 ```
                            QUERY PLAN
 -----------------------------------------------------------------
@@ -23,9 +41,9 @@ Output:
    Index Cond: (email = 'alice@example.com'::text)
 ```
 
-## EXPLAIN ANALYZE
+### EXPLAIN ANALYZE
 
-**Actually executes the query** and shows real timing:
+Adding ANALYZE actually executes the query and shows real timing:
 
 ```sql
 EXPLAIN ANALYZE 
@@ -34,7 +52,8 @@ JOIN users u ON o.user_id = u.id
 WHERE o.created_at > '2024-01-01';
 ```
 
-Output:
+The output now includes both estimated and actual metrics:
+
 ```
                                     QUERY PLAN
 --------------------------------------------------------------------------------
@@ -54,10 +73,11 @@ Output:
  Execution Time: 2.231 ms
 ```
 
-## Understanding the Output
+Comparing estimated rows (453) to actual rows (512) tells you whether statistics are accurate.
 
-### Plan Structure
-The plan is a **tree of nodes**, read bottom-up:
+### Understanding Plan Structure
+
+The plan is a tree of nodes, read from bottom to top and inside out:
 
 ```
 Hash Join           ← Top node (final operation)
@@ -65,6 +85,8 @@ Hash Join           ← Top node (final operation)
 └── Hash               ← Right child (inner relation)
     └── Seq Scan (users)
 ```
+
+Child nodes execute first and feed their output to parent nodes.
 
 ### Key Metrics
 
@@ -74,37 +96,71 @@ Hash Join           ← Top node (final operation)
 | `rows=N` | Estimated rows returned |
 | `width=N` | Average row size in bytes |
 | `actual time=start..total` | Real execution time (ms) |
-| `rows=N` | Actual rows returned |
+| `rows=N` (actual) | Actual rows returned |
 | `loops=N` | Times this node was executed |
 
-### Comparing Estimated vs Actual
+### EXPLAIN Options
 
-```
-Seq Scan on orders (cost=0.00..103.75 rows=453 width=64)
-                   (actual time=0.012..0.987 rows=512 loops=1)
-```
-
-- **Estimated rows**: 453
-- **Actual rows**: 512
-- Close enough! Large differences indicate stale statistics.
-
-## EXPLAIN Options
+In PostgreSQL 18, EXPLAIN ANALYZE automatically includes buffer usage information (previously you needed to specify BUFFERS explicitly):
 
 ```sql
--- Include buffer usage information
-EXPLAIN (ANALYZE, BUFFERS) SELECT ...;
+-- In PostgreSQL 18, EXPLAIN ANALYZE includes BUFFERS by default
+EXPLAIN ANALYZE SELECT * FROM orders WHERE user_id = 42;
+-- Equivalent to: EXPLAIN (ANALYZE, BUFFERS) in older versions
 
--- Show timing breakdown per operation
-EXPLAIN (ANALYZE, TIMING) SELECT ...;
-
--- All useful options combined
-EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) SELECT ...;
-
--- JSON format (for visualization tools)
-EXPLAIN (ANALYZE, FORMAT JSON) SELECT ...;
+-- To disable buffer info:
+EXPLAIN (ANALYZE, BUFFERS OFF) SELECT * FROM orders WHERE user_id = 42;
 ```
 
-📖 [Using EXPLAIN](https://www.postgresql.org/docs/18/using-explain.html)
+Other useful option combinations:
+
+```sql
+-- Show timing breakdown per operation
+EXPLAIN (ANALYZE, TIMING) SELECT * FROM orders;
+
+-- JSON format (for visualization tools like pgMustard, explain.depesz.com)
+EXPLAIN (ANALYZE, FORMAT JSON) SELECT * FROM orders;
+```
+
+These options give you different views into query performance.
+
+## Common Pitfalls
+
+1. **Using EXPLAIN without ANALYZE for performance debugging** - Plain EXPLAIN shows estimates only. The actual execution time and row counts from ANALYZE are essential for diagnosing real problems.
+2. **Ignoring the loops column** - A node with `actual time=0.1ms` but `loops=10000` actually took 1000ms total. Multiply time by loops for the true cost.
+3. **Running EXPLAIN ANALYZE on destructive statements** - EXPLAIN ANALYZE executes the query. Wrap UPDATE/DELETE in a transaction and ROLLBACK if you just want to see the plan.
+
+## Best Practices
+
+1. **Always use EXPLAIN (ANALYZE, BUFFERS)** - Buffer information reveals whether queries hit cache or read from disk, which is critical for understanding real-world performance.
+2. **Compare estimated vs actual rows** - Large discrepancies (10x or more) indicate stale or insufficient statistics. Run ANALYZE to fix them.
+3. **Use visualization tools** - Paste EXPLAIN output into tools like explain.depesz.com or pgMustard for easier interpretation of complex plans.
+
+## Summary
+
+- EXPLAIN shows the planned execution strategy; EXPLAIN ANALYZE shows actual runtime metrics.
+- In PostgreSQL 18, EXPLAIN ANALYZE includes buffer information by default.
+- Plan nodes form a tree read from bottom to top.
+- Compare estimated vs actual rows to detect statistics problems.
+- Always wrap EXPLAIN ANALYZE of write queries in a transaction to avoid side effects.
+
+## Code Examples
+
+**Using EXPLAIN ANALYZE to see actual execution metrics, and wrapping destructive queries in a transaction for safety**
+
+```sql
+-- PostgreSQL 18: EXPLAIN ANALYZE includes BUFFERS by default
+EXPLAIN ANALYZE
+SELECT * FROM orders o
+JOIN users u ON o.user_id = u.id
+WHERE o.created_at > '2024-01-01';
+
+-- To see the plan for a destructive query without executing:
+BEGIN;
+EXPLAIN ANALYZE DELETE FROM orders WHERE created_at < '2020-01-01';
+ROLLBACK;
+```
+
 
 ## Resources
 

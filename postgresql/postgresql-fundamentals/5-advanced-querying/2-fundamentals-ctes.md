@@ -5,19 +5,36 @@ source_lesson: "postgresql-fundamentals-ctes"
 
 # Common Table Expressions (CTEs)
 
-CTEs make complex queries readable by breaking them into named steps.
+## Introduction
+CTEs make complex queries readable by breaking them into named, reusable steps using the WITH clause. Instead of nesting subqueries inside subqueries, you define each step as a named temporary result set. CTEs also support recursion, enabling queries on hierarchical data like org charts and threaded comments.
 
-## Basic CTE Syntax
+## Key Concepts
+- **CTE (Common Table Expression)**: A named temporary result set defined with the WITH clause. It exists only for the duration of the query.
+- **WITH clause**: The keyword that introduces one or more CTEs before the main SELECT.
+- **Recursive CTE**: A CTE that references itself, used for hierarchical or tree-structured data.
+- **Materialization**: PostgreSQL may materialize (compute and store) CTE results, which can be beneficial or detrimental depending on the query.
+
+## Real World Context
+CTEs are used constantly in data analysis and reporting. Instead of writing a 50-line nested query, you break it into 3-4 named CTEs that each do one clear thing. Recursive CTEs solve problems that are nearly impossible with regular SQL: traversing org charts, bill of materials, category trees, and threaded discussions.
+
+## Deep Dive
+
+### Basic CTE Syntax
+
+A CTE is defined with WITH and used like a table in the main query:
 
 ```sql
 WITH cte_name AS (
-    -- Your query here
     SELECT ...
 )
 SELECT * FROM cte_name;
 ```
 
-## Simple Example
+The CTE is like a temporary view that exists only for this query.
+
+### Simple Example
+
+Break a complex query into readable steps:
 
 ```sql
 -- Find books by prolific authors (3+ books)
@@ -36,7 +53,11 @@ JOIN prolific_authors pa ON b.author_id = pa.author_id
 JOIN authors a ON b.author_id = a.id;
 ```
 
-## Multiple CTEs
+The CTE identifies prolific authors first, then the main query joins against it. This is much clearer than a nested subquery.
+
+### Multiple CTEs
+
+You can define multiple CTEs, each building on the previous:
 
 ```sql
 WITH 
@@ -63,9 +84,11 @@ CROSS JOIN average_sales avs
 ORDER BY ms.month;
 ```
 
-## Recursive CTEs
+The second CTE (`average_sales`) references the first CTE (`monthly_sales`), creating a clean pipeline.
 
-For hierarchical data (org charts, categories, threads):
+### Recursive CTEs
+
+Recursive CTEs reference themselves and are essential for hierarchical data:
 
 ```sql
 -- Employee hierarchy
@@ -85,7 +108,11 @@ WITH RECURSIVE employee_tree AS (
 SELECT * FROM employee_tree ORDER BY level, name;
 ```
 
-## CTE vs Subquery
+The base case selects root nodes (employees with no manager), and the recursive case finds their direct reports, repeating until no more rows are found.
+
+### CTE vs Subquery
+
+Here is when to use each approach:
 
 | Feature | CTE | Subquery |
 |---------|-----|----------|
@@ -94,8 +121,9 @@ SELECT * FROM employee_tree ORDER BY level, name;
 | Recursion | Supported | Not supported |
 | Optimization | Materialized in some cases | Always inlined |
 
+A CTE can be referenced multiple times in the same query, which is impossible with a subquery:
+
 ```sql
--- CTE referenced twice
 WITH stats AS (
     SELECT author_id, COUNT(*) AS books, AVG(pages) AS avg_pages
     FROM books GROUP BY author_id
@@ -103,7 +131,40 @@ WITH stats AS (
 SELECT * FROM stats WHERE books > (SELECT AVG(books) FROM stats);
 ```
 
-📖 [WITH Queries](https://www.postgresql.org/docs/18/queries-with.html)
+Here `stats` is used twice — once in the main query and once in the WHERE subquery.
+
+## Common Pitfalls
+1. **Over-using CTEs for simple queries** — A simple subquery is clearer than a CTE for one-off, non-reused expressions. Use CTEs when the query has multiple steps or the result is referenced more than once.
+2. **Forgetting RECURSIVE keyword** — Self-referencing CTEs require `WITH RECURSIVE`. Without it, PostgreSQL throws an error.
+
+## Best Practices
+1. **Name CTEs descriptively** — `monthly_sales` is much clearer than `t1` or `cte1`. The name should describe what the CTE contains.
+2. **Use CTEs to replace deeply nested subqueries** — If you have more than two levels of nesting, rewrite with CTEs.
+3. **Add a termination condition for recursive CTEs** — Always ensure recursive CTEs will terminate, or add a LIMIT or depth check.
+
+## Summary
+- CTEs are named temporary result sets defined with WITH, making complex queries readable.
+- Multiple CTEs can be chained, each building on the previous.
+- Recursive CTEs handle hierarchical data (org charts, trees, threaded comments).
+- CTEs can be referenced multiple times in the same query, unlike subqueries.
+- Use descriptive names for CTEs and add termination conditions for recursive ones.
+
+## Code Examples
+
+**A recursive CTE that generates all dates in January 2024 — useful for reports that need every day, even those with no data**
+
+```sql
+-- Recursive CTE: generate a series of dates
+WITH RECURSIVE date_series AS (
+    SELECT DATE '2024-01-01' AS day
+    UNION ALL
+    SELECT day + INTERVAL '1 day'
+    FROM date_series
+    WHERE day < DATE '2024-01-31'
+)
+SELECT day FROM date_series;
+```
+
 
 ## Resources
 

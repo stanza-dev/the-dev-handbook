@@ -16,6 +16,6 @@ This section includes **3 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: Counting Unique Values
 - 🧩 Multiple Choice: WHERE vs HAVING
-- 🧩 Multiple Choice: GROUP BY with HAVING
+- 🧩 Challenge: Query Execution Order
 
 → [Practice in your IDE](https://stanza.dev/courses/postgresql-fundamentals)
