@@ -191,9 +191,9 @@ Each lesson flows from conceptual understanding to practical application to edge
 - 🐘 [PostgreSQL Fundamentals](./postgresql/postgresql-fundamentals/) — 19 lessons
 - 📋 [PostgreSQL JSON & Document Processing](./postgresql/postgresql-json/) — 16 lessons
 - ⚡ [PostgreSQL Performance Engineering](./postgresql/postgresql-performance/) — 18 lessons
-- ⚙️ [Server-Side Programming with PL/pgSQL](./postgresql/postgresql-plpgsql/) — 15 lessons
+- ⚙️ [Server-Side Programming with PL/pgSQL](./postgresql/postgresql-plpgsql/) — 18 lessons
 - 🔄 [High Availability & Replication in PostgreSQL](./postgresql/postgresql-replication/) — 17 lessons
-- 🔐 [PostgreSQL Security & Access Control](./postgresql/postgresql-security/) — 16 lessons
+- 🔐 [PostgreSQL Security & Access Control](./postgresql/postgresql-security/) — 22 lessons
 
 ### Paperclip
 

@@ -12,10 +12,11 @@ Understand procedural SQL and when to use server-side logic.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Function vs Procedure
 - ✏️ Fill in the Blank: Assignment Operator
+- 🧩 Challenge: PL/pgSQL Block Order
 - 🧩 Multiple Choice: Using %ROWTYPE
 
 → [Practice in your IDE](https://stanza.dev/courses/postgresql-plpgsql)

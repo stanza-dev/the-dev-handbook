@@ -5,11 +5,26 @@ source_lesson: "postgresql-plpgsql-block-structure"
 
 # PL/pgSQL Block Structure
 
-All PL/pgSQL code is organized in blocks with a specific structure.
+## Introduction
 
-## Basic Block Structure
+Every piece of PL/pgSQL code lives inside a block. Understanding blocks is essential because they define where you declare variables, where you write logic, and how you handle errors. Mastering block structure is the foundation for writing any PL/pgSQL function or procedure.
 
-```plpgsql
+## Key Concepts
+
+- **Block**: The fundamental unit of PL/pgSQL code, consisting of an optional DECLARE section, a mandatory BEGIN/END section, and an optional EXCEPTION section.
+- **Dollar Quoting**: A PostgreSQL string-quoting mechanism (`$$` or `$tag$`) that lets you write PL/pgSQL bodies without escaping single quotes.
+- **Nested Block**: A block inside another block, used for scope control and localized exception handling.
+- **Label**: An optional `<<name>>` tag before a block that enables referencing it from EXIT or CONTINUE statements.
+
+## Real World Context
+
+When you write a migration script that processes thousands of rows, you often need temporary variables, localized error handling, and clear scope boundaries. Block structure gives you all of this. A well-structured function with nested blocks makes it easy for teammates to understand which variables are in scope and where errors are caught.
+
+## Deep Dive
+
+### Basic Block Structure
+
+```sql
 [ <<label>> ]
 [ DECLARE
     -- Variable declarations ]
@@ -20,9 +35,11 @@ BEGIN
 END [ label ];
 ```
 
-## Simple Example
+### Simple Example
 
-```plpgsql
+The `DO` command executes an anonymous block without creating a persistent function:
+
+```sql
 DO $$
 DECLARE
     message TEXT := 'Hello, PL/pgSQL!';
@@ -32,11 +49,11 @@ END;
 $$;
 ```
 
-The `DO` command executes an anonymous block (no need to create a function).
+### Complete Function Example
 
-## Complete Function Example
+Here is a function that uses DECLARE for local variables and IF for control flow:
 
-```plpgsql
+```sql
 CREATE OR REPLACE FUNCTION calculate_discount(
     original_price NUMERIC,
     discount_percent NUMERIC
@@ -45,28 +62,25 @@ DECLARE
     discount_amount NUMERIC;
     final_price NUMERIC;
 BEGIN
-    -- Calculate the discount
     discount_amount := original_price * (discount_percent / 100);
     final_price := original_price - discount_amount;
-    
-    -- Ensure price is not negative
+
     IF final_price < 0 THEN
         final_price := 0;
     END IF;
-    
+
     RETURN final_price;
 END;
 $$ LANGUAGE plpgsql;
 
--- Usage
 SELECT calculate_discount(100, 15);  -- Returns 85.00
 ```
 
-## Nested Blocks
+### Nested Blocks
 
-Blocks can be nested for scope control:
+Blocks can be nested for scope control. Inner blocks can see outer variables, but not vice versa:
 
-```plpgsql
+```sql
 CREATE FUNCTION nested_example() RETURNS TEXT AS $$
 DECLARE
     outer_var TEXT := 'outer';
@@ -75,26 +89,18 @@ BEGIN
     DECLARE
         inner_var TEXT := 'inner';
     BEGIN
-        -- Can access both outer_var and inner_var
         RETURN outer_var || ' and ' || inner_var;
     END inner_block;
 END;
 $$ LANGUAGE plpgsql;
 ```
 
-## Dollar Quoting
+### Dollar Quoting
 
-Use `$$` or named tags to avoid escaping quotes:
+Use `$$` or named tags to avoid escaping single quotes inside your function body:
 
-```plpgsql
--- Using $$ (most common)
-CREATE FUNCTION greeting() RETURNS TEXT AS $$
-BEGIN
-    RETURN 'Hello, World!';
-END;
-$$ LANGUAGE plpgsql;
-
--- Using named tags (for nested functions)
+```sql
+-- Using named tags for nested dollar-quoted strings
 CREATE FUNCTION outer_func() RETURNS TEXT AS $outer$
 DECLARE
     inner_func TEXT := $inner$
@@ -106,14 +112,47 @@ END;
 $outer$ LANGUAGE plpgsql;
 ```
 
-## Important Notes
+## Common Pitfalls
 
-1. **Semicolons required** after every statement and declaration
-2. **Assignment uses `:=`** (not `=`)
-3. **LANGUAGE clause is required** when creating functions
-4. **OR REPLACE** allows modifying existing functions
+1. **Forgetting semicolons** -- Every statement and declaration in PL/pgSQL must end with a semicolon. Missing one produces a cryptic parse error at the `END` keyword.
+2. **Using `=` instead of `:=` for assignment** -- In PL/pgSQL, `=` is only valid in SQL expressions and comparisons. Variable assignment requires `:=`.
 
-📖 [Block Structure](https://www.postgresql.org/docs/18/plpgsql-structure.html)
+## Best Practices
+
+1. **Always use OR REPLACE** -- `CREATE OR REPLACE FUNCTION` lets you iterate during development without dropping and recreating the function each time.
+2. **Use named dollar-quote tags in nested contexts** -- When a function body itself contains dollar-quoted strings, use `$outer$` / `$inner$` tags to avoid ambiguity.
+
+## Summary
+
+- PL/pgSQL code is organized into blocks with DECLARE, BEGIN, EXCEPTION, and END sections.
+- Blocks can be nested for scope isolation, and labels let you reference specific blocks from EXIT or CONTINUE.
+- Dollar quoting (`$$`) avoids the need to escape single quotes inside function bodies.
+
+## Code Examples
+
+**A complete PL/pgSQL function showing DECLARE, BEGIN/END block structure, variable assignment with :=, and a simple IF conditional.**
+
+```sql
+CREATE OR REPLACE FUNCTION calculate_discount(
+    original_price NUMERIC,
+    discount_percent NUMERIC
+) RETURNS NUMERIC AS $$
+DECLARE
+    discount_amount NUMERIC;
+    final_price NUMERIC;
+BEGIN
+    discount_amount := original_price * (discount_percent / 100);
+    final_price := original_price - discount_amount;
+
+    IF final_price < 0 THEN
+        final_price := 0;
+    END IF;
+
+    RETURN final_price;
+END;
+$$ LANGUAGE plpgsql;
+```
+
 
 ## Resources
 

@@ -5,70 +5,65 @@ source_lesson: "postgresql-security-compliance"
 
 # Security Best Practices
 
-Harden your PostgreSQL installation for production.
+## Introduction
+Hardening a PostgreSQL installation for production requires a systematic approach covering authentication, network security, privilege management, and regular audits. This lesson provides a comprehensive security checklist aligned with common compliance frameworks like GDPR, HIPAA, PCI-DSS, and SOC 2.
 
-## Authentication Checklist
+## Key Concepts
+- **Least Privilege**: Grant the minimum permissions necessary for each role to perform its function.
+- **Separation of Duties**: Different roles for different tasks — no single role should have all-encompassing access.
+- **Defense in Depth**: Multiple layers of security so that a failure in one layer does not compromise the system.
+
+## Real World Context
+A PCI-DSS audit requires you to demonstrate: encrypted connections, individual user accounts (no shared passwords), audit logging, least-privilege access controls, and regular security reviews. A well-hardened PostgreSQL setup with SSL, pgAudit, role hierarchies, and documented access policies checks all these boxes.
+
+## Deep Dive
+
+### Authentication Checklist
 
 ```conf
-# pg_hba.conf
-# ❌ Never in production:
+# pg_hba.conf — NEVER in production:
 host all all 0.0.0.0/0 trust
 
-# ✅ Good:
+# GOOD:
 hostssl all all 0.0.0.0/0 scram-sha-256
 ```
 
-## Network Security
+### Network Security
 
 ```ini
 # postgresql.conf
-
-# Listen only where needed
-listen_addresses = 'localhost'  # Or specific IPs
-# listen_addresses = '*'  # Only if behind firewall
-
-# Set port (optional obfuscation)
+listen_addresses = 'localhost'
 port = 5432
 ```
 
-## Privilege Principles
-
-1. **Least Privilege**: Grant minimum necessary permissions
-2. **Separation of Duties**: Different roles for different tasks
-3. **No Shared Accounts**: Individual accounts for each user
+### Privilege Principles
 
 ```sql
--- ✅ Good: Specific privileges
+-- GOOD: Specific privileges
 GRANT SELECT ON reports TO analyst;
 
--- ❌ Bad: Excessive privileges
+-- BAD: Excessive privileges
 GRANT ALL ON SCHEMA public TO analyst;
 ```
 
-## Superuser Restrictions
+### Superuser Restrictions
 
 ```sql
--- Limit superuser usage
--- Use for administration only, not applications
-
--- Create admin role for most tasks
 CREATE ROLE db_admin WITH CREATEDB CREATEROLE LOGIN PASSWORD 'secure';
-
--- Reserve superuser for emergencies
+-- Reserve superuser for emergencies only
 ```
 
-## Regular Security Reviews
+### Regular Security Reviews
 
 ```sql
--- Check for users with superuser
+-- Check for superusers
 SELECT rolname FROM pg_roles WHERE rolsuper;
 
--- Check for roles that can bypass RLS
+-- Check for RLS bypass
 SELECT rolname FROM pg_roles WHERE rolbypassrls;
 
 -- Find public grants
-SELECT 
-    nspname || '.' || relname AS object,
+SELECT nspname || '.' || relname AS object,
     array_agg(privilege_type) AS public_privileges
 FROM information_schema.table_privileges tp
 JOIN pg_class c ON c.relname = tp.table_name
@@ -77,28 +72,14 @@ WHERE grantee = 'PUBLIC'
 GROUP BY nspname, relname;
 ```
 
-## Password Policies
+### Password Policies
 
 ```sql
--- Require password expiration
-ALTER ROLE app_user VALID UNTIL '2025-06-01';
-
--- Connection limits
+ALTER ROLE app_user VALID UNTIL '2027-06-01';
 ALTER ROLE app_user CONNECTION LIMIT 10;
 ```
 
-## Security Extensions
-
-```sql
--- sepgsql: SELinux integration
--- anon: Data anonymization
--- pg_permissions: Permission reporting
-
-CREATE EXTENSION pg_permissions;
-SELECT * FROM all_permissions();
-```
-
-## Compliance Considerations
+### Compliance Quick Reference
 
 | Regulation | Key Requirements |
 |------------|------------------|
@@ -107,7 +88,41 @@ SELECT * FROM all_permissions();
 | PCI-DSS | Network security, encryption, access control |
 | SOC 2 | Security monitoring, access management |
 
-📖 [Server Security](https://www.postgresql.org/docs/18/auth-pg-hba-conf.html)
+## Common Pitfalls
+1. **Using superuser for application connections** — Superuser bypasses all security controls including RLS. Create dedicated application roles with minimal privileges.
+2. **Not reviewing privileges regularly** — Privilege drift accumulates over time. Schedule quarterly reviews to remove unnecessary grants.
+
+## Best Practices
+1. **Implement least privilege from day one** — It is much harder to restrict privileges later than to start restrictive and expand as needed.
+2. **Automate security reviews** — Create scripts that check for common issues (superuser count, public grants, expired passwords) and run them regularly.
+
+## Summary
+- Harden authentication with SCRAM-SHA-256 over SSL, and never use trust in production.
+- Apply least privilege: specific grants to specific roles on specific objects.
+- Schedule regular security reviews to catch privilege drift and compliance gaps.
+
+## Code Examples
+
+**Security audit queries for reviewing superusers, RLS bypass, expired passwords, and public grants**
+
+```sql
+-- Security audit queries
+SELECT rolname FROM pg_roles WHERE rolsuper;
+SELECT rolname FROM pg_roles WHERE rolbypassrls;
+SELECT rolname, rolvaliduntil FROM pg_roles
+WHERE rolvaliduntil IS NOT NULL AND rolvaliduntil < NOW();
+
+-- Check for overly permissive public grants
+SELECT table_schema, table_name, privilege_type
+FROM information_schema.table_privileges
+WHERE grantee = 'PUBLIC'
+ORDER BY table_schema, table_name;
+```
+
+
+## Resources
+
+- [Server Security](https://www.postgresql.org/docs/18/auth-pg-hba-conf.html) — Authentication and security configuration
 
 ---
 

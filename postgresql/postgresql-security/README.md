@@ -8,15 +8,15 @@
 
 | | Section | Lessons |
 |---|---------|---------|
-| 🔑 | [Authentication Fundamentals](./1-authentication/) | 3 lessons |
+| 🔑 | [Authentication Fundamentals](./1-authentication/) | 4 lessons |
 | 👥 | [Roles & Privileges](./2-roles-privileges/) | 3 lessons |
-| 🏢 | [Schema-Based Multi-Tenancy](./3-schema-multitenancy/) | 2 lessons |
-| 🔒 | [Row-Level Security](./4-row-level-security/) | 2 lessons |
-| 👁️ | [Column-Level Security & Data Masking](./5-column-security-masking/) | 2 lessons |
-| 🔐 | [SSL/TLS & Encryption](./6-ssl-encryption/) | 2 lessons |
-| 📋 | [Auditing & Compliance](./7-auditing-compliance/) | 2 lessons |
+| 🏢 | [Schema-Based Multi-Tenancy](./3-schema-multitenancy/) | 3 lessons |
+| 🔒 | [Row-Level Security](./4-row-level-security/) | 3 lessons |
+| 👁️ | [Column-Level Security & Data Masking](./5-column-security-masking/) | 3 lessons |
+| 🔐 | [SSL/TLS & Encryption](./6-ssl-encryption/) | 3 lessons |
+| 📋 | [Auditing & Compliance](./7-auditing-compliance/) | 3 lessons |
 
-**16 lessons** · **21 interactive challenges**
+**22 lessons** · **25 interactive challenges**
 
 ## Want the Interactive Experience?
 

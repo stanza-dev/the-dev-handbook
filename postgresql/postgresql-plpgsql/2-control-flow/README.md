@@ -8,6 +8,7 @@ Master conditionals, loops, and program flow in PL/pgSQL.
 
 1. [Conditional Statements](./1-plpgsql-conditionals.md)
 2. [Loop Structures](./2-plpgsql-loops.md)
+3. [RETURN, NULL Handling, and Early Exit](./3-return-null.md)
 
 ## Practice Challenges
 

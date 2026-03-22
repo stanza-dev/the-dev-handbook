@@ -5,12 +5,23 @@ source_lesson: "postgresql-security-privileges"
 
 # GRANT and REVOKE
 
-Privileges control what operations roles can perform on database objects.
+## Introduction
+Privileges control what operations roles can perform on database objects. PostgreSQL offers a granular privilege system covering tables, columns, schemas, databases, functions, and more. The `GRANT` and `REVOKE` commands are the primary tools for managing these permissions.
 
-## Table Privileges
+## Key Concepts
+- **Object Privilege**: Permission to perform a specific operation (SELECT, INSERT, UPDATE, DELETE, etc.) on a specific database object.
+- **WITH GRANT OPTION**: Allows the grantee to pass the privilege on to other roles.
+- **DEFAULT PRIVILEGES**: Automatically apply grants to objects created in the future.
+- **pg_get_acl()**: A new function in PostgreSQL 18 for programmatically retrieving the access control list (ACL) of a database object, taking the catalog OID, object OID, and sub-object ID as arguments.
+
+## Real World Context
+A typical web application has multiple services: the main app needs read-write access, the reporting service needs read-only access, and the migration runner needs DDL privileges. Using grants and group roles, you can ensure each service has exactly the permissions it needs — nothing more — following the principle of least privilege.
+
+## Deep Dive
+
+### Table Privileges
 
 ```sql
--- Grant specific privileges
 GRANT SELECT ON products TO analysts;
 GRANT SELECT, INSERT, UPDATE ON orders TO app_user;
 GRANT ALL PRIVILEGES ON customers TO admin;
@@ -18,12 +29,11 @@ GRANT ALL PRIVILEGES ON customers TO admin;
 -- Grant on all tables in schema
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO reporting;
 
--- Revoke privileges
+-- Revoke
 REVOKE INSERT ON orders FROM app_user;
-REVOKE ALL PRIVILEGES ON customers FROM alice;
 ```
 
-## Privilege Types
+### Privilege Types
 
 | Privilege | Allows |
 |-----------|--------|
@@ -36,86 +46,77 @@ REVOKE ALL PRIVILEGES ON customers FROM alice;
 | `TRIGGER` | Create triggers |
 | `ALL` | All of the above |
 
-## Column-Level Privileges
+### Column-Level Privileges
 
 ```sql
--- Allow updates only on specific columns
 GRANT UPDATE (status, updated_at) ON orders TO app_user;
-
--- Restrict SELECT to certain columns
 GRANT SELECT (id, name, email) ON users TO support_team;
--- support_team cannot see password_hash, etc.
 ```
 
-## Schema Privileges
+### Schema and Database Privileges
 
 ```sql
--- Access to schema (required to see objects)
 GRANT USAGE ON SCHEMA sales TO analysts;
-
--- Create objects in schema
 GRANT CREATE ON SCHEMA sales TO developers;
-
--- Both
-GRANT USAGE, CREATE ON SCHEMA sales TO admin;
-```
-
-## Database Privileges
-
-```sql
--- Connect to database
 GRANT CONNECT ON DATABASE myapp TO app_user;
-
--- Create schemas
-GRANT CREATE ON DATABASE myapp TO admin;
 ```
 
-## Function Privileges
+### Default Privileges
 
 ```sql
--- Allow execution
-GRANT EXECUTE ON FUNCTION calculate_total(integer) TO app_user;
-
--- All functions in schema
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO app_user;
+ALTER DEFAULT PRIVILEGES FOR ROLE admin IN SCHEMA public
+    GRANT SELECT ON TABLES TO analysts;
 ```
 
-## Default Privileges
+### Retrieving ACLs with pg_get_acl() (PostgreSQL 18)
 
-Apply to future objects:
+PostgreSQL 18 introduces `pg_get_acl()` for programmatically retrieving access control lists:
 
 ```sql
--- All future tables created by admin are readable by analysts
+-- Get ACL for a table using pg_get_acl()
+SELECT pg_get_acl('pg_class'::regclass, 'orders'::regclass, 0);
+```
+
+The three arguments are: the catalog containing the object (`pg_class` for tables), the object itself, and the sub-object ID (0 for the whole object, or a column number for column-level ACLs). This function returns a structured representation of all grants, making it easier to audit permissions programmatically compared to parsing the `relacl` column.
+
+### Checking Privileges
+
+```sql
+SELECT * FROM information_schema.table_privileges
+WHERE table_name = 'orders';
+```
+
+## Common Pitfalls
+1. **Granting ALL PRIVILEGES when only SELECT is needed** — Over-privileging roles violates least privilege and expands the blast radius of a compromised credential.
+2. **Forgetting schema USAGE grants** — A role needs `USAGE` on a schema before it can access any objects within it. Table-level grants alone are not sufficient.
+
+## Best Practices
+1. **Use DEFAULT PRIVILEGES for consistency** — Set up default privileges so that new tables automatically inherit the correct permission structure.
+2. **Use `pg_get_acl()` for auditing (PG 18)** — Regularly review ACLs programmatically to catch privilege drift.
+
+## Summary
+- PostgreSQL supports granular privileges at table, column, schema, database, and function levels.
+- Default privileges ensure consistent permissions for future objects.
+- PostgreSQL 18 adds `pg_get_acl()` for easier programmatic permission auditing.
+
+## Code Examples
+
+**Configuring default privileges and auditing existing grants**
+
+```sql
+-- Set up default privileges for a team
 ALTER DEFAULT PRIVILEGES FOR ROLE admin IN SCHEMA public
     GRANT SELECT ON TABLES TO analysts;
 
--- All future functions are executable by app_user
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
     GRANT EXECUTE ON FUNCTIONS TO app_user;
-```
 
-## WITH GRANT OPTION
-
-```sql
--- Allow user to grant this privilege to others
-GRANT SELECT ON products TO manager WITH GRANT OPTION;
-
--- manager can now:
-GRANT SELECT ON products TO team_member;
-```
-
-## Checking Privileges
-
-```sql
--- Check table privileges
-SELECT * FROM information_schema.table_privileges
+-- Check existing privileges
+SELECT grantee, table_name, privilege_type
+FROM information_schema.table_privileges
 WHERE table_name = 'orders';
-
--- Or use \dp in psql
-\dp orders
 ```
 
-📖 [GRANT](https://www.postgresql.org/docs/18/sql-grant.html)
 
 ## Resources
 

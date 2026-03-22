@@ -3,26 +3,35 @@ source_course: "postgresql-security"
 source_lesson: "postgresql-security-schema-isolation"
 ---
 
-# Schema-Based Isolation
+# Schema Isolation Strategies
 
-Schemas provide a powerful mechanism for organizing and isolating data in multi-tenant applications.
+## Introduction
+Schemas provide a powerful mechanism for organizing and isolating data in multi-tenant applications. Choosing the right isolation strategy determines your security boundaries, operational complexity, and ability to scale. This lesson compares the major approaches and deep-dives into the schema-per-tenant pattern.
 
-## Multi-Tenancy Approaches
+## Key Concepts
+- **Schema**: A namespace within a database that contains tables, views, functions, and other objects.
+- **search_path**: A session variable that determines which schema is used for unqualified object names.
+- **Schema-per-tenant**: An isolation pattern where each tenant gets a dedicated schema with identical table structures.
+
+## Real World Context
+A SaaS application serving 500 customers needs data isolation. Shared tables with a `tenant_id` column work but require WHERE clauses everywhere (and a single missed filter leaks data). Schema-per-tenant provides natural isolation: each tenant's queries hit their own schema, and a forgotten WHERE clause simply cannot access another tenant's data.
+
+## Deep Dive
+
+### Multi-Tenancy Approaches
 
 | Approach | Isolation | Complexity | Use Case |
 |----------|-----------|------------|----------|
 | Shared tables | Low | Low | Small tenants, simple data |
-| Schema per tenant | High | Medium | **Recommended** |
+| Schema per tenant | High | Medium | **Recommended for most SaaS** |
 | Database per tenant | Highest | High | Strict compliance needs |
 
-## Schema-Per-Tenant Pattern
+### Schema-Per-Tenant Pattern
 
 ```sql
--- Create schema for each tenant
 CREATE SCHEMA tenant_acme;
 CREATE SCHEMA tenant_globex;
 
--- Create identical tables in each schema
 CREATE TABLE tenant_acme.users (
     id SERIAL PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
@@ -36,40 +45,28 @@ CREATE TABLE tenant_globex.users (
 );
 ```
 
-## Using search_path for Tenant Context
+### Using search_path for Tenant Context
 
 ```sql
--- Set tenant context at connection time
 SET search_path TO tenant_acme, public;
-
--- Now queries automatically use tenant's schema
 SELECT * FROM users;  -- Uses tenant_acme.users
-INSERT INTO orders (user_id, total) VALUES (1, 99.99);
 
--- Switch tenant
 SET search_path TO tenant_globex, public;
 SELECT * FROM users;  -- Uses tenant_globex.users
 ```
 
-## Role-Based Schema Access
+### Role-Based Schema Access
 
 ```sql
--- Create role for each tenant
 CREATE ROLE acme_app WITH LOGIN PASSWORD 'secret';
-CREATE ROLE globex_app WITH LOGIN PASSWORD 'secret';
-
--- Grant schema access
 GRANT USAGE ON SCHEMA tenant_acme TO acme_app;
 GRANT ALL ON ALL TABLES IN SCHEMA tenant_acme TO acme_app;
-
--- Set default search path per role
 ALTER ROLE acme_app SET search_path TO tenant_acme, public;
 ```
 
-## Dynamic Schema Selection
+### Dynamic Schema Selection
 
 ```sql
--- Function to set tenant context
 CREATE OR REPLACE FUNCTION set_tenant(tenant_name TEXT)
 RETURNS VOID AS $$
 BEGIN
@@ -77,11 +74,35 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Usage in application
 SELECT set_tenant('acme');
 ```
 
-📖 [Schemas](https://www.postgresql.org/docs/18/ddl-schemas.html)
+## Common Pitfalls
+1. **Not restricting search_path per role** — If the application role can access any schema, a bug in tenant context selection can leak data between tenants.
+2. **Forgetting to grant USAGE on the schema** — Table-level grants alone do not work without schema USAGE permission.
+
+## Best Practices
+1. **Lock down search_path per role** — Use `ALTER ROLE ... SET search_path` so each tenant role can only see its own schema.
+2. **Automate schema provisioning** — Use a function to create schemas, tables, roles, and grants consistently for every new tenant.
+
+## Summary
+- Schema-per-tenant provides strong data isolation without per-query WHERE clauses.
+- Use search_path and role-based access to enforce tenant boundaries.
+- Automate schema creation to ensure consistency across hundreds of tenants.
+
+## Code Examples
+
+**Setting up a schema-per-tenant with dedicated role and locked search_path**
+
+```sql
+-- Create tenant schema with isolated role
+CREATE SCHEMA tenant_acme;
+CREATE ROLE acme_app WITH LOGIN PASSWORD 'secret';
+GRANT USAGE ON SCHEMA tenant_acme TO acme_app;
+GRANT ALL ON ALL TABLES IN SCHEMA tenant_acme TO acme_app;
+ALTER ROLE acme_app SET search_path TO tenant_acme, public;
+```
+
 
 ## Resources
 

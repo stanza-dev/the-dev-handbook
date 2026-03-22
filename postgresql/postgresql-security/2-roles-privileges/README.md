@@ -12,10 +12,11 @@ Manage database users and their permissions.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - ✏️ Fill in the Blank: Column-Level Privileges
 - 🧩 Multiple Choice: Default Privileges
 - ✏️ Fill in the Blank: Dropping a Role
+- 🔗 Matching: Match Privilege Types
 
 → [Practice in your IDE](https://stanza.dev/courses/postgresql-security)

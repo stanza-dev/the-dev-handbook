@@ -15,7 +15,7 @@ Execute SQL within PL/pgSQL and process results.
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: The FOUND Variable
-- 🧩 Multiple Choice: Preventing SQL Injection
+- 🔗 Matching: Preventing SQL Injection
 - 🧩 Multiple Choice: RETURN NEXT Usage
 
 → [Practice in your IDE](https://stanza.dev/courses/postgresql-plpgsql)

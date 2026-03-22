@@ -5,99 +5,106 @@ source_lesson: "postgresql-security-ownership"
 
 # Object Ownership
 
-Every database object has an owner who has full control over it.
+## Introduction
+Every database object in PostgreSQL has an owner who has full control over it. Understanding ownership is essential because the owner can grant and revoke privileges, alter the object, and even drop it — regardless of other privilege settings. Ownership transfer is also a critical operation when decommissioning roles.
 
-## Default Ownership
+## Key Concepts
+- **Owner**: The role that created an object. Has all privileges on it automatically.
+- **REASSIGN OWNED**: Transfers ownership of all objects from one role to another.
+- **search_path**: Controls which schema is used for unqualified object names — a common source of security issues.
+
+## Real World Context
+When an employee leaves your organization, you need to drop their database role. But if that role owns tables, views, or functions, PostgreSQL will refuse to drop it. The correct workflow is to first `REASSIGN OWNED BY departing_user TO dba`, then `DROP OWNED BY departing_user`, and finally `DROP ROLE departing_user`. Skipping this leads to orphaned objects or blocked role removal.
+
+## Deep Dive
+
+### Default Ownership
 
 ```sql
--- Objects are owned by the role that creates them
 CREATE TABLE orders (id SERIAL PRIMARY KEY);
--- Owner is current user
+-- Owner is the current user who ran this statement
 
--- Check ownership
 SELECT tableowner FROM pg_tables WHERE tablename = 'orders';
 ```
 
-## Changing Ownership
+### Changing Ownership
 
 ```sql
--- Transfer ownership of one object
 ALTER TABLE orders OWNER TO admin;
-
--- Transfer all objects in schema
 ALTER SCHEMA sales OWNER TO admin;
-
--- Transfer all objects owned by a role
 REASSIGN OWNED BY alice TO bob;
 ```
 
-## Owner Privileges
+### Schema Search Path Security
 
-The owner can always:
-- Grant/revoke privileges on the object
-- Drop the object
-- Alter the object
-- Transfer ownership
+The `search_path` determines which schema is used for unqualified names:
 
 ```sql
--- Even without explicit GRANT, owner has all privileges
-CREATE TABLE my_table (data TEXT);
--- Creator can SELECT, INSERT, UPDATE, DELETE, etc.
-```
-
-## Schema Search Path
-
-Controls which schema is used for unqualified names:
-
-```sql
--- Check current search path
 SHOW search_path;
-
--- Set for session
 SET search_path TO myschema, public;
-
--- Set for role
 ALTER ROLE app_user SET search_path TO app_schema, public;
 ```
 
-## Security Best Practices
+A common security pattern is to revoke default public schema access:
 
 ```sql
--- 1. Create separate schema for application
 CREATE SCHEMA app AUTHORIZATION app_owner;
-
--- 2. Revoke default public access
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
-
--- 3. Grant specific access
 GRANT USAGE ON SCHEMA app TO app_user;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA app TO app_user;
 ```
 
-## Role Hierarchy Example
+### Role Hierarchy Example
 
 ```sql
--- Create role hierarchy
 CREATE ROLE readonly;
 CREATE ROLE readwrite;
 CREATE ROLE admin;
 
--- Build hierarchy
 GRANT readonly TO readwrite;
 GRANT readwrite TO admin;
 
--- Grant privileges to groups
 GRANT SELECT ON ALL TABLES IN SCHEMA app TO readonly;
 GRANT INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA app TO readwrite;
 GRANT TRUNCATE ON ALL TABLES IN SCHEMA app TO admin;
 
--- Users inherit from their group
 CREATE ROLE alice WITH LOGIN PASSWORD 'pass';
-GRANT readwrite TO alice;  -- alice can SELECT, INSERT, UPDATE, DELETE
+GRANT readwrite TO alice;
 ```
 
-📖 [Schemas](https://www.postgresql.org/docs/18/ddl-schemas.html)
+## Common Pitfalls
+1. **Not revoking PUBLIC schema CREATE** — By default, any authenticated user can create objects in the `public` schema. This can lead to search_path hijacking attacks.
+2. **Forgetting to REASSIGN before DROP ROLE** — PostgreSQL will refuse to drop a role that owns objects, leading to frustrating errors.
+
+## Best Practices
+1. **Revoke CREATE on public schema** — In PostgreSQL 15+, the default CREATE privilege on public was removed, but always verify with `REVOKE CREATE ON SCHEMA public FROM PUBLIC` — especially for databases upgraded from older versions.
+2. **Set explicit search_path per role** — Avoid relying on the default search_path to prevent unintended schema resolution.
+
+## Summary
+- Object owners have full control over their objects, including granting privileges.
+- Use REASSIGN OWNED to safely transfer ownership before dropping roles.
+- Revoke default public schema privileges and set explicit search_path for security.
+
+## Code Examples
+
+**Safe role removal and secure schema configuration**
+
+```sql
+-- Safe role removal workflow
+REASSIGN OWNED BY departing_user TO dba;
+DROP OWNED BY departing_user;
+DROP ROLE departing_user;
+
+-- Secure schema setup
+CREATE SCHEMA app AUTHORIZATION app_owner;
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+GRANT USAGE ON SCHEMA app TO app_user;
+```
+
+
+## Resources
+
+- [Schemas](https://www.postgresql.org/docs/18/ddl-schemas.html) — Schema management and security
 
 ---
 

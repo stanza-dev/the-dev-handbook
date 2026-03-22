@@ -12,9 +12,10 @@ Automatically execute logic when data changes.
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Trigger Return Values
+- 🧩 Challenge: Trigger Execution Order
 - ✏️ Fill in the Blank: TG_OP Variable
 - 🧩 Multiple Choice: Canceling a Delete
 

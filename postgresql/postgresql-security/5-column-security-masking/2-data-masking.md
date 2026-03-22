@@ -3,11 +3,22 @@ source_course: "postgresql-security"
 source_lesson: "postgresql-security-data-masking"
 ---
 
-# Dynamic Data Masking
+# Dynamic Data Masking with Views
 
-Data masking hides or transforms sensitive data while preserving data utility.
+## Introduction
+Data masking hides or transforms sensitive data while preserving data utility. In PostgreSQL, views are the primary mechanism for dynamic masking: you create a view that applies masking functions, then grant access to the view instead of the underlying table. This lets different roles see different levels of detail from the same data.
 
-## View-Based Masking
+## Key Concepts
+- **Masking View**: A view that applies transformation functions (redaction, partial masking) to sensitive columns.
+- **Role-Based Masking**: Using `current_user` or `pg_has_role()` in CASE expressions to show different levels of detail per role.
+- **security_barrier**: A view option that prevents the query optimizer from reordering predicates in ways that could leak masked data.
+
+## Real World Context
+A customer support portal needs to display customer information, but support agents should only see masked credit card numbers (last 4 digits) and masked emails (domain only). Creating a masked view lets you provide useful data without exposing PII, satisfying both usability and compliance requirements.
+
+## Deep Dive
+
+### Basic View-Based Masking
 
 ```sql
 CREATE TABLE customers (
@@ -19,75 +30,34 @@ CREATE TABLE customers (
     ssn TEXT
 );
 
--- Create masked view
 CREATE VIEW customers_masked AS
-SELECT 
+SELECT
     id,
     name,
-    -- Mask email: show domain only
-    CASE 
+    CASE
         WHEN current_user = 'admin' THEN email
         ELSE '***@' || split_part(email, '@', 2)
     END AS email,
-    -- Mask phone: show last 4 digits
     CASE
         WHEN current_user IN ('admin', 'support') THEN phone
         ELSE '***-***-' || right(phone, 4)
     END AS phone,
-    -- Mask credit card: show last 4 digits
     '****-****-****-' || right(credit_card, 4) AS credit_card,
-    -- Never show SSN
     '***-**-' || right(ssn, 4) AS ssn
 FROM customers;
 
--- Grant access to view, not table
 REVOKE ALL ON customers FROM PUBLIC;
 GRANT SELECT ON customers_masked TO app_user;
 ```
 
-## Role-Based Masking
+### Reusable Masking Functions
 
 ```sql
--- Different masking levels by role
-CREATE OR REPLACE VIEW employees_dynamic AS
-SELECT 
-    id,
-    name,
-    department,
-    -- Salary visible to HR and managers
-    CASE 
-        WHEN pg_has_role(current_user, 'hr_role', 'MEMBER') 
-             OR pg_has_role(current_user, 'manager_role', 'MEMBER')
-        THEN salary::text
-        ELSE 'CONFIDENTIAL'
-    END AS salary,
-    -- Email masking by sensitivity level
-    CASE 
-        WHEN pg_has_role(current_user, 'admin_role', 'MEMBER') THEN email
-        WHEN pg_has_role(current_user, 'internal_role', 'MEMBER') 
-            THEN split_part(email, '@', 1) || '@***'
-        ELSE '***'
-    END AS email
-FROM employees;
-```
-
-## Function-Based Masking
-
-```sql
--- Reusable masking functions
 CREATE OR REPLACE FUNCTION mask_email(email TEXT)
 RETURNS TEXT AS $$
 BEGIN
     IF email IS NULL THEN RETURN NULL; END IF;
     RETURN '***@' || split_part(email, '@', 2);
-END;
-$$ LANGUAGE plpgsql IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION mask_phone(phone TEXT)
-RETURNS TEXT AS $$
-BEGIN
-    IF phone IS NULL OR length(phone) < 4 THEN RETURN '****'; END IF;
-    RETURN '***-***-' || right(regexp_replace(phone, '[^0-9]', '', 'g'), 4);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
@@ -98,33 +68,51 @@ BEGIN
     RETURN '****-****-****-' || right(regexp_replace(cc, '[^0-9]', '', 'g'), 4);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
-
--- Use in views
-CREATE VIEW payments_masked AS
-SELECT 
-    id,
-    amount,
-    mask_credit_card(card_number) AS card_number,
-    status
-FROM payments;
 ```
 
-## Security Definer Views
+### Security Barrier Views
 
 ```sql
--- View runs with creator's permissions
-CREATE VIEW secure_data 
+CREATE VIEW secure_data
 WITH (security_barrier = true) AS
-SELECT 
-    id,
-    mask_email(email) AS email
+SELECT id, mask_email(email) AS email
 FROM customers
 WHERE active = true;
-
--- security_barrier prevents optimization leaks
 ```
 
-📖 [CREATE VIEW](https://www.postgresql.org/docs/18/sql-createview.html)
+The `security_barrier` option prevents the optimizer from pushing user-supplied predicates below the view's own filters, which could otherwise leak data through timing attacks or error messages.
+
+## Common Pitfalls
+1. **Not using security_barrier** — Without it, the optimizer might evaluate a user's WHERE clause before the view's masking, potentially leaking unmasked values through errors or side channels.
+2. **Granting access to the base table** — If users can access both the masked view and the base table, the masking is useless. Always REVOKE access to the base table.
+
+## Best Practices
+1. **Always use security_barrier on masking views** — This prevents optimizer-based information leakage.
+2. **Create reusable masking functions** — Standardize masking logic in functions so it is consistent across all views.
+
+## Summary
+- Use views with CASE expressions to dynamically mask sensitive data per role.
+- security_barrier prevents optimizer-based data leakage through predicate reordering.
+- Always revoke direct access to base tables when using masking views.
+
+## Code Examples
+
+**Creating a security barrier view with masked email and credit card columns**
+
+```sql
+-- Create a security barrier masking view
+CREATE VIEW customers_masked
+WITH (security_barrier = true) AS
+SELECT
+    id, name,
+    '***@' || split_part(email, '@', 2) AS email,
+    '****-****-****-' || right(credit_card, 4) AS credit_card
+FROM customers;
+
+REVOKE ALL ON customers FROM PUBLIC;
+GRANT SELECT ON customers_masked TO support_team;
+```
+
 
 ## Resources
 

@@ -5,28 +5,31 @@ source_lesson: "postgresql-security-audit-logging"
 
 # Audit Logging
 
-Track who did what and when in your database.
+## Introduction
+Audit logging tracks who did what and when in your database. It is essential for security incident investigation, compliance requirements (GDPR, HIPAA, PCI-DSS, SOC 2), and operational debugging. PostgreSQL provides built-in logging, the pgAudit extension for structured audit trails, and trigger-based approaches for change tracking.
 
-## Built-in Logging
+## Key Concepts
+- **log_statement**: Built-in PostgreSQL setting that controls which SQL statements are logged (none, ddl, mod, all).
+- **pgAudit**: An extension that provides detailed, structured audit logging with fine-grained control over what is logged.
+- **Trigger-Based Audit**: Application-level change tracking using AFTER triggers that record old and new values.
+
+## Real World Context
+During a security incident, you need to answer: "Who accessed the customers table in the last 24 hours, and what did they read or modify?" Built-in logging with `log_statement = 'all'` captures all SQL. pgAudit provides structured, parseable logs. A trigger-based audit trail on the customers table records the exact old and new values for every change.
+
+## Deep Dive
+
+### Built-in Logging
 
 ```ini
 # postgresql.conf
-
-# What to log
-log_statement = 'all'  # none, ddl, mod, all
+log_statement = 'all'
 log_connections = on
 log_disconnections = on
-
-# Log details
 log_line_prefix = '%t [%p]: user=%u,db=%d,app=%a '
 log_duration = on
-
-# Where to log
 logging_collector = on
 log_directory = 'pg_log'
 log_filename = 'postgresql-%Y-%m-%d.log'
-log_rotation_age = 1d
-log_rotation_size = 100MB
 ```
 
 ### log_statement Options
@@ -38,12 +41,9 @@ log_rotation_size = 100MB
 | `mod` | DDL + INSERT, UPDATE, DELETE |
 | `all` | All statements |
 
-## pgAudit Extension
-
-More detailed, structured audit logging:
+### pgAudit Extension
 
 ```sql
--- Install
 CREATE EXTENSION pgaudit;
 ```
 
@@ -66,10 +66,9 @@ pgaudit.log_parameter = on
 | `DDL` | All DDL not in ROLE |
 | `MISC` | DISCARD, FETCH, CHECKPOINT, etc. |
 
-## Trigger-Based Audit Trail
+### Trigger-Based Audit Trail
 
 ```sql
--- Audit table
 CREATE TABLE audit_log (
     id SERIAL PRIMARY KEY,
     table_name TEXT NOT NULL,
@@ -80,7 +79,6 @@ CREATE TABLE audit_log (
     new_data JSONB
 );
 
--- Generic audit function
 CREATE OR REPLACE FUNCTION audit_trigger()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -95,29 +93,44 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Apply to sensitive tables
 CREATE TRIGGER audit_users
     AFTER INSERT OR UPDATE OR DELETE ON users
     FOR EACH ROW EXECUTE FUNCTION audit_trigger();
 ```
 
-## Viewing Audit Logs
+## Common Pitfalls
+1. **Setting log_statement = 'all' on high-traffic databases** — This generates enormous log files and can impact performance. Use pgAudit with targeted log classes instead.
+2. **Not rotating log files** — Without log rotation, log files grow unbounded and fill the disk, potentially causing database crashes.
+
+## Best Practices
+1. **Use pgAudit for compliance-grade logging** — It provides structured, filterable audit logs suitable for compliance requirements.
+2. **Use trigger-based audit for change tracking** — When you need to see the exact before/after values of data changes, triggers provide row-level detail that log-based auditing cannot.
+
+## Summary
+- PostgreSQL offers three levels of auditing: built-in logging, pgAudit extension, and trigger-based change tracking.
+- Use pgAudit for compliance requirements (HIPAA, PCI-DSS) with targeted log classes.
+- Trigger-based auditing captures exact old/new values for sensitive tables.
+
+## Code Examples
+
+**Setting up a trigger-based audit trail for tracking all changes to a table**
 
 ```sql
--- Recent changes to users table
-SELECT 
-    timestamp,
-    operation,
-    user_name,
-    old_data->>'email' AS old_email,
-    new_data->>'email' AS new_email
-FROM audit_log
-WHERE table_name = 'users'
-  AND timestamp > NOW() - INTERVAL '24 hours'
-ORDER BY timestamp DESC;
+-- Create generic audit trigger
+CREATE TABLE audit_log (
+    id SERIAL PRIMARY KEY,
+    table_name TEXT NOT NULL,
+    operation TEXT NOT NULL,
+    user_name TEXT DEFAULT current_user,
+    timestamp TIMESTAMPTZ DEFAULT NOW(),
+    old_data JSONB, new_data JSONB
+);
+
+CREATE TRIGGER audit_orders
+    AFTER INSERT OR UPDATE OR DELETE ON orders
+    FOR EACH ROW EXECUTE FUNCTION audit_trigger();
 ```
 
-📖 [Error Reporting and Logging](https://www.postgresql.org/docs/18/runtime-config-logging.html)
 
 ## Resources
 

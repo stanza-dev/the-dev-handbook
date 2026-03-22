@@ -8,6 +8,7 @@ Use schemas to isolate tenant data and implement multi-tenant architectures.
 
 1. [Schema Isolation Strategies](./1-schema-isolation.md)
 2. [Multi-Tenant Implementation Patterns](./2-schema-patterns.md)
+3. [Schema Migration Strategies](./3-schema-migration.md)
 
 ## Practice Challenges
 
