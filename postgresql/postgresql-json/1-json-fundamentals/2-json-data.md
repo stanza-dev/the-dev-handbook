@@ -1,13 +1,27 @@
 ---
 source_course: "postgresql-json"
-source_lesson: "creating-json-data"
+source_lesson: "postgresql-json-creating-json-data"
 ---
 
 # Creating and Storing JSON Data
 
-There are multiple ways to create JSON/JSONB values in PostgreSQL.
+## Introduction
+PostgreSQL offers multiple ways to create JSON and JSONB values, from simple string casting to powerful construction functions that build nested structures from query results. Mastering these techniques lets you assemble complex documents directly in SQL.
 
-## Casting Strings to JSON
+## Key Concepts
+- **Casting**: Converting a text string to `json` or `jsonb` using the `::jsonb` syntax.
+- **jsonb_build_object()**: A function that constructs a JSONB object from alternating key-value argument pairs.
+- **jsonb_build_array()**: A function that constructs a JSONB array from its arguments.
+- **jsonb_agg() / jsonb_object_agg()**: Aggregate functions that collect rows into a JSON array or object.
+
+## Real World Context
+When building REST APIs, you often need to assemble JSON responses from normalized relational data. Rather than fetching rows and assembling JSON in application code, PostgreSQL can do this directly. This reduces round trips and simplifies your API layer. E-commerce platforms frequently use `jsonb_agg` to build order summaries with nested line items in a single query.
+
+## Deep Dive
+
+### Casting Strings to JSON
+
+The simplest way to create JSON is by casting a string literal:
 
 ```sql
 -- Direct casting
@@ -22,7 +36,11 @@ SELECT to_jsonb(row('Alice', 30));
 -- Result: {"f1": "Alice", "f2": 30}
 ```
 
-## Building JSON Objects
+Casting is straightforward but requires you to write valid JSON strings manually.
+
+### Building JSON Objects Programmatically
+
+The `jsonb_build_object` function is safer than string casting because PostgreSQL handles escaping and type conversion automatically:
 
 ```sql
 -- Build object from key-value pairs
@@ -44,7 +62,11 @@ SELECT jsonb_build_object(
 );
 ```
 
-## Aggregating to JSON
+Nesting these functions lets you build arbitrarily deep document structures.
+
+### Aggregating to JSON
+
+Aggregate functions let you collect multiple rows into a single JSON value:
 
 ```sql
 -- Aggregate rows to JSON array
@@ -59,7 +81,11 @@ SELECT jsonb_object_agg(id, name) FROM users;
 SELECT jsonb_agg(to_jsonb(users)) FROM users;
 ```
 
-## Table with JSONB Column
+These aggregations are invaluable for building nested API responses in a single query.
+
+### Table with JSONB Column
+
+Here is a typical table definition that combines relational columns with a JSONB attributes column:
 
 ```sql
 CREATE TABLE products (
@@ -74,9 +100,30 @@ INSERT INTO products (name, attributes) VALUES
 ('Phone', '{"brand": "Apple", "model": "iPhone 15"}');
 ```
 
+The `DEFAULT '{}'` ensures the column always has a valid empty object even when no attributes are provided.
+
+## Common Pitfalls
+1. **Forgetting to escape special characters in cast strings** — Manual casting can fail on strings containing quotes or backslashes. Use `jsonb_build_object` instead.
+2. **Using jsonb_agg on empty result sets** — When no rows match, `jsonb_agg` returns NULL rather than an empty array. Wrap with `COALESCE(jsonb_agg(...), '[]'::jsonb)`.
+3. **Passing an odd number of arguments to jsonb_build_object** — This function requires pairs (key, value). An odd count causes a runtime error.
+
+## Best Practices
+1. **Prefer jsonb_build_object over string casting** — It handles escaping, type conversion, and is less error-prone than constructing JSON strings manually.
+2. **Use COALESCE with jsonb_agg** — Always wrap aggregations with `COALESCE(..., '[]'::jsonb)` to avoid NULL results on empty sets.
+3. **Set meaningful defaults** — Use `DEFAULT '{}'` on JSONB columns so you never have to handle NULL checks in application code.
+
+## Summary
+- Cast strings with `::jsonb` for simple literals.
+- Use `jsonb_build_object()` and `jsonb_build_array()` for safe, programmatic JSON construction.
+- Aggregate rows into JSON arrays or objects with `jsonb_agg()` and `jsonb_object_agg()`.
+- Always set `DEFAULT '{}'` on JSONB columns to avoid NULL handling.
+- Wrap aggregations with COALESCE to handle empty result sets.
+
 ## Code Examples
 
-```undefined
+**JSON Construction Functions**
+
+```sql
 -- Build complex JSON from query data
 SELECT jsonb_build_object(
     'order_id', o.id,
@@ -85,11 +132,11 @@ SELECT jsonb_build_object(
         'email', c.email
     ),
     'items', (
-        SELECT jsonb_agg(jsonb_build_object(
+        SELECT COALESCE(jsonb_agg(jsonb_build_object(
             'product', p.name,
             'quantity', oi.quantity,
             'price', oi.unit_price
-        ))
+        )), '[]'::jsonb)
         FROM order_items oi
         JOIN products p ON oi.product_id = p.id
         WHERE oi.order_id = o.id

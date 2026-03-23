@@ -1,8 +1,8 @@
-# undefined Querying JSON Data
+# 🔍 Querying JSON Data
 
 > Part of [PostgreSQL JSON & Document Processing](https://stanza.dev/courses/postgresql-json)
 
-
+Extract values from JSON documents using operators, containment checks, existence tests, and JSON path expressions.
 
 ## Lessons
 
@@ -15,7 +15,7 @@
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: JSON Extraction Operators
-- 🧩 Multiple Choice: Containment Operator
-- 🧩 Multiple Choice: JSON Path Expressions
+- 🧩 Challenge: Containment Operator Usage
+- ✏️ Fill in the Blank: JSON Path Functions
 
 → [Practice in your IDE](https://stanza.dev/courses/postgresql-json)

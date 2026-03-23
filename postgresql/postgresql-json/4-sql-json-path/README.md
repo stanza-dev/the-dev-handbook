@@ -2,7 +2,7 @@
 
 > Part of [PostgreSQL JSON & Document Processing](https://stanza.dev/courses/postgresql-json)
 
-Master the powerful JSONPath query language for complex JSON navigation.
+Master the powerful JSONPath query language for complex JSON navigation, filtering, and transformation.
 
 ## Lessons
 
@@ -15,7 +15,7 @@ Master the powerful JSONPath query language for complex JSON navigation.
 This section includes **3 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: JSONPath Root Symbol
-- 🧩 Multiple Choice: JSONPath Filter Symbol
-- 🧩 Multiple Choice: JSONPath Query Function
+- ✏️ Fill in the Blank: JSONPath Filter Symbol
+- 🔗 Matching: JSONPath Function Return Types
 
 → [Practice in your IDE](https://stanza.dev/courses/postgresql-json)

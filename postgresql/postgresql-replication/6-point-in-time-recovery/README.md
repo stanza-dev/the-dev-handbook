@@ -6,16 +6,17 @@ Master backup strategies and restore databases to any point in time.
 
 ## Lessons
 
-1. [Understanding PITR Concepts](./1-concepts-lesson.md)
-2. [Backup Strategy for PITR](./2-strategy-lesson.md)
-3. [Performing PITR Recovery](./3-recovery-lesson.md)
+1. [Understanding PITR Concepts](./1-pitr-concepts.md)
+2. [Backup Strategy for PITR](./2-backup-strategy.md)
+3. [Performing PITR Recovery](./3-recovery-process.md)
 
 ## Practice Challenges
 
-This section includes **3 interactive challenges** available on Stanza:
+This section includes **4 interactive challenges** available on Stanza:
 
 - 🧩 Multiple Choice: Recovery Target Configuration
-- 🧩 Multiple Choice: WAL Restore Command
+- 🧩 Challenge: PITR Prerequisites
 - ✏️ Fill in the Blank: Recovery Signal File
+- 🧩 Challenge: PITR Recovery Steps
 
 → [Practice in your IDE](https://stanza.dev/courses/postgresql-replication)
